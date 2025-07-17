@@ -1,0 +1,28 @@
+안드로이드 환경설정 및 소스 다운로드
+
+# apt update && sudo apt upgrade -y
+# apt install -y openjdk-17-jdk
+# apt install -y git curl repo bc bison build-essential flex g++-multilib gcc-multilib libncurses5-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync zip zlib1g-dev
+# mkdir -p ~/bin
+# curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+# chmod a+x ~/bin/repo
+# echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
+# source ~/.bashrc
+# mkdir -p ~/android
+# cd ~/android
+# git config --global user.email "you@example.com"
+# git config --global user.name "userName"
+# repo init -u https://android.googlesource.com/platform/manifest -b android-14.0.0_r1
+# repo sync -c -j$(nproc)
+
+# apt install libncurses5
+# fallocate -l 20G /swapfile
+# chmod 600 /swapfile
+# mkswap /swapfile
+# swapon /swapfile
+# free -h
+
+# source build/envsetup.sh
+# lunch sdk_car_x86_64-userdebug
+# python3 $ANDROID_BUILD_TOP/development/vndk/tools/header-checker/utils/create_reference_dumps.py -l libcrypto
+# make -j$(nproc)

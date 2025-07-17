@@ -1,0 +1,22 @@
+안드로이드 빌드 방법
+
+안드로이드 소스 디렉토리로 이동
+# cd android
+
+빌드 환경 설정
+# apt install libncurses5
+# fallocate -l 20G /swapfile
+# chmod 600 /swapfile
+# mkswap /swapfile
+# swapon /swapfile
+# free -h
+
+안드로이드 빌드 
+# source build/envsetup.sh
+# lunch sdk_car_x86_64-userdebug
+# python3 $ANDROID_BUILD_TOP/development/vndk/tools/header-checker/utils/create_reference_dumps.py -l libcrypto
+# make -j$(nproc)
+
+빌드 확인
+# ls /root/android/out/target/product/emulator_car_x86_64
+system.img  userdata.img  kernel-ranchu ramdisk.img vendor.img
