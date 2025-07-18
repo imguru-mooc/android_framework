@@ -1,0 +1,12 @@
+cc_binary {
+    name: "my_data_service",
+    srcs: ["MyDataService.cpp", "IMyDataService.cpp", "IMyDataCallback.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+}
+
+cc_binary {
+    name: "my_data_client",
+    srcs: ["client.cpp", "IMyDataService.cpp", "IMyDataCallback.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+}
+
