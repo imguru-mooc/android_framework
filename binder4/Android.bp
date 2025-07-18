@@ -1,0 +1,12 @@
+cc_binary {
+    name: "my_server_test_4",
+    srcs: ["my_server.cpp", "ILedService.cpp", "LedService.cpp"],
+    shared_libs: ["liblog","libbinder","libutils"],
+}
+
+cc_binary {
+    name: "my_client_test_4",
+    srcs: ["my_client.cpp", "ILedService.cpp"],
+    shared_libs: ["liblog","libbinder","libutils"],
+}
+
