@@ -1,0 +1,28 @@
+aidl_interface {
+    name: "my_interface",
+    srcs: [
+        "IMyDataCallback.aidl",
+        "IMyDataService.aidl",
+    ],
+	local_include_dir : ".",
+    backend: {
+        cpp: {
+            enabled: true,
+        },
+    },
+    unstable: true,
+}
+
+cc_binary {
+    name: "binder_server_7",
+    srcs: ["server.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+	static_libs: ["my_interface-cpp"],
+}
+
+cc_binary {
+    name: "binder_client_7",
+    srcs: ["client.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+	static_libs: ["my_interface-cpp"],
+}
