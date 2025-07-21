@@ -1,0 +1,14 @@
+cc_binary {
+    name: "sf_vsync_anim",
+    srcs: ["vsync_anim.cpp"],
+    shared_libs: [
+        "libgui",
+        "libui",
+        "libbinder",
+        "libutils",
+        "liblog",
+        "libandroid",
+    ],
+    cflags: ["-Wall", "-Werror"],
+}
+
