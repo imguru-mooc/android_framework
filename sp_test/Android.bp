@@ -1,0 +1,9 @@
+cc_binary {
+    name: "my_sp",
+    srcs: ["my_sp.cpp"],
+    shared_libs: [
+        "libcutils",
+        "libutils",
+        "libbinder",
+    ],
+}
