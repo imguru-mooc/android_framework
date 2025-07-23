@@ -1,0 +1,23 @@
+aidl_interface {
+    name: "led_auth_interface",
+    srcs: ["ILedAuthService.aidl"],
+    local_include_dir: ".",
+    vendor_available: true,
+    backend: { cpp: { enabled: true } },
+    unstable: true,
+}
+
+cc_binary {
+    name: "led_auth_service",
+    srcs: ["LedAuthService.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+    static_libs: ["led_auth_interface-cpp"],
+}
+
+cc_binary {
+    name: "led_auth_client",
+    srcs: ["LedAuthClient.cpp"],
+    shared_libs: ["libbinder", "libutils"],
+    static_libs: ["led_auth_interface-cpp"],
+}
+

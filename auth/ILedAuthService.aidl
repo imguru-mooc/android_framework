@@ -1,0 +1,4 @@
+interface ILedAuthService {
+    void LEDON();
+}
+
