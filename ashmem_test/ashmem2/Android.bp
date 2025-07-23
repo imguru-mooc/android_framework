@@ -1,0 +1,12 @@
+cc_binary {
+    name: "my_ashmem_server_2",
+    srcs: ["my_server.cpp"],
+    shared_libs: ["libbinder", "libutils", "libcutils"],
+}
+
+cc_binary {
+    name: "my_ashmem_client_2",
+    srcs: ["my_client.cpp"],
+    shared_libs: ["libbinder", "libutils", "libcutils"],
+}
+
