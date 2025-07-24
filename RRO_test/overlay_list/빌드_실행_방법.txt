@@ -1,0 +1,17 @@
+build (linux)
+
+# FRAMEWORK=$ANDROID_BUILD_TOP/out/target/common/obj/JAVA_LIBRARIES/framework-minus-apex_intermediates/classes.jar
+# SERVICES=$ANDROID_BUILD_TOP/out/target/common/obj/JAVA_LIBRARIES/services_intermediates/classes.jar
+# javac -source 17 -target 17   -classpath $FRAMEWORK:$SERVICES  ListOverlays.java
+# HOST_D8=$ANDROID_BUILD_TOP/out/host/linux-x86/bin/d8
+# $HOST_D8 --release  ListOverlays.class --output ListOverlays-dex.jar
+
+execute (windows)
+> adb push ListOverlays-dex.jar /data
+> adb shell
+emulator_car64_x86_64:/ # CLASSPATH=/data/ListOverlays-dex.jar app_process /system/bin ListOverlays
+
+com.android.systemui.car.rro                       : ENABLED
+com.android.systemui.auto_generated_rro_vendor__   : disabled
+com.android.systemui.auto_generated_rro_product__  : ENABLED
+...
