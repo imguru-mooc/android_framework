@@ -1,0 +1,19 @@
+apex {
+    name: "com.example.simple",
+    manifest: "apex_manifest.json",
+    binaries: ["simple_apex_binary"],
+    key: "com.example.simple.key",
+    certificate: ":com.example.simple.certificate",
+    min_sdk_version: "34",
+}
+
+apex_key {
+    name: "com.example.simple.key",
+    public_key: "com.example.simple.avbpubkey",
+    private_key: "com.example.simple.pem",
+}
+
+android_app_certificate {
+    name: "com.example.simple.certificate",
+    certificate: "com.example.simple",
+}

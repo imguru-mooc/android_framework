@@ -1,0 +1,6 @@
+cc_binary {
+    name: "simple_apex_binary",
+    srcs: ["main.cpp"],
+    apex_available: ["com.example.simple"],
+    min_sdk_version: "34",
+}
