@@ -1,0 +1,3 @@
+g++ invocation.cpp -I/usr/lib/jvm/java-11-openjdk-amd64/include/ -I/usr/lib/jvm/java-11-openjdk-amd64/include/linux -L/usr/lib/jvm/java-11-openjdk-amd64/lib/server/ -ljvm
+export LD_LIBRARY_PATH=/usr/lib/jvm/java-11-openjdk-amd64/lib/server
+./a.out
