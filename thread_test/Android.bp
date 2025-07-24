@@ -1,0 +1,6 @@
+cc_binary {
+    name: "my_thread",
+    srcs: ["my_thread.cpp"],
+    shared_libs: ["libbinder", "libutils", "libcutils"],
+}
+
