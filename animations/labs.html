@@ -1,0 +1,615 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🛠 수강생 실습 전체 리스트 (v2.2)</title><style>
+:root{--bg:#0d1117;--panel:#131a2b;--txt:#dbe4f3;--dim:#8b98b8;--hot:#ffb454;--on:#4fc3f7;--ok:#7ee787;--line:#232d45}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Malgun Gothic',sans-serif;margin:0;line-height:1.75}
+header{position:sticky;top:0;background:#10182bee;backdrop-filter:blur(4px);border-bottom:1px solid #2a3552;padding:12px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;z-index:10}
+header h1{font-size:16.5px;margin:0;color:var(--hot)}
+header a{color:var(--on);text-decoration:none;font-size:12.5px;background:#14283d;padding:5px 12px;border-radius:12px}
+header a:hover{text-decoration:underline}
+.md{max-width:1000px;margin:0 auto;padding:24px 26px 80px;font-size:14.5px}
+.md h1{font-size:24px;color:var(--hot);border-bottom:2px solid var(--line);padding-bottom:10px;margin:34px 0 16px}
+.md h2{font-size:19px;color:var(--hot);border-bottom:1px solid var(--line);padding-bottom:7px;margin:32px 0 12px}
+.md h3{font-size:16px;color:var(--ok);margin:24px 0 8px}
+.md h4{font-size:14.5px;color:var(--on);margin:18px 0 6px}
+.md p{margin:10px 0}
+.md a{color:var(--on)}
+.md strong{color:#ffd9a0}
+.md blockquote{margin:12px 0;padding:8px 16px;border-left:4px solid var(--on);background:#101a30;border-radius:0 8px 8px 0;color:#b9c8e8}
+.md blockquote p{margin:4px 0}
+.md code{font-family:Consolas,'D2Coding',monospace;font-size:13px;background:#1b2437;color:#e2b7ff;padding:1.5px 6px;border-radius:5px}
+.md pre{background:#0a0e18;border:1px solid #26314f;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+.md pre code{background:none;color:#c9d6f0;padding:0;font-size:12.8px;line-height:1.6}
+.md table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px;display:block;overflow-x:auto}
+.md thead th{background:#1a2440;color:#aab8d8;text-align:left;padding:8px 11px;border:1px solid #26314f;white-space:nowrap}
+.md td{border:1px solid #202a45;padding:7px 11px;vertical-align:top}
+.md tbody tr:nth-child(even){background:#111a2e}
+.md ul,.md ol{padding-left:26px;margin:8px 0}
+.md li{margin:4px 0}
+.md hr{border:0;border-top:1px dashed #2a3552;margin:28px 0}
+.md img{max-width:100%}
+@media print{body{background:#fff;color:#111}header{display:none}
+ .md h1,.md h2{color:#000;border-color:#999}.md h3{color:#0a5}.md strong{color:#000}
+ .md code{background:#eee;color:#333}.md pre{background:#f6f6f6;border-color:#ccc}.md pre code{color:#222}
+ .md blockquote{background:#f4f4f4;color:#333;border-color:#888}
+ .md thead th{background:#eee;color:#000}.md td{border-color:#bbb}.md tbody tr:nth-child(even){background:#fafafa}}
+</style></head><body>
+<header><h1>🛠 수강생 실습 전체 리스트 (v2.2)</h1><a href="animation.html">🎬 애니메이션</a><a href="workshop.html">✏️ 워크시트</a><a href="javascript:window.print()">🖨 인쇄</a></header>
+<article class="md"><h1 id="v22">🛠 수강생 수행 실습 전체 리스트 (v2.2 확정판)</h1>
+<blockquote>
+<p><strong>과정:</strong> Android Automotive Framework 4일 32시간
+<strong>워크플로:</strong> 빌드=빌드 서버(PuTTY+tmux) / 전송=WinSCP(SSH 키 인증) / 검증=Windows 11 로컬 Automotive Emulator(API 36)
+<strong>유형 분류:</strong> 🔍관찰 · 📖분석 · 🧪실험 · ✏수정 · ✅검증 (커리큘럼 §6 실습 사이클)
+<strong>연계 자료:</strong> 각 실습의 🎬=사전 애니메이션(https://imguru-mooc.github.io/android_framework/animations/animation.html), 워크시트는 챕터 종료 시 별도 수행(https://imguru-mooc.github.io/android_framework/animations/workshop.html)</p>
+</blockquote>
+<hr />
+<h2 id="_1">📊 집계</h2>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>건수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Day 0 사전 준비 (전원 필수)</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Day 1 실습</td>
+<td>5 + 과제 1</td>
+</tr>
+<tr>
+<td>Day 2 실습 (전원 AOSP)</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Day 3 실습</td>
+<td>6 + 과제 1</td>
+</tr>
+<tr>
+<td>Day 4 실습 (전원 AOSP + 워크숍)</td>
+<td>7 (워크숍 내 시나리오 6)</td>
+</tr>
+<tr>
+<td><strong>합계</strong></td>
+<td><strong>실습 36 + 과제 2</strong> (별도: 챕터 워크시트 16 + 종합 워크시트 4)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="day-0-1">🔧 DAY 0 — 사전 준비 (교육 1주 전까지 전원 완료)</h1>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>실습</th>
+<th>유형</th>
+<th>환경</th>
+<th>수행 내용</th>
+<th>Pass 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D0-1</td>
+<td>Windows 11 로컬 환경 구축</td>
+<td>✅</td>
+<td>로컬</td>
+<td>Android Studio + SDK 36, Hyper-V/WHPX 활성(HAXM 제거), <strong>Google APIs x86_64 AVD + Automotive Emulator</strong> 생성, <code>-writable-system</code> 구동 확인</td>
+<td>에뮬레이터 부팅 + <code>adb root</code> 성공</td>
+</tr>
+<tr>
+<td>D0-2</td>
+<td>AOSP 최초 full build</td>
+<td>🧪</td>
+<td>서버</td>
+<td>PuTTY 접속 → <code>lunch sdk_car_x86_64-userdebug</code> → tmux 세션에서 <code>m -j$(nproc)</code> 완주</td>
+<td>$OUT에 system.img 생성, 점검 스크립트 통과</td>
+</tr>
+<tr>
+<td>D0-3</td>
+<td>PuTTY 설정</td>
+<td>✅</td>
+<td>로컬→서버</td>
+<td>세션 저장(stuNN 계정), keepalive, tmux 설치 확인</td>
+<td>접속 + <code>tmux ls</code> 동작</td>
+</tr>
+<tr>
+<td>D0-4</td>
+<td>SSH 키 페어 생성·등록 (B-2.5)</td>
+<td>✏</td>
+<td>로컬+서버</td>
+<td>PuTTYgen <strong>Ed25519+passphrase</strong> 생성 → 공개키를 서버 <code>~/.ssh/authorized_keys</code>(700/600) 등록 → .ppk로 PuTTY/WinSCP 키 인증 전환</td>
+<td>비밀번호 없이 키+passphrase로 접속</td>
+</tr>
+<tr>
+<td>D0-5</td>
+<td>WinSCP 설정 + 북마크 4종</td>
+<td>✅</td>
+<td>로컬↔서버</td>
+<td>SFTP 접속(.ppk), <strong>편집기 연동(저장 시 자동 업로드)</strong>, 북마크: <code>vendor/edu/</code> · <code>frameworks/base/core/java/android/os/custom/</code> · <code>$OUT</code> · <code>$OUT/system/apex/</code></td>
+<td>원격 파일 편집→저장→서버 반영 확인</td>
+</tr>
+<tr>
+<td>D0-6</td>
+<td>JNI용 JDK 11 확인 (C)</td>
+<td>✅</td>
+<td>서버</td>
+<td><code>java -version</code> = 11, <code>javac</code>/<code>javah 대체(javac -h)</code> 동작</td>
+<td>JNI_test First 컴파일 사전 통과</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="day-1-binderaidl">🔷 DAY 1 — 아키텍처 &amp; Binder·AIDL 기초 (로컬 에뮬레이터)</h1>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>실습</th>
+<th>시간</th>
+<th>유형</th>
+<th>수행 내용</th>
+<th>Pass 기준</th>
+<th>🎬</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1-0</td>
+<td>환경 삼중 점검 + tmux 3명령</td>
+<td>20분</td>
+<td>✅</td>
+<td>① Automotive Emulator 부팅 ② PuTTY+tmux 세션 생성+WinSCP 북마크 확인 ③ AOSP 점검 스크립트. <code>tmux</code> new/detach(<code>Ctrl+b,d</code>)/attach 전원 1회</td>
+<td>3항목 체크 + tmux 왕복 성공</td>
+<td>㉙</td>
+</tr>
+<tr>
+<td>D1-1</td>
+<td>🔍 관찰 1-A — 시스템 지도</td>
+<td>20분</td>
+<td>🔍</td>
+<td><code>ps -A</code>(zygote/system_server/<strong>carservice</strong> PPID 확인), <code>getprop</code>, <code>service list \| grep -i car</code></td>
+<td>zygote PID=앱들의 PPID 확인, car_* 서비스 목록 캡처</td>
+<td>①</td>
+</tr>
+<tr>
+<td>D1-2</td>
+<td>🔍 관찰 1-B — Binder 흔적</td>
+<td>15분</td>
+<td>🔍</td>
+<td><code>dumpsys activity provider</code>(CursorWindow), <code>/sys/kernel/debug/binder/state</code> 헤드</td>
+<td>binder state 출력 확보</td>
+<td>②⑭</td>
+</tr>
+<tr>
+<td>D1-3</td>
+<td>🛠 Lab 1-1 — CalcServiceApp</td>
+<td>60분</td>
+<td>✏🧪</td>
+<td><code>ICalculatorService.aidl</code> → <code>CalculatorService(Stub 상속)</code> → <code>ClientActivity(bindService)</code>. add/subtract 직접 구현, 생성 코드(build/generated) 열람</td>
+<td>두 연산 결과 UI 표시 + 생성 Stub/Proxy 파일 확인</td>
+<td>⑪⑫⑬</td>
+</tr>
+<tr>
+<td>D1-4</td>
+<td>🛠 Lab 1-2 — 콜백 서비스</td>
+<td>50분</td>
+<td>✏🧪</td>
+<td>ContentProvider + AIDL <strong>oneway 콜백</strong>(<code>ICallback.onResult</code>) 완성본 분석·수정, 대용량은 URI 전달로 교체</td>
+<td>콜백 수신 UI 갱신 + 1MB 초과분 URI 우회 동작</td>
+<td>③⑭</td>
+</tr>
+<tr>
+<td>D1-H</td>
+<td>📌 과제</td>
+<td>—</td>
+<td>✏</td>
+<td>CalcServiceApp에 곱셈/나눗셈 + <strong>0 나누기 예외 처리</strong>(원격 예외 전달 확인)</td>
+<td>Day 2 아침 시연</td>
+<td>⑪</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="day-2-binder-system-service-aosp">🔷 DAY 2 — Binder 심화 &amp; 커스텀 System Service (전원 AOSP)</h1>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>실습</th>
+<th>시간</th>
+<th>유형</th>
+<th>환경</th>
+<th>수행 내용</th>
+<th>Pass 기준</th>
+<th>🎬</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D2-1</td>
+<td>🛠 4-1 — mmap Zero-Copy 관찰</td>
+<td>25분</td>
+<td>🔍📖</td>
+<td>로컬</td>
+<td><code>pidof system_server</code> → <code>/proc/&lt;pid&gt;/maps \| grep /dev/binder</code>(≈1MB, <strong>r--p</strong>) → surfaceflinger/audioserver 비교 → <code>binder/state</code></td>
+<td>기록표(주소/크기/권한/버퍼 수) 완성</td>
+<td>④</td>
+</tr>
+<tr>
+<td>D2-2</td>
+<td>🛠 4-2 — Thread Pool &amp; 데드락</td>
+<td>25분</td>
+<td>🔍🧪</td>
+<td>로컬</td>
+<td>Binder 스레드 수 관찰 → A↔B 순환 동기 호출 데드락 조건 → 해결 4안(oneway/방향 단일화/풀 확대/재설계) 정리</td>
+<td>데드락 조건 도식 + 해결표</td>
+<td>⑮</td>
+</tr>
+<tr>
+<td>D2-3</td>
+<td>🛠 4-3 — TransactionTooLarge 재현</td>
+<td>25분</td>
+<td>🧪</td>
+<td>로컬</td>
+<td>1.5MB byte[] Intent → 예외 로그 확인 → <code>binder/state</code> 버퍼 현황 → 대안표(ashmem/FD/Provider/MemoryFile)</td>
+<td>FAILED BINDER TRANSACTION 로그 + 대안표</td>
+<td>⑯⑭</td>
+</tr>
+<tr>
+<td>D2-4</td>
+<td>🛠 5-1 — 호출 스택 추적</td>
+<td>30분</td>
+<td>📖</td>
+<td>서버</td>
+<td><code>Binder.java</code> → <code>android_util_Binder.cpp</code> → <code>BpBinder.cpp</code> → <code>IPCThreadState.cpp</code> grep 추적</td>
+<td><strong>빈칸 호출 스택 다이어그램</strong> 완성</td>
+<td>②④</td>
+</tr>
+<tr>
+<td>D2-5</td>
+<td>🛠 6-1 — AIDL 정의</td>
+<td>20분</td>
+<td>✏</td>
+<td>WinSCP</td>
+<td><code>IDeviceInfoService.aidl</code>(4메서드) 작성 + Android.bp filegroup 등록 — <strong>북마크 경로에서 편집기 연동</strong></td>
+<td>aidl 단독 빌드 통과</td>
+<td>⑤</td>
+</tr>
+<tr>
+<td>D2-6</td>
+<td>🛠 6-2 — Service 구현</td>
+<td>25분</td>
+<td>✏</td>
+<td>WinSCP</td>
+<td><code>DeviceInfoService extends Stub</code>: <strong>enforceCallingOrSelfPermission / clearCallingIdentity·restore(finally) / ConcurrentHashMap</strong></td>
+<td>3대 보안 패턴 체크리스트 통과</td>
+<td>⑤⑬</td>
+</tr>
+<tr>
+<td>D2-7</td>
+<td>🛠 6-3 — Manager/등록</td>
+<td>25분</td>
+<td>✏</td>
+<td>WinSCP</td>
+<td><code>DeviceInfoManager</code> + <code>Context.DEVICE_INFO_SERVICE</code> + <code>SystemServiceRegistry.registerService()</code> + SystemServer 기동 코드</td>
+<td>4개 파일 diff 리뷰</td>
+<td>⑤</td>
+</tr>
+<tr>
+<td>D2-8</td>
+<td>🛠 6-4 — SELinux 정책</td>
+<td>15분</td>
+<td>✏</td>
+<td>WinSCP</td>
+<td><code>service_contexts</code> 전용 라벨 + <code>.te</code> 규칙 → <strong>14:40 전원 빌드 시작</strong> <code>m framework-minus-apex services -j$(nproc)</code> (tmux)</td>
+<td>빌드 세션 detach 상태로 가동</td>
+<td>⑱⑤</td>
+</tr>
+<tr>
+<td>D2-9</td>
+<td>🛠 JNI_test First~Fourth</td>
+<td>45분</td>
+<td>🧪</td>
+<td>서버</td>
+<td>①First: <code>javac -h</code>→<code>Java_Hello_foo</code>→libHello.so ②Second: FindClass/NewObject ③Third: JNI_OnLoad+RegisterNatives ④Fourth: <strong>JNI_CreateJavaVM</strong>(-ljvm)</td>
+<td>4개 실행 결과 출력 캡처</td>
+<td>⑰</td>
+</tr>
+<tr>
+<td>D2-10</td>
+<td>🛠 5-2 — Binder 보안 검증</td>
+<td>15분</td>
+<td>🔍</td>
+<td>로컬</td>
+<td><code>service call activity 1</code> → <code>transaction_log</code>에서 <strong>커널 주입 UID/PID</strong> 확인</td>
+<td>위변조 불가 근거 1줄 설명</td>
+<td>②⑬</td>
+</tr>
+<tr>
+<td>D2-11</td>
+<td>🛠 SELinux — avc 디버깅</td>
+<td>25분</td>
+<td>📖🧪</td>
+<td>서버+로컬</td>
+<td><code>grep "avc:.*denied"</code> 수집 → <code>audit2allow -p out/.../sepolicy</code> → neverallow 충돌 grep → 5단계 흐름도</td>
+<td>흐름도(수집→분석→생성→충돌확인→검증) 제출</td>
+<td>⑱</td>
+</tr>
+<tr>
+<td>D2-12</td>
+<td>🛠 6-5 — 검증 착수</td>
+<td>30분+</td>
+<td>✅</td>
+<td>WinSCP+로컬</td>
+<td>(서버)<code>$OUT</code> framework.jar/services.jar → (WinSCP)다운로드 → (로컬)<code>.orig 백업</code>→<code>-writable-system</code>+root/remount→push→재부팅 → <code>service check</code>/<code>dumpsys device_info</code></td>
+<td><strong>미완료자는 D3-0에서 완주</strong> — 부팅 루프 시 .orig 복원/Cold Boot</td>
+<td>㉙⑤</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="day-3-framework-core-overlay-car-api">🔷 DAY 3 — Framework Core · Overlay · Car API</h1>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>실습</th>
+<th>시간</th>
+<th>유형</th>
+<th>수행 내용</th>
+<th>Pass 기준</th>
+<th>🎬</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D3-0</td>
+<td>🛠 6-5 — 검증 완주 세션</td>
+<td>35분</td>
+<td>✅</td>
+<td>전원 4종 판정: service check → dumpsys → 테스트앱 값 → <strong>avc denied 없음</strong></td>
+<td><strong>전원 Pass 보드 기록</strong></td>
+<td>⑤</td>
+</tr>
+<tr>
+<td>D3-1</td>
+<td>🔍 관찰 3-A — AMS·프로세스</td>
+<td>15분</td>
+<td>🔍</td>
+<td><code>dumpsys activity activities</code>, <code>dumpsys activity processes</code>(oom_adj), logcat <strong>Displayed</strong>(콜드 vs 웜 비교)</td>
+<td>콜드/웜 시간 2회 기록</td>
+<td>⑥㉑</td>
+</tr>
+<tr>
+<td>D3-2</td>
+<td>🛠 Lab 3-1 — RRO 1차(문자열/색상)</td>
+<td>45분</td>
+<td>✏🧪✅</td>
+<td>RROTarget(overlayable.xml) → RROOverlay(<code>hasCode=false</code>, overlay 태그) → <code>cmd overlay enable</code> → "Hello, RRO! 🚀" → list/dump → disable/uninstall</td>
+<td>enable/disable 왕복으로 값 변화 확인</td>
+<td>⑦㉒</td>
+</tr>
+<tr>
+<td>D3-3</td>
+<td>🛠 Lab 3-2 — RRO 2차(Drawable)</td>
+<td>30분</td>
+<td>✏🧪</td>
+<td>background_shape(gradient)·ic_target_icon 동일명 오버레이 + overlayable에 drawable 추가</td>
+<td>이미지·배경 교체 확인</td>
+<td>㉒</td>
+</tr>
+<tr>
+<td>D3-4</td>
+<td>🛠 Lab 3-3 — SRO</td>
+<td>30분</td>
+<td>✏🧪</td>
+<td><code>sro_overlay/res/values</code> 생성 → Gradle 오버레이 등록 → 빌드 시점 교체 → <strong>RRO 비교표</strong></td>
+<td>비교표(적용 시점/우선순위/재빌드 여부) 완성</td>
+<td>㉒</td>
+</tr>
+<tr>
+<td>D3-5</td>
+<td>🔍 관찰 3-B — 렌더링</td>
+<td>20분</td>
+<td>🔍🧪</td>
+<td><code>dumpsys gfxinfo &lt;pkg&gt;</code> 프레임 시간 → 과도 Recomposition 유발 전후 percentile 비교</td>
+<td>전/후 Janky % 기록</td>
+<td>㉗</td>
+</tr>
+<tr>
+<td>D3-H</td>
+<td>📌 과제</td>
+<td>—</td>
+<td>✏</td>
+<td><strong>HvacSimulator를 RRO 타겟으로 개조</strong>(overlayable.xml) + 브랜드 색상 오버레이 APK — <strong>Day 4 워크숍 S5에서 사용</strong></td>
+<td>Day 4 오전 제출</td>
+<td>㉒⑧</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="day-4-native-apex-aosp">🔷 DAY 4 — Native 실전 · APEX · 종합 워크숍 (전원 AOSP)</h1>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>실습</th>
+<th>시간</th>
+<th>유형</th>
+<th>수행 내용</th>
+<th>Pass 기준</th>
+<th>🎬</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D4-1</td>
+<td>🔍 관찰 4-A — 두 장부 대응</td>
+<td>10분</td>
+<td>🔍</td>
+<td><code>dumpsys window windows</code> 트리 스케치 ↔ <code>dumpsys SurfaceFlinger</code> Layer 대응</td>
+<td>트리↔Layer 매핑 스케치</td>
+<td>㉕⑨</td>
+</tr>
+<tr>
+<td>D4-2</td>
+<td>🛠 Lab 4-1 — FloatingOverlayDemo</td>
+<td>20분</td>
+<td>🧪</td>
+<td><code>Settings.canDrawOverlays()</code> → WindowManager에 View 추가, <code>appops set ... SYSTEM_ALERT_WINDOW allow</code> → dumpsys에서 <strong>TYPE_APPLICATION_OVERLAY</strong> 확인</td>
+<td>플로팅 뷰 표시 + 타입 확인</td>
+<td>㉕</td>
+</tr>
+<tr>
+<td>D4-3</td>
+<td>🛠 Lab 4-2 — SplitScreenDemo</td>
+<td>15분</td>
+<td>🧪</td>
+<td>left/right FrameLayout 분할 — 차량 센터 분할 UI 축소판, Window 트리에서 관찰</td>
+<td>분할 화면 + 트리 노드 식별</td>
+<td>㉖</td>
+</tr>
+<tr>
+<td>D4-4</td>
+<td>🛠 N-1 — Native Binder 서비스</td>
+<td>70분</td>
+<td>✏🧪✅</td>
+<td><strong>BBinder 상속 onTransact</strong> 구현 → <code>addService("hello.native")</code> → <code>joinThreadPool</code> → cc_binary(mm) → (WinSCP)<code>native_hello</code> → (로컬)push/chmod/실행 → <code>service list</code>·<code>service call hello.native 1 s16 "world"</code> → (선택)client.cpp <code>getService/transact</code></td>
+<td>service call Parcel 응답 확인 (SELinux 거부 시 setenforce 0 후 정식 정책 토론)</td>
+<td>②⑰</td>
+</tr>
+<tr>
+<td>D4-5</td>
+<td>🛠 N-2 — surface_test</td>
+<td>35분</td>
+<td>🧪✅</td>
+<td><code>SurfaceComposerClient</code>→createSurface("My Cpp Surface",400,400)→Transaction(setLayer 최상위)→lock/붉은색/unlockAndPost → (서버 mm→WinSCP→로컬 push) → <strong>로컬 화면에서 붉은 Surface 확인</strong> → dumpsys SurfaceFlinger에서 Layer 검색</td>
+<td>붉은 사각형 + "My Cpp Surface" Layer 라인</td>
+<td>⑨</td>
+</tr>
+<tr>
+<td>D4-6</td>
+<td>🛠 Lab 4-3 — simple APEX 빌드</td>
+<td>35분</td>
+<td>✏🧪✅</td>
+<td>apex_manifest·<strong>RSA 4096 키 4종</strong> 생성 → sepolicy/apex file_contexts → <code>mm</code> → <code>$OUT/system/apex/com.example.simple.apex</code> → (WinSCP→로컬) push /data/ → remount→/system/apex/ 복사→reboot → <code>/apex/com.example.simple/bin/simple_apex_binary</code> 실행. 실패 시 <code>logcat -s apexd</code>·<code>pm get-stagedsessions</code></td>
+<td>Hello from Simple APEX 출력</td>
+<td>⑩</td>
+</tr>
+<tr>
+<td>D4-7</td>
+<td>🚗 종합 워크숍 — HvacSimulator S1~S6</td>
+<td>90분</td>
+<td>📖🧪✅</td>
+<td>조별 계층 판정 훈련: <strong>S1</strong> 속성 지연(gfxinfo→Perfetto→car_service) / <strong>S2</strong> DeadObjectException(생존→linkToDeath→재바인딩) / <strong>S3</strong> 부팅 지연(SystemServer 타임라인) / <strong>S4</strong> 팬 jank(앱 메인 스레드) / <strong>S5</strong> RRO 미적용(overlayable/dump — Day 3 과제 APK 사용) / <strong>S6</strong> 조용한 실패(avc denied)</td>
+<td>시나리오별 원인 계층+근거 도구 발표, ㉚ 게임 전 시나리오 정답</td>
+<td>㉚㉘⑳㉔</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">📦 제출물 체크리스트 (수료 요건)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>제출물</th>
+<th>발생 실습</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>실습 4-1 기록표 (주소/크기/권한/버퍼 수)</td>
+<td>D2-1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>데드락 조건 도식 + 해결 4안 표</td>
+<td>D2-2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>대용량 대안표 (ashmem/FD/Provider/MemoryFile)</td>
+<td>D2-3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Binder 호출 스택 빈칸 다이어그램</td>
+<td>D2-4</td>
+</tr>
+<tr>
+<td>5</td>
+<td>SELinux 5단계 흐름도</td>
+<td>D2-11</td>
+</tr>
+<tr>
+<td>6</td>
+<td>6-5 검증 4종 Pass (보드 기록)</td>
+<td>D2-12/D3-0</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Day 1 과제: 곱셈/나눗셈+예외</td>
+<td>D1-H</td>
+</tr>
+<tr>
+<td>8</td>
+<td>RRO vs SRO 비교표</td>
+<td>D3-4</td>
+</tr>
+<tr>
+<td>9</td>
+<td>gfxinfo 전/후 Janky % 기록</td>
+<td>D3-5</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Day 3 과제: HVAC RRO 오버레이 APK</td>
+<td>D3-H</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Window 트리↔Layer 매핑 스케치</td>
+<td>D4-1</td>
+</tr>
+<tr>
+<td>12</td>
+<td>service call 응답 캡처 (hello.native)</td>
+<td>D4-4</td>
+</tr>
+<tr>
+<td>13</td>
+<td>"My Cpp Surface" dumpsys 라인 캡처</td>
+<td>D4-5</td>
+</tr>
+<tr>
+<td>14</td>
+<td>APEX 실행 출력 캡처</td>
+<td>D4-6</td>
+</tr>
+<tr>
+<td>15</td>
+<td>워크숍 S1~S6 판정표 (원인 계층+도구)</td>
+<td>D4-7</td>
+</tr>
+<tr>
+<td>16</td>
+<td>챕터 워크시트 16종 + 종합 4종 (각 80점↑) 인쇄/제출</td>
+<td>각 챕터·Day 종료</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">⚠️ 실습 공통 안전 수칙</h2>
+<ol>
+<li>시스템 파일(push) 교체 전 <strong>반드시 <code>.orig</code> 백업</strong> — 부팅 루프 시 복원 또는 Cold Boot</li>
+<li>빌드는 <strong>반드시 tmux 세션 안에서</strong> — 접속 끊김 대비 (<code>tmux attach -t build</code>)</li>
+<li><code>setenforce 0</code>은 <strong>개발 검증용 임시 수단</strong> — 정식 해결은 항상 sepolicy(D2-11 절차)</li>
+<li>로컬 에뮬레이터는 push 실습 날 <strong><code>-writable-system</code>으로 기동</strong>했는지 먼저 확인</li>
+</ol></article></body></html>

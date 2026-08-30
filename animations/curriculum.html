@@ -1,0 +1,1859 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📚 Android Automotive Framework — 상세 커리큘럼 (v2.2)</title><style>
+:root{--bg:#0d1117;--panel:#131a2b;--txt:#dbe4f3;--dim:#8b98b8;--hot:#ffb454;--on:#4fc3f7;--ok:#7ee787;--line:#232d45}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Malgun Gothic',sans-serif;margin:0;line-height:1.75}
+header{position:sticky;top:0;background:#10182bee;backdrop-filter:blur(4px);border-bottom:1px solid #2a3552;padding:12px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;z-index:10}
+header h1{font-size:16.5px;margin:0;color:var(--hot)}
+header a{color:var(--on);text-decoration:none;font-size:12.5px;background:#14283d;padding:5px 12px;border-radius:12px}
+header a:hover{text-decoration:underline}
+.md{max-width:1000px;margin:0 auto;padding:24px 26px 80px;font-size:14.5px}
+.md h1{font-size:24px;color:var(--hot);border-bottom:2px solid var(--line);padding-bottom:10px;margin:34px 0 16px}
+.md h2{font-size:19px;color:var(--hot);border-bottom:1px solid var(--line);padding-bottom:7px;margin:32px 0 12px}
+.md h3{font-size:16px;color:var(--ok);margin:24px 0 8px}
+.md h4{font-size:14.5px;color:var(--on);margin:18px 0 6px}
+.md p{margin:10px 0}
+.md a{color:var(--on)}
+.md strong{color:#ffd9a0}
+.md blockquote{margin:12px 0;padding:8px 16px;border-left:4px solid var(--on);background:#101a30;border-radius:0 8px 8px 0;color:#b9c8e8}
+.md blockquote p{margin:4px 0}
+.md code{font-family:Consolas,'D2Coding',monospace;font-size:13px;background:#1b2437;color:#e2b7ff;padding:1.5px 6px;border-radius:5px}
+.md pre{background:#0a0e18;border:1px solid #26314f;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+.md pre code{background:none;color:#c9d6f0;padding:0;font-size:12.8px;line-height:1.6}
+.md table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px;display:block;overflow-x:auto}
+.md thead th{background:#1a2440;color:#aab8d8;text-align:left;padding:8px 11px;border:1px solid #26314f;white-space:nowrap}
+.md td{border:1px solid #202a45;padding:7px 11px;vertical-align:top}
+.md tbody tr:nth-child(even){background:#111a2e}
+.md ul,.md ol{padding-left:26px;margin:8px 0}
+.md li{margin:4px 0}
+.md hr{border:0;border-top:1px dashed #2a3552;margin:28px 0}
+.md img{max-width:100%}
+@media print{body{background:#fff;color:#111}header{display:none}
+ .md h1,.md h2{color:#000;border-color:#999}.md h3{color:#0a5}.md strong{color:#000}
+ .md code{background:#eee;color:#333}.md pre{background:#f6f6f6;border-color:#ccc}.md pre code{color:#222}
+ .md blockquote{background:#f4f4f4;color:#333;border-color:#888}
+ .md thead th{background:#eee;color:#000}.md td{border-color:#bbb}.md tbody tr:nth-child(even){background:#fafafa}}
+</style></head><body>
+<header><h1>📚 Android Automotive Framework — 상세 커리큘럼 (v2.2)</h1><a href="animation.html">🎬 애니메이션</a><a href="workshop.html">✏️ 워크시트</a><a href="javascript:window.print()">🖨 인쇄</a></header>
+<article class="md"><h1 id="android-framework-v2-aosp">Android Framework 교육 — 일자별 상세 커리큘럼 (v2: AOSP 실습 전원 필수)</h1>
+<blockquote>
+<p><strong>과정:</strong> 4일 32시간 (하루 8시간, 09:00~17:00)
+<strong>대상:</strong> 자동차 전장사업부 주니어 Android 개발자
+<strong>기준 슬라이드:</strong> 102장 (강사 스크립트 <code>instructor_script_with_answers.md</code> 대응)
+<strong>실습 문서:</strong> <code>Android_Framework16_Day2_실습자료.md</code>, <code>RRO_example.ipynb</code>, <code>SRO_example.ipynb</code>, <code>apex_build_tutorial.md</code>, <code>jni_build.txt</code>
+<strong>실습 앱/코드:</strong> CalcServiceApp / HvacSimulator / FloatingOverlayDemo / SplitScreenDemo / JNI_test(First~Fourth) / surface_test</p>
+<p><strong>⚠️ v2 변경사항:</strong> 커스텀 System Service(6-1~6-5), SELinux audit2allow, JNI_test, surface_test, APEX 빌드, <strong>Native Binder 구현(신설)</strong> 을 강사 시연에서 <strong>전원 필수 실습으로 전환</strong>. 이에 따라 전 수강생 AOSP 빌드 환경 필수, Day 2~4 시간표 재배치.
+<strong>⚠️ v2.2 워크플로 확정:</strong> ① <strong>빌드 = 빌드 서버</strong>(PuTTY + tmux) ② <strong>파일 업/다운로드 = WinSCP</strong>(SCP/SFTP, <strong>공개키·개인키 인증 필수</strong>) ③ <strong>실습 검증 = Windows 11 로컬 Automotive Emulator</strong>에 <code>adb push/pull</code>. 서버에서는 에뮬레이터를 구동하지 않으며, 모든 실행·화면 확인은 로컬 에뮬레이터에서 수행.</p>
+</blockquote>
+<hr />
+<h2 id="_1">🌐 온라인 수업 자료 배포 사이트</h2>
+<p>전체 인터랙티브 애니메이션(30건)·디지털 워크시트(4건)는 아래 사이트에서 바로 실행된다(설치 불필요, 데스크톱 브라우저 권장).</p>
+<ul>
+<li><strong>🎬 애니메이션 목록(챕터 순)</strong>: https://imguru-mooc.github.io/android_framework/animations/animation.html</li>
+<li><strong>✏️ 워크시트 목록(챕터 16 + 종합 4)</strong>: https://imguru-mooc.github.io/android_framework/animations/workshop.html</li>
+<li>애니메이션: <code>https://imguru-mooc.github.io/android_framework/animations/anim01_…~anim30_….html</code> (아래 각 세션에 🎬 직링크 표기)</li>
+<li>챕터별 워크시트(16종): <code>https://imguru-mooc.github.io/android_framework/animations/ws_ch0.html ~ ws_ch12.html · ws_jni_selinux · ws_native · ws_ch9_car · ws_workshop</code> — 각 챕터 종료 지점에 ✏️ 블록으로 직링크 표기</li>
+<li>일자별 종합 워크시트: <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day1.html">📝 Day 1 워크시트</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day2.html">📝 Day 2 워크시트</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day3.html">📝 Day 3 워크시트</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day4.html">📝 Day 4 워크시트</a></li>
+</ul>
+<p>강의장 운영: 강사는 animation.html에서 해당 세션의 🎬 링크를 열어 단계 재생(◀ ▶, 자동재생)하고, 수강생은 각자 브라우저로 같은 링크를 열어 자습·복습한다. 챕터별 워크시트는 각 챕터 종료 직후, 일자별 종합 워크시트(각 12문항, 챕터판과 겹치지 않는 재출제 문항)는 Day 마지막 세션 또는 다음 날 아침 복습에 풀고, 80점 미만 문항의 🎬 링크로 즉시 복습한다.</p>
+<hr />
+<h2 id="_2">하루 공통 시간표</h2>
+<table>
+<thead>
+<tr>
+<th>교시</th>
+<th>시간</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>오전 1교시</td>
+<td>09:00~10:30</td>
+<td>90분</td>
+</tr>
+<tr>
+<td>휴식</td>
+<td>10:30~10:45</td>
+<td></td>
+</tr>
+<tr>
+<td>오전 2교시</td>
+<td>10:45~12:15</td>
+<td>90분</td>
+</tr>
+<tr>
+<td>점심</td>
+<td>12:15~13:15</td>
+<td></td>
+</tr>
+<tr>
+<td>오후 1교시</td>
+<td>13:15~14:45</td>
+<td>90분</td>
+</tr>
+<tr>
+<td>휴식</td>
+<td>14:45~15:00</td>
+<td></td>
+</tr>
+<tr>
+<td>오후 2교시</td>
+<td>15:00~16:30</td>
+<td>90분</td>
+</tr>
+<tr>
+<td>정리/Q&amp;A</td>
+<td>16:30~17:00</td>
+<td>퀴즈 토론 → 정답 해설</td>
+</tr>
+</tbody>
+</table>
+<p>v2 시간 배분: 이론 3h(37%) / 실습 3.5h(44%) / Q&amp;A·토론 1h / 휴식 0.5h — 실습 비중 상향</p>
+<hr />
+<h1 id="day-0">🔧 DAY 0 (사전 준비) — 실습 환경 설정 ★전원 필수 완료</h1>
+<p><strong>v2에서는 AOSP 빌드가 전원 필수이므로, 교육 시작 최소 1주 전까지 아래 A+B+C를 모두 완료해야 합니다. 특히 B의 최초 full build 미완료 시 Day 2 오후부터 실습 진행이 불가능합니다.</strong></p>
+<h3 id="a-windows-11">A. Windows 11 환경 (관찰/앱 실습용) — 전원 필수</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>설정 내용</th>
+<th>확인 방법</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>가상화</td>
+<td><strong>Hyper-V + WHPX</strong> 모두 활성화</td>
+<td>설정 → 앱 → 선택적 기능 → 추가 Windows 기능</td>
+</tr>
+<tr>
+<td>HAXM</td>
+<td>설치되어 있으면 <strong>반드시 제거</strong> (Hyper-V 충돌)</td>
+<td>제어판</td>
+</tr>
+<tr>
+<td>Android Studio</td>
+<td>SDK Manager에서 <strong>Android 16 (API 36)</strong></td>
+<td>SDK Manager</td>
+</tr>
+<tr>
+<td>AVD</td>
+<td><strong>Google APIs 포함 x86_64</strong> (adb root 조건) + <strong>Automotive Emulator</strong>. 실습 구동 시 <code>emulator -avd &lt;이름&gt; -writable-system</code> (system 파티션 push 실습 대비)</td>
+<td>AVD Manager</td>
+</tr>
+<tr>
+<td>도구</td>
+<td>adb / logcat / dumpsys / Perfetto(ui.perfetto.dev)</td>
+<td><code>adb devices</code></td>
+</tr>
+</tbody>
+</table>
+<p>부팅 실패 시(슬라이드 #10): ① Hyper-V+WHPX 확인 → ② HAXM 제거 → ③ <code>-verbose</code> 로그 → ④ AVD 재생성 → ⑤ Cold Boot Now</p>
+<h3 id="b-aosp-day-24">B. AOSP 빌드 서버 + 원격 접속 환경 (Day 2~4 필수 실습용) — ★전원 필수</h3>
+<p><strong>v2.1: AOSP 빌드는 수강생 PC가 아닌 별도 빌드 서버에서 수행합니다. 수강생은 Windows에서 PuTTY로 터미널 작업, WinSCP로 파일 전송을 합니다.</strong></p>
+<h4 id="b-1">B-1. 빌드 서버 (교육 운영측 사전 준비)</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>요건</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS/스펙</td>
+<td>Ubuntu 22.04 LTS, 다중 사용자 동시 빌드 기준 CPU 32코어+/RAM 128GB+/SSD 2TB+ 권장</td>
+</tr>
+<tr>
+<td>계정</td>
+<td><strong>1인 1계정</strong> 발급 (<code>stu01</code>~<code>stuNN</code>), 홈에 개인 <code>~/aosp</code> 체크아웃 또는 공용 미러 + 개인 out 디렉토리(<code>OUT_DIR_COMMON_BASE</code>) 구성</td>
+</tr>
+<tr>
+<td>사전 완료</td>
+<td>각 계정에서 <code>lunch sdk_car_x86_64-userdebug</code> + <strong>최초 full build(<code>m</code>) 완료</strong> (교육 1주 전)</td>
+</tr>
+<tr>
+<td>필수 패키지</td>
+<td>repo/빌드 도구 일체, <strong>tmux(또는 screen)</strong>, OpenJDK 11(JNI 실습용). <strong>서버에서 에뮬레이터 구동 불필요</strong> — 검증은 전부 로컬</td>
+</tr>
+<tr>
+<td>방화벽</td>
+<td><strong>SSH(22)만 개방</strong> — PuTTY(터미널)와 WinSCP(SCP/SFTP)가 동일 포트 사용. 에뮬레이터는 로컬 PC 구동이므로 추가 포트·터널 불필요</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b-2-putty-day-0">B-2. PuTTY 설정 (수강생 전원, Day 0 완료)</h4>
+<table>
+<thead>
+<tr>
+<th>설정 위치</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session</td>
+<td>Host: <code>&lt;빌드서버 IP&gt;</code>, Port: 22, 프로파일 저장명 <code>AOSP-BUILD</code></td>
+</tr>
+<tr>
+<td>Connection</td>
+<td><strong>Seconds between keepalives: 30</strong> (장시간 빌드 중 세션 유지)</td>
+</tr>
+<tr>
+<td>Window → Translation</td>
+<td><strong>Remote character set: UTF-8</strong> (한글 로그 깨짐 방지)</td>
+</tr>
+<tr>
+<td>Connection → SSH → Auth ★</td>
+<td><strong>개인키(.ppk) 지정 필수</strong> — 아래 B-2.5 키 페어 절차 완료 후 등록 (포트 터널링은 사용하지 않음 — 검증이 로컬 에뮬레이터이므로 불필요)</td>
+</tr>
+</tbody>
+</table>
+<p>접속 후 첫 확인(전원):</p>
+<pre><code class="language-bash">tmux new -s build        # ★ 모든 빌드는 tmux 안에서! (PuTTY 끊겨도 빌드 유지)
+cd ~/aosp
+source build/envsetup.sh
+lunch sdk_car_x86_64-userdebug
+</code></pre>
+<blockquote>
+<p>💡 <strong>tmux 최소 명령 3개</strong>: 분리 <code>Ctrl+b, d</code> / 재접속 <code>tmux attach -t build</code> / 목록 <code>tmux ls</code> — Day 1 오리엔테이션에서 전원 실습.</p>
+</blockquote>
+<h4 id="b-25-ssh-puttywinscp">B-2.5. SSH 공개키/개인키 페어 생성·등록 ★전원 필수 (PuTTY·WinSCP 공용)</h4>
+<p>비밀번호 로그인 대신 <strong>키 인증</strong>을 표준으로 합니다. 아래 5단계를 Day 0에 완료하고, Day 1 오리엔테이션에서 전원 확인합니다.</p>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>수행 위치</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 키 생성</td>
+<td>Windows — <strong>PuTTYgen</strong></td>
+<td>Type: <strong>Ed25519</strong>(권장) 또는 RSA 3072+ → Generate(마우스 이동) → <strong>Key passphrase 설정</strong>(필수) → <strong>Save private key</strong> → <code>내문서\ssh\aosp_stuNN.ppk</code></td>
+</tr>
+<tr>
+<td>② 공개키 복사</td>
+<td>PuTTYgen</td>
+<td>상단 "Public key for pasting into OpenSSH authorized_keys file" 박스의 <strong>한 줄 전체</strong>(<code>ssh-ed25519 AAAA... comment</code>) 복사 — Save public key 버튼의 파일 형식은 사용하지 않음</td>
+</tr>
+<tr>
+<td>③ 서버 등록</td>
+<td>PuTTY(최초 1회는 비밀번호 로그인)</td>
+<td><code>mkdir -p ~/.ssh &amp;&amp; chmod 700 ~/.ssh</code> → <code>echo '복사한 공개키 한 줄' &gt;&gt; ~/.ssh/authorized_keys</code> → <code>chmod 600 ~/.ssh/authorized_keys</code></td>
+</tr>
+<tr>
+<td>④ 클라이언트 지정</td>
+<td>PuTTY: Connection→SSH→Auth→<strong>Private key file = .ppk</strong> / WinSCP: 고급→SSH→인증→<strong>개인키 파일 = .ppk</strong> (또는 <strong>Pageant</strong>에 .ppk 로드 시 두 프로그램 모두 자동 인증)</td>
+<td></td>
+</tr>
+<tr>
+<td>⑤ 검증</td>
+<td>PuTTY·WinSCP 각각</td>
+<td>재접속 시 <strong>비밀번호 없이</strong>(passphrase만) 로그인되는지 확인. 실패 시: authorized_keys 한 줄 여부/개행 깨짐, <code>~/.ssh</code> 700·파일 600 권한, 키 파일 경로 재확인</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 개인키(.ppk)는 절대 서버에 업로드하거나 공유하지 않습니다. 분실 시 서버의 authorized_keys에서 해당 공개키 삭제 후 재발급.</p>
+</blockquote>
+<h4 id="b-3-winscp-day-0">B-3. WinSCP 설정 (수강생 전원, Day 0 완료)</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>프로토콜</td>
+<td><strong>SFTP</strong>(기본) 또는 <strong>SCP</strong> — 같은 SSH 계정(22포트), 사이트 저장명 <code>AOSP-BUILD</code></td>
+</tr>
+<tr>
+<td>인증 ★</td>
+<td>고급 → SSH → 인증 → <strong>개인키 파일(.ppk)</strong> 지정 (B-2.5 ④). Pageant 사용 시 자동. 비밀번호 없이 접속되는지 확인</td>
+</tr>
+<tr>
+<td>북마크 등록 ★</td>
+<td><code>~/aosp/vendor/edu/</code> (실습 코드), <code>~/aosp/frameworks/base/core/java/android/os/custom/</code> (실습 6-x), <code>~/aosp/out/target/product/emulator_car64_x86_64/</code> (산출물), <code>~/aosp/out/.../system/apex/</code> (APEX)</td>
+</tr>
+<tr>
+<td>편집기 연동 ★</td>
+<td>옵션 → 편집기에서 <strong>로컬 편집기(VS Code/메모장++) 연결</strong> — 서버 파일을 더블클릭으로 열고 저장하면 자동 업로드. vim이 익숙하지 않은 주니어의 기본 편집 방식</td>
+</tr>
+<tr>
+<td>용도</td>
+<td>① 배포 스켈레톤 코드 업로드 ② 소스 편집(자동 업로드) ③ 빌드 산출물/트레이스(trace.pb)/로그 다운로드 ④ 과제 제출물 회수</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b-4-winscp-day-24">B-4. 표준 워크플로: 서버 빌드 → WinSCP 전송 → 로컬 에뮬레이터 검증 (Day 2~4 공통)</h4>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim29_remote_workflow.html">㉙ 원격 빌드 워크플로</a>
+Day 0에 한 번 시청 후, Day 2~4 매 빌드 세션 시작 시 재생하며 단계 확인</p>
+</blockquote>
+<pre><code class="language-text">[Windows 11 PC]                                   [빌드 서버]
+① 소스 편집: WinSCP 편집기 연동 ───(SCP 업로드)──▶  ~/aosp/... 반영
+② 빌드: PuTTY(tmux)에서 m / mm  ────────────────▶  out/target/product/... 산출물 생성
+③ 산출물 회수: WinSCP           ◀──(SCP 다운로드)──  바이너리 / .jar / .apex / trace
+④ 검증: Windows 로컬 adb
+   adb push &lt;산출물&gt; → 로컬 Automotive Emulator에서 실행·화면 확인
+   (adb shell / service call / dumpsys / logcat 전부 로컬에서)
+⑤ 결과 회수: adb pull(로컬) → 필요 시 WinSCP로 서버에 제출물 업로드
+</code></pre>
+<p><strong>핵심 원칙:</strong> 서버는 "빌드 공장", 로컬 에뮬레이터는 "시험대". adb는 항상 <strong>Windows 로컬 에뮬레이터</strong>를 향한다 (<code>adb devices</code>에 <code>emulator-5554</code>만 보이면 정상).</p>
+<p><strong>실습별 산출물 매핑표 (WinSCP 다운로드 경로 → 로컬 adb push 대상):</strong></p>
+<p><code>$OUT</code> = <code>~/aosp/out/target/product/emulator_car64_x86_64/</code> (WinSCP 북마크)</p>
+<table>
+<thead>
+<tr>
+<th>실습</th>
+<th>서버 다운로드(WinSCP)</th>
+<th>로컬 push/적용(Windows adb)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6-5 커스텀 System Service</td>
+<td><code>$OUT/system/framework/framework.jar</code>, <code>$OUT/system/framework/services.jar</code> (+ 수정 SELinux 산출물)</td>
+<td>에뮬레이터를 <code>-writable-system</code>으로 구동 → <code>adb root &amp;&amp; adb remount</code> → <code>adb push *.jar /system/framework/</code> → <code>adb reboot</code></td>
+</tr>
+<tr>
+<td>N-1 native_hello</td>
+<td><code>$OUT/system/bin/native_hello</code> (mm 결과)</td>
+<td><code>adb push native_hello /data/local/tmp/</code> → <code>adb shell chmod +x</code> → 실행</td>
+</tr>
+<tr>
+<td>N-2 surface_test</td>
+<td><code>$OUT/system/bin/surface1</code></td>
+<td>동일 (<code>/data/local/tmp/</code>) — <strong>붉은 Surface를 로컬 에뮬레이터 화면에서 직접 확인</strong></td>
+</tr>
+<tr>
+<td>Lab 4-3 APEX</td>
+<td><code>$OUT/system/apex/com.example.simple.apex</code></td>
+<td><code>adb push com.example.simple.apex /data/</code> → remount 후 <code>/system/apex/</code> 복사 → reboot</td>
+</tr>
+<tr>
+<td>Perfetto(참고)</td>
+<td>트레이스는 로컬 에뮬레이터에서 직접 <code>adb pull trace.pb</code> — 서버 경유 불필요</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>버전 일치 필수:</strong> 서버 AOSP 빌드(Android 16)와 로컬 AVD 이미지의 빌드가 크게 다르면 framework.jar 교체 시 부팅 루프가 날 수 있음. 대응: ① 로컬 AVD도 API 36 최신 이미지로 통일 ② 부팅 루프 시 Cold Boot + 원본 jar 복원(<code>.orig</code> 백업) ③ 근본 대안 — <code>$OUT</code>의 <strong>에뮬레이터 이미지 세트 전체</strong>(system-qemu.img 등)를 WinSCP로 내려받아 로컬 SDK에 커스텀 시스템 이미지로 등록해 구동(강사 가이드 별첨).</p>
+</blockquote>
+<p><strong>Day 1 아침 최종 점검 (전원):</strong></p>
+<p>서버측(PuTTY, tmux 안):</p>
+<pre><code class="language-bash">tmux new -s build
+cd ~/aosp &amp;&amp; source build/envsetup.sh &amp;&amp; lunch sdk_car_x86_64-userdebug
+m nothing   # 빌드 그래프 로딩 확인 (수 분 내 종료되면 정상)
+</code></pre>
+<p>로컬측(Windows 명령창):</p>
+<pre><code class="language-bash">emulator -avd &lt;Automotive_AVD&gt; -writable-system   # 최초 1회 이 옵션으로 구동
+adb wait-for-device
+adb root                                # Google APIs 이미지에서 가능해야 함
+adb shell ls /sys/kernel/debug/binder/  # state 등 확인 (미마운트 시 mount -t debugfs)
+</code></pre>
+<p>WinSCP: <code>$OUT</code> 북마크 열림 + 임의 파일 1개 다운로드 테스트(키 인증, 비밀번호 없이).</p>
+<h3 id="c-jni-day-2">C. JNI 실습용 (Day 2 필수, 빌드 서버에서 수행)</h3>
+<p>PuTTY로 접속하여 서버에서 진행. <code>jni_build.txt</code> 기준: OpenJDK 11 (<code>sudo update-alternatives --config java</code>), g++, 헤더 경로 <code>/usr/lib/jvm/java-11-openjdk-amd64/include/{,linux/}</code> 확인.</p>
+<hr />
+<h1 id="day-1-android-binder-ipc">🔷 DAY 1 — Android 아키텍처 &amp; Binder IPC 기초</h1>
+<blockquote>
+<p><strong>오늘의 키워드:</strong> 아키텍처, Binder
+<strong>핵심 질문:</strong> "앱에서 호출한 API 한 줄이 커널·차량 하드웨어까지 어떤 여정을 거치는가?"
+(v2 변경 없음 — Windows/Automotive Emulator 기반)</p>
+</blockquote>
+<h3 id="135">⏰ 시간 배분 (슬라이드 #1~#35)</h3>
+<table>
+<thead>
+<tr>
+<th>시간</th>
+<th>내용</th>
+<th>슬라이드</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>09:00~09:20</td>
+<td>과정 소개, <strong>Windows+AOSP 양쪽 환경 최종 점검</strong></td>
+<td>#1~#4</td>
+</tr>
+<tr>
+<td>09:20~10:30</td>
+<td>Ch 0: 아키텍처 개요</td>
+<td>#5~#12</td>
+</tr>
+<tr>
+<td>10:45~12:15</td>
+<td>Ch 1: Binder 개념 및 IPC</td>
+<td>#13~#21</td>
+</tr>
+<tr>
+<td>13:15~14:45</td>
+<td>Ch 2: AIDL 실습 (CalcServiceApp)</td>
+<td>#22~#30</td>
+</tr>
+<tr>
+<td>15:00~16:30</td>
+<td>Ch 3: 간단한 IPC 서비스 개발</td>
+<td>#31~#35</td>
+</tr>
+<tr>
+<td>16:30~17:00</td>
+<td>Day 1 정리 / 퀴즈 / Q&amp;A</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="09000920-14">[09:00~09:20] 오리엔테이션 (#1~#4)</h2>
+<ul>
+<li>과정 목표: "API 암기가 아니라 <strong>문제 발생 시 어느 계층부터 조사할지 판단하는 개발자</strong> 되기"</li>
+<li><strong>환경 삼중 점검:</strong> ① Automotive Emulator 부팅 ② <strong>PuTTY 접속 + tmux 세션 생성 + WinSCP 접속·북마크 확인</strong> ③ AOSP 점검 스크립트(Day 0-B) 통과 — 미통과자는 휴식시간마다 개별 지원, Day 2 오후 전까지 반드시 해결. <strong>tmux 3명령(new/detach/attach) 전원 1회 실습</strong></li>
+<li>🚗 Automotive 오프닝 다이어그램: <code>차량 App → CarPropertyManager → CarService → Binder → Vehicle HAL → 차량 ECU/Signal</code> — "4일 뒤 이 그림의 모든 칸을 직접 만들어 본 상태가 된다"</li>
+</ul>
+<h2 id="09201030-chapter-0-android-512">[09:20~10:30] Chapter 0 — Android 시스템 아키텍처 개요 (#5~#12)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim01_boot_zygote.html">① Boot &amp; Zygote(COW)</a>
+부팅 족보·COW 클로즈업 — #8~#10 설명 시 단계 재생</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>학습 목표</td>
+<td>5계층 구조와 부팅 시퀀스를 큰 그림으로 이해</td>
+</tr>
+<tr>
+<td>강의 (#6)</td>
+<td>Kernel(Binder Driver) → HAL(<strong>Android 16: HIDL deprecated, 신규 HAL은 AIDL 필수</strong>) → Native+ART → Java API Framework(<code>getSystemService()</code>) → Applications</td>
+</tr>
+<tr>
+<td>강의 (#7)</td>
+<td>Android 16 변경사항: AIDL HAL, 16KB Page Size 등</td>
+</tr>
+<tr>
+<td>강의 (#8)</td>
+<td>부팅: Bootloader → Kernel → Init → <strong>Zygote(fork+COW)</strong> → SystemServer → Launcher</td>
+</tr>
+<tr>
+<td>트러블슈팅 (#10)</td>
+<td>Zygote crash loop(<code>logcat -b main -s Zygote</code>+dmesg), 에뮬레이터 부팅 실패</td>
+</tr>
+<tr>
+<td>🎬 Animation ①</td>
+<td><strong>"Android Boot &amp; Zygote fork(COW)"</strong> — 페이지 공유→쓰기 시 복사 화살표</td>
+</tr>
+<tr>
+<td>🔍 관찰 실습 1-A (20분, 필수)</td>
+<td>시스템 지도: <code>ps -A</code>(zygote/system_server/carservice), <code>getprop</code>, <code>service list | grep -i car</code></td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>계층도에 <strong>CarService(<code>packages/services/Car/</code>)·VHAL(<code>hardware/interfaces/automotive/vehicle/</code>)</strong> 위치 표시</td>
+</tr>
+<tr>
+<td>Quiz (#11)</td>
+<td>Q1 AIDL HAL 이유 / Q2 fork+COW / Q3 SystemServer→Launcher / Q4 부팅 실패 디버깅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch0.html">📝 Ch 0 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+계층 사다리·Zygote/COW·부팅 족보를 방금 배운 직후 점검한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="10451215-chapter-1-binder-ipc-1321">[10:45~12:15] Chapter 1 — Binder 개념 및 IPC 이해 (#13~#21)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim02_binder_concept.html">② Binder IPC 개념</a>
+MMU 격리→커널 우체국→핸들→Socket 비교 — #14~#18과 병행</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의 (#12~13)</td>
+<td>IPC 비교(Socket 2회 vs Binder 1회 복사), Client→Proxy→Driver→Stub→Service, mmap zero-copy</td>
+</tr>
+<tr>
+<td>🎬 Animation ②</td>
+<td><strong>"Binder IPC 데이터 여행"</strong> — copy_from_user 1회 + 서버 mmap 직접 읽기 (Socket과 나란히 비교)</td>
+</tr>
+<tr>
+<td>트러블슈팅 (#17)</td>
+<td><strong>TransactionTooLargeException</strong>(1MB), <strong>DeadObjectException</strong>(<code>linkToDeath()</code>)</td>
+</tr>
+<tr>
+<td>🔍 관찰 실습 1-B (15분, 필수)</td>
+<td><code>dumpsys activity provider</code>(CursorWindow), <code>/sys/kernel/debug/binder/state</code> 헤드 확인</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"차량 서비스가 죽으면 앱은 DeadObjectException — Day 4 워크숍 예고"</td>
+</tr>
+<tr>
+<td>Quiz (#19)</td>
+<td>Q1 TransactionTooLarge / Q2 mmap 1회 복사 / Q3 FLAG_ONEWAY와 콜백</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch1.html">📝 Ch 1 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+MMU 격리·1회 복사·UID 주입·핸들 — Binder 대원칙 5가지를 확인한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="13151445-chapter-2-aidl-2230-calcserviceapp">[13:15~14:45] Chapter 2 — AIDL 실습 (#22~#30) ★ CalcServiceApp</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim11_aidl_compiler.html">⑪ AIDL 컴파일러</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim12_parcel_order.html">⑫ Parcel 순서 함정</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim13_calling_identity.html">⑬ clearCallingIdentity</a>
+⑪은 생성 코드 열람 직전, ⑫는 Parcel 퀴즈(Q2) 직후, ⑬은 권한 검사 설명 시</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의 (#20~24)</td>
+<td>AIDL→Stub/Proxy 자동 생성, <code>Stub.asInterface()</code> 로컬/원격 분기, ★<code>getCallingUid()</code>, <code>clearCallingIdentity()/restore</code></td>
+</tr>
+<tr>
+<td>🛠 Lab 1-1 (60분, 필수)</td>
+<td><strong>CalcServiceApp</strong>: <code>ICalculatorService.aidl</code> → <code>CalculatorService.java</code>(Stub) → <code>ClientActivity.java</code>(bindService). 배포본 기반, add/subtract 직접 구현</td>
+</tr>
+<tr>
+<td>예상 결과</td>
+<td>버튼 → 서비스 계산 → 결과 수신, <code>dumpsys activity services</code>로 바인딩 확인</td>
+</tr>
+<tr>
+<td>자주 나는 오류</td>
+<td>Manifest 미등록, onServiceConnected 전 호출 NPE, Parcelable 순서 불일치</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"CarPropertyManager도 car_service AIDL Proxy를 감싼 Manager일 뿐"</td>
+</tr>
+<tr>
+<td>Quiz (#27)</td>
+<td>Q1 asInterface 동작 / Q2 Parcelable 순서 불일치 / Q3 clearCallingIdentity 시나리오 3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch2.html">📝 Ch 2 워크시트</a></strong> — 5문항 · 약 7~9분 · 자동 채점
+CalcServiceApp 실습 종료 직후, asInterface 분기·Parcel 순서·신원 스위치를 점검한다(정렬 문항 포함). 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="15001630-chapter-3-ipc-3135">[15:00~16:30] Chapter 3 — 간단한 IPC 서비스 개발 (#31~#35)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim03_oneway_callback.html">③ oneway 콜백 왕복</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim14_cursorwindow_fd.html">⑭ CursorWindow FD 우회</a>
+③ 콜백 등록~oneway 실패 씬 → 콜백 실습 직전 / ⑭는 대용량 논의 시 선택</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의</td>
+<td>oneway 특성, ContentProvider+CursorWindow(1MB 우회), <code>android:process</code> 분리 주의 3가지</td>
+</tr>
+<tr>
+<td>🛠 Lab 1-2 (50분, 필수)</td>
+<td><strong>ContentProvider + AIDL 콜백 서비스</strong>(배포 완성본): oneway + <code>ICallback.onResult()</code> 구현, 대용량은 URI 전달로 수정</td>
+</tr>
+<tr>
+<td>🎬 Animation ③</td>
+<td><strong>"oneway 콜백 왕복"</strong></td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"CarPropertyEventCallback도 정확히 이 oneway 콜백 패턴"</td>
+</tr>
+<tr>
+<td>Quiz (#33)</td>
+<td>Q1 Provider의 Binder·CursorWindow / Q2 process 분리 / Q3 FileUriExposedException</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch3.html">📝 Ch 3 워크시트</a></strong> — 4문항 · 약 5~6분 · 자동 채점
+콜백 등록·oneway의 특성과 한계(예외 미전달)를 확인한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="16301700-day-1">[16:30~17:00] Day 1 정리</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim01_boot_zygote.html">① Boot &amp; Zygote(COW)</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim02_binder_concept.html">② Binder IPC 개념</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim11_aidl_compiler.html">⑪ AIDL 컴파일러</a>
+✏️ <strong>이해도 점검</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day1.html">📝 Day 1 워크시트</a>
+복습 재생(자동재생 모드 권장)</p>
+</blockquote>
+<ul>
+<li>핵심 한 줄: "Binder 데이터 복사는 <strong>1회</strong>"</li>
+<li><strong>AOSP 환경 미비자 최종 확인</strong> — Day 2 오후부터 전원 AOSP 실습임을 공지</li>
+<li>과제: CalcServiceApp에 곱셈/나눗셈 + 0 나누기 예외 처리</li>
+</ul>
+<hr />
+<h1 id="day-2-binder-system-service-aosp">🔷 DAY 2 — Binder 심화 &amp; 커스텀 System Service ★전원 AOSP 실습</h1>
+<blockquote>
+<p><strong>오늘의 키워드:</strong> Zero-Copy, JNI, SystemServer, SELinux
+<strong>환경:</strong> 관찰·검증 = <strong>Windows 11 로컬 Automotive Emulator(adb root)</strong> / 코드 수정 = WinSCP 편집기 연동 / 빌드 = <strong>서버 PuTTY(tmux)</strong> <code>sdk_car_x86_64-userdebug</code>
+<strong>실습 문서:</strong> <code>Android_Framework16_Day2_실습자료.md</code> 전체 + <code>jni_build.txt</code> + JNI_test</p>
+</blockquote>
+<h3 id="3457">⏰ 시간 배분 (슬라이드 #34~#57)</h3>
+<table>
+<thead>
+<tr>
+<th>시간</th>
+<th>내용</th>
+<th>실습</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>09:00~09:05</td>
+<td>Day 1 복습 ("복사 몇 번? → 1회")</td>
+<td></td>
+</tr>
+<tr>
+<td>09:05~10:30</td>
+<td>Ch 4: Binder 심화 분석</td>
+<td>실습 4-1, 4-2 (필수)</td>
+</tr>
+<tr>
+<td>10:45~12:15</td>
+<td>Ch 4 마무리 + Ch 5: Java→커널 경로</td>
+<td>실습 4-3, Perfetto, 5-1 (필수)</td>
+</tr>
+<tr>
+<td>13:15~14:45</td>
+<td><strong>Ch 6: 커스텀 System Service 코드 작성</strong></td>
+<td>실습 6-1~6-4 (전원 필수) → 14:40 빌드 시작</td>
+</tr>
+<tr>
+<td>15:00~16:30</td>
+<td>(빌드 대기 병행) Ch 5: JNI 브릿지 + 보안 + SELinux</td>
+<td>JNI_test, 실습 5-2, SELinux (전원 필수)</td>
+</tr>
+<tr>
+<td>16:30~17:00</td>
+<td>빌드 완료분 <strong>실습 6-5 검증</strong> 착수 + 정리</td>
+<td>미완료자는 Day 3 아침 검증 세션</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>📌 운영 핵심(실습자료 강사 메모 확장): <strong>"코드 먼저, 빌드는 백그라운드"</strong> — 6-1~6-4 작성을 오후 1교시로 당기고 14:40에 전원 <code>m framework-minus-apex services -j$(nproc)</code> 시작. 오후 2교시(JNI/보안/SELinux)는 빌드와 병행 가능한 실습으로 구성.
+📌 원격 워크플로: 소스 편집은 <strong>WinSCP 편집기 연동</strong>(저장=자동 업로드), 빌드·adb 검증은 <strong>PuTTY의 tmux 세션 안</strong>에서. 빌드 시작 후 <code>Ctrl+b, d</code>로 분리해두면 PuTTY가 끊겨도 빌드가 계속된다.</p>
+</blockquote>
+<h2 id="09051030-chapter-4-binder-3439">[09:05~10:30] Chapter 4 — Binder 심화 분석 (#34~#39)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim04_mmap_zerocopy.html">④ mmap zero-copy</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim16_1mb_buffer.html">⑯ 1MB 버퍼 초과</a>
+④는 실습 4-1(maps 관찰) 직전 필수 / ⑯은 실습 4-3(TransactionTooLarge) 도입</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의 (#34)</td>
+<td>★mmap Zero-Copy — 커널 버퍼=서버 mmap 동일 물리 페이지. 💡화이트보드에 PTE→Physical Frame</td>
+</tr>
+<tr>
+<td>🎬 Animation ④</td>
+<td><strong>"물리 페이지 공유의 마법"</strong> — <code>vm_insert_page()</code> 강조</td>
+</tr>
+<tr>
+<td>🛠 실습 4-1 (25분, 필수)</td>
+<td><strong>mmap 관찰</strong>: <code>pidof system_server</code> → <code>/proc/&lt;pid&gt;/maps | grep /dev/binder</code>(≈1MB, r--p) → system_server/surfaceflinger/audioserver 비교 → <code>/sys/kernel/debug/binder/state</code> → 기록표(주소/크기/권한/버퍼 수)</td>
+</tr>
+<tr>
+<td>🛠 실습 4-2 (25분, 필수)</td>
+<td><strong>Thread Pool &amp; 데드락</strong>: 스레드 수 관찰, A↔B 순환 동기 호출 조건, 해결 4가지(oneway/방향 단일화/풀 확대/재설계)</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"CarService↔앱 콜백 순환도 같은 패턴 — 차량 콜백은 oneway가 기본"</td>
+</tr>
+<tr>
+<td>Quiz (#39)</td>
+<td>Q1 zero-copy 커널 동작 / Q2 데드락 / Q3 Perfetto 절차</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch4.html">📝 Ch 4 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+실습 4-1~4-3에서 관찰한 r--p·vm_insert_page·1MB 공유 버퍼를 점검한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="10451215-ch-4-chapter-5-java-4047">[10:45~12:15] Ch 4 마무리 + Chapter 5 — Java→커널 경로 (#40~#47)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim15_deadlock.html">⑮ Binder 스레드풀 데드락</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim19_watchdog.html">⑲ Watchdog 60초</a>
+⑮는 실습 4-2 데드락 재현 직전 / ⑲은 Watchdog 설명(#46) 시</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🛠 실습 4-3 (25분, 필수)</td>
+<td><strong>TransactionTooLarge 재현</strong>: 1.5MB byte[] Intent → 예외 확인 → binder/state 버퍼 현황 → 대안표(ashmem/FD/Provider/MemoryFile) 완성</td>
+</tr>
+<tr>
+<td>🛠 Perfetto (20분, 필수)</td>
+<td>(로컬 에뮬레이터) 10초 트레이스(binder_transaction/received/sched_switch) → 로컬 <code>adb pull trace.pb</code> → 바로 ui.perfetto.dev 분석 + SQL — 서버 경유 불필요</td>
+</tr>
+<tr>
+<td>강의 (#47)</td>
+<td>전체 경로: Stub.Proxy → BinderProxy.transact → JNI <code>android_os_BinderProxy_transact</code> → <code>BpBinder::transact</code> → <code>IPCThreadState::talkWithDriver</code> → <code>ioctl(BINDER_WRITE_READ)</code> → <code>binder_ioctl</code></td>
+</tr>
+<tr>
+<td>🛠 실습 5-1 (30분, 필수)</td>
+<td><strong>호출 스택 추적</strong>: ~/aosp에서 <code>Binder.java</code> → <code>android_util_Binder.cpp</code> → <code>BpBinder.cpp</code> → <code>IPCThreadState.cpp</code> grep → <strong>빈칸 호출 스택 다이어그램 완성</strong></td>
+</tr>
+<tr>
+<td>소스 경로</td>
+<td><code>frameworks/base/core/java/android/os/Binder.java</code> · <code>frameworks/base/core/jni/android_util_Binder.cpp</code> · <code>frameworks/native/libs/binder/{BpBinder,IPCThreadState}.cpp</code> · <code>drivers/android/binder.c</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch5.html">📝 Ch 5 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+데드락 성립 조건과 Watchdog 60초 시나리오(진행 순서 정렬 포함)를 점검한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="13151445-chapter-6-system-service-4857">[13:15~14:45] Chapter 6 — 커스텀 System Service 코드 작성 (#48~#57) ★전원 필수</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim05_system_service_birth.html">⑤ System Service의 탄생</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim13_calling_identity.html">⑬ clearCallingIdentity</a>
+⑤의 9개 파일 점등 순서 = 실습 6-1~6-4 진행 순서와 동일 — 코딩 전 전체 재생</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>실습</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>실습 6-1 (20분)</td>
+<td>AIDL 정의</td>
+<td><strong>WinSCP 북마크 경로에서 편집기 연동으로 작성</strong> — <code>frameworks/base/core/java/android/os/custom/IDeviceInfoService.aidl</code> (getDeviceModel/getUptimeSeconds/set·getCustomProperty) + Android.bp filegroup 등록</td>
+</tr>
+<tr>
+<td>실습 6-2 (25분)</td>
+<td>Service 구현</td>
+<td><code>com.android.server.custom.DeviceInfoService extends Stub</code> — ★<code>enforceCallingOrSelfPermission</code>, <code>clearCallingIdentity()/restore</code>, ConcurrentHashMap</td>
+</tr>
+<tr>
+<td>실습 6-3 (25분)</td>
+<td>Manager/등록</td>
+<td><code>DeviceInfoManager</code> + <code>Context.DEVICE_INFO_SERVICE</code> + <code>SystemServiceRegistry.registerService()</code> + SystemServer 등록</td>
+</tr>
+<tr>
+<td>실습 6-4 (15분)</td>
+<td>SELinux 정책</td>
+<td>service_contexts + <code>.te</code> 작성</td>
+</tr>
+<tr>
+<td>14:40</td>
+<td><strong>빌드 시작(전원)</strong></td>
+<td>PuTTY <strong>tmux 세션 안</strong>에서 <code>m framework-minus-apex services -j$(nproc)</code> 시작 후 detach — 백그라운드 진행. 오류 대응: <code>AIDL unknown type</code>→Android.bp 경로 / <code>cannot find symbol</code>→import·clean / <code>neverallow</code>→정책 재검토</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>🎬 Animation ⑤: <strong>"System Service의 탄생"</strong> (생성→ServiceManager 등록→getSystemService Proxy 획득)</li>
+<li>🚗 Automotive: "이 9개 파일 변경이 <strong>CarService가 존재하는 방식 그대로</strong>"</li>
+</ul>
+<h3 id="_9">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch6.html">📝 Ch 6 워크시트</a></strong> — 5문항 · 약 7~9분 · 자동 채점
+6단계 등록 순서 정렬이 핵심 — 코드 작성 완료 후(빌드 대기 중) 푸는 것을 권장한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="15001630-chapter-5-jni-selinux">[15:00~16:30] Chapter 5 계속 — JNI 브릿지 + 보안 + SELinux ★전원 필수 (빌드 대기 병행)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim17_jni_bridge.html">⑰ JNI 브릿지 4형제</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim18_selinux.html">⑱ SELinux avc→해결</a>
+⑰은 JNI_test First 빌드 대기 중 / ⑱은 실습 6-4 sepolicy 작성 직전 필수</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🛠 JNI_test (45분, 전원 필수)</td>
+<td><code>jni_build.txt</code> 절차(Ubuntu, JDK 11): <strong>① First</strong> — <code>javac -h</code> 헤더 생성 → <code>Java_Hello_foo</code> 구현 → <code>libHello.so</code> → <code>java -Djava.library.path=.</code> 실행. <strong>② Second</strong> — native에서 Java 객체 생성(<code>createJniObject</code>, FindClass/NewObject). <strong>③ Third</strong> — <code>JNI_OnLoad</code> + <code>RegisterNatives</code> 동적 등록(함수명 자유). <strong>④ Fourth</strong> — <strong>Invocation API</strong>: C++이 <code>JNI_CreateJavaVM</code>으로 JVM 생성 → Java main 호출(<code>-ljvm</code>, LD_LIBRARY_PATH). 목표: "android_util_Binder.cpp의 JNI 브릿지가 낯설지 않게"</td>
+</tr>
+<tr>
+<td>🛠 실습 5-2 (15분, 필수)</td>
+<td><strong>Binder 보안 검증</strong>: <code>service call activity 1</code> → <code>transaction_log</code>에서 커널 주입 UID/PID 확인 — "userspace 위변조 불가"</td>
+</tr>
+<tr>
+<td>🛠 SELinux 실습 (25분, 전원 필수)</td>
+<td><strong>avc denied 디버깅</strong>: <code>dmesg/logcat | grep "avc:.*denied"</code> → <code>audit2allow -p out/.../sepolicy</code> 규칙 생성(개발 전용) → <code>system/sepolicy/{public,private}</code> neverallow 충돌 grep → 5단계 흐름도 정리(수집→분석→생성→충돌확인→빌드검증)</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"VHAL도 AIDL HAL — 동일 Binder 경로. SELinux 거부는 차량 서비스 연동 실패의 단골 원인"</td>
+</tr>
+<tr>
+<td>Quiz (#47)</td>
+<td>Java→커널 경로 / HandlerThread 위임 / Watchdog ANR</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_jni_selinux.html">📝 JNI &amp; SELinux 워크시트</a></strong> — 6문항 · 약 8~10분 · 자동 채점
+JNI 이름 규칙·Invocation API와 SELinux 5단계·avc 4요소 해석을 점검한다 — 실습 6-4 직전 필수 통과. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="16301700-6-5-day-2">[16:30~17:00] 실습 6-5 검증 착수 + Day 2 정리 ★전원 필수</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim29_remote_workflow.html">㉙ 원격 빌드 워크플로</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim05_system_service_birth.html">⑤ System Service의 탄생</a>
+✏️ <strong>이해도 점검</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day2.html">📝 Day 2 워크시트</a>
+㉙의 [빌드완료]→전송→검증 구간과 실제 작업을 나란히 진행</p>
+</blockquote>
+<p>빌드 완료자부터 즉시 검증(미완료자는 <strong>Day 3 09:00 검증 세션</strong>에서 완료). <strong>서버 → WinSCP → 로컬 에뮬레이터</strong> 3단계:</p>
+<pre><code class="language-bash"># [서버/WinSCP] 산출물 다운로드 (B-4 매핑표):
+#   $OUT/system/framework/framework.jar, services.jar → Windows 작업 폴더
+
+# [로컬 Windows] -writable-system 으로 구동된 에뮬레이터에:
+adb root &amp;&amp; adb remount
+adb shell cp /system/framework/services.jar /data/local/tmp/services.jar.orig   # 원본 백업
+adb push framework.jar services.jar /system/framework/
+adb reboot &amp;&amp; adb wait-for-device &amp;&amp; adb shell getprop sys.boot_completed  # &quot;1&quot;
+
+# [로컬 검증]
+adb shell service check device_info        # found
+adb shell service call device_info 1       # 모델명 Parcel(UTF-16)
+adb shell service call device_info 2       # uptime long
+adb shell dumpsys device_info              # 상태 덤프
+adb logcat | grep avc                      # SELinux 거부 없음
+</code></pre>
+<blockquote>
+<p>⚠️ 부팅 루프 시: Cold Boot → <code>adb remount</code> → <code>.orig</code> 복원. 반복 실패 시 B-4의 "이미지 세트 전체 교체" 대안 적용 — 이 판단 과정 자체가 트러블슈팅 훈련.</p>
+</blockquote>
+<ul>
+<li><strong>Pass/Fail 테스트 표</strong> 5항목 제출 (등록/call 1/call 2/dumpsys/avc)</li>
+<li>종합 과제: ① Binder 성능 분석 보고서(mmap/Thread Pool/Perfetto 상위 5/failed_transaction_log) ② DeviceInfoService 확장(getMemoryInfo·RemoteCallbackList·Rate Limiting) ③ 보안 코드 리뷰(InsecureService 5개 문제)</li>
+</ul>
+<hr />
+<h1 id="day-3-framework-core-overlay-jetpack-car-api">🔷 DAY 3 — Framework Core &amp; Overlay &amp; Jetpack (+ Car API 입문)</h1>
+<blockquote>
+<p><strong>오늘의 키워드:</strong> startActivity의 여정, RRO/SRO, OEM Customization
+<strong>환경:</strong> Automotive Emulator + Android Studio / 09:00 AOSP 검증 세션
+<strong>실습 문서:</strong> <code>RRO_example.ipynb</code>, <code>SRO_example.ipynb</code></p>
+</blockquote>
+<h3 id="5883">⏰ 시간 배분 (슬라이드 #58~#83)</h3>
+<table>
+<thead>
+<tr>
+<th>시간</th>
+<th>내용</th>
+<th>실습</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>09:00~09:35</td>
+<td><strong>실습 6-5 검증 완주 세션(전원)</strong> + Day 2 복습</td>
+<td>dumpsys device_info 전원 Pass 확인</td>
+</tr>
+<tr>
+<td>09:35~10:30</td>
+<td>Ch 7: Framework Core 분석</td>
+<td>관찰 3-A</td>
+</tr>
+<tr>
+<td>10:45~12:15</td>
+<td>Ch 8: RRO</td>
+<td>Lab 3-1, 3-2 (필수)</td>
+</tr>
+<tr>
+<td>13:15~14:45</td>
+<td>Ch 9: SRO + 🚗 Car API 입문</td>
+<td>Lab 3-3 (필수)</td>
+</tr>
+<tr>
+<td>15:00~16:00</td>
+<td>Ch 10: Jetpack와 Framework (압축)</td>
+<td>관찰 3-B</td>
+</tr>
+<tr>
+<td>16:00~17:00</td>
+<td>Day 3 정리 / 퀴즈 / HVAC RRO 과제 안내</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="09000935-6-5-pass">[09:00~09:35] 실습 6-5 검증 세션 (전원 Pass 목표)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim05_system_service_birth.html">⑤ System Service의 탄생</a>
+⑤ 마지막 단계(6-5 검증 에필로그)를 Pass/Fail 판정 기준표로 사용</p>
+</blockquote>
+<ul>
+<li>Day 2 빌드 미완료/실패자 우선 지원 (빌드 오류 3종 대응표 활용)</li>
+<li>전원 <code>dumpsys device_info</code> 출력 스크린샷 제출로 완주 확인</li>
+<li>복습 문답: "System Service 추가 시 변경 파일 최소 9개는?"</li>
+</ul>
+<h2 id="09351030-chapter-7-framework-core-5965">[09:35~10:30] Chapter 7 — Framework Core 분석 (#59~#65)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim06_startactivity.html">⑥ startActivity 여정</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim20_anr_lock.html">⑳ ANR lock 추적</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim21_oomadjuster.html">㉑ OomAdjuster 생존게임</a>
+⑥은 #60 콜드 스타트 필수 / ⑳은 ANR(#61) / ㉑은 OOM(#62)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의 (#59)</td>
+<td><code>startActivity()</code> → Instrumentation → <strong>[IPC①]</strong> ATMS → ActivityStarter → (프로세스 없으면) ZygoteProcess.start(<strong>Unix Socket</strong>) → fork → ActivityThread.main → <strong>[IPC②]</strong> attachApplication → <strong>[IPC③]</strong> scheduleLaunchActivity → onCreate/onResume</td>
+</tr>
+<tr>
+<td>강의 (#62)</td>
+<td>OomAdjuster: FOREGROUND(0)/VISIBLE(100)/SERVICE(500)/CACHED(900+)</td>
+</tr>
+<tr>
+<td>강의</td>
+<td>ANR traces.txt 3단계: main 상태 → lock 소유자 → Binder 대기</td>
+</tr>
+<tr>
+<td>🎬 Animation ⑥</td>
+<td><strong>"startActivity()의 여정"</strong> — 4개 프로세스 레인, Binder 화살표 3개 강조</td>
+</tr>
+<tr>
+<td>🔍 관찰 3-A (15분, 필수)</td>
+<td><code>dumpsys activity activities</code>, <code>dumpsys activity processes</code>(oom_adj), logcat Displayed(콜드 vs 웜)</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"부팅 지연 분석 = 이 체인의 병목 찾기"</td>
+</tr>
+<tr>
+<td>Quiz (#65)</td>
+<td>호출 체인 / traces.txt 3가지 / OomAdjuster 기준 5+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch7.html">📝 Ch 7 워크시트</a></strong> — 6문항 · 약 8~10분 · 자동 채점
+콜드 스타트 체인 정렬·ANR 3단 독법·OOM 생존 규칙을 점검한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="10451215-chapter-8-rro-6672-rro_exampleipynb">[10:45~12:15] Chapter 8 — RRO (#66~#72) ★ RRO_example.ipynb</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim07_assetmanager.html">⑦ AssetManager 탐색</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim22_overlay_layers.html">㉒ Overlay 5단 레이어</a>
+⑦(ID 해부·탐색)→㉒(5단 레이어) 연작 — RRO 실습 전 연속 재생</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의</td>
+<td>OMS 등록 → AssetManager 검색 경로 추가(타겟 무수정) → idmap2. 정적 vs 동적 RRO</td>
+</tr>
+<tr>
+<td>🛠 Lab 3-1 (45분, 필수)</td>
+<td><strong>RRO 1차(문자열/색상)</strong>: RROTarget(overlayable.xml 공개) → RROOverlay(<code>hasCode=false</code>, <code>&lt;overlay targetPackage/targetName/priority/isStatic=false&gt;</code>) → <code>cmd overlay enable</code> → "Hello, RRO! 🚀" → <code>cmd overlay list/dump</code> → disable/uninstall</td>
+</tr>
+<tr>
+<td>🛠 Lab 3-2 (30분, 필수)</td>
+<td><strong>RRO 2차(Drawable)</strong>: background_shape(gradient)·ic_target_icon 동일명 오버레이 + overlayable에 drawable 추가</td>
+</tr>
+<tr>
+<td>자주 나는 오류</td>
+<td>targetName 불일치, overlayable 미공개, 앱 재시작 누락</td>
+</tr>
+<tr>
+<td>🎬 Animation ⑦</td>
+<td><strong>"AssetManager의 리소스 탐색"</strong></td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"OEM 차량 UI 브랜딩의 표준 방법 — Day 4 워크숍에서 HvacSimulator에 적용"</td>
+</tr>
+<tr>
+<td>Quiz (#72)</td>
+<td>RRO 메커니즘 / 정적·동적 활용</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_12">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch8.html">📝 Ch 8 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+리소스 ID 해부·qualifier 선택·idmap2 원리 — RRO 실습 결과가 '왜' 그렇게 나왔는지 확인한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="13151445-chapter-9-sro-car-api-7376-sro_exampleipynb">[13:15~14:45] Chapter 9 — SRO + 🚗 Car API 입문 (#73~#76) ★ SRO_example.ipynb</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim22_overlay_layers.html">㉒ Overlay 5단 레이어</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim08_hvac_journey.html">⑧ HVAC 값의 여행</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim23_vhal_subscribe.html">㉓ VHAL 구독 스트림</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim24_carservice_boot.html">㉔ CarService 기동</a>
+㉒은 SRO 우선순위 복습 / ⑧⑨㉔은 Car API 3부작: 왕복→구독→기동</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의</td>
+<td>우선순위: <strong>동적 RRO &gt; 정적 RRO &gt; PRODUCT_PACKAGE_OVERLAYS &gt; DEVICE_PACKAGE_OVERLAYS &gt; 원본</strong> — "SRO로 기본값, RRO로 런타임 덮어쓰기"</td>
+</tr>
+<tr>
+<td>🛠 Lab 3-3 (30분, 필수)</td>
+<td><strong>SRO</strong>: 프로젝트 루트 <code>sro_overlay/res/values</code> 생성 → Gradle 오버레이 등록 → 빌드 시점 교체 확인 → RRO 비교표</td>
+</tr>
+<tr>
+<td>🚗 Car API 입문 (40분)</td>
+<td><code>Car.createCar()</code> → <code>CarPropertyManager</code> → [Binder] CarService → VHAL Property → 차량 신호. 시연+따라하기: <code>dumpsys car_service</code>로 서비스/속성 확인, Property ID 개념(HVAC_TEMPERATURE_SET, PERF_VEHICLE_SPEED, GEAR_SELECTION). 소스: <code>packages/services/Car/</code>, <code>hardware/interfaces/automotive/vehicle/</code></td>
+</tr>
+<tr>
+<td>🎬 Animation ⑧</td>
+<td><strong>"차량 온도 버튼 한 번의 여행"</strong> (App→VHAL 왕복) ★핵심</td>
+</tr>
+<tr>
+<td>Quiz (#76)</td>
+<td>PRODUCT vs DEVICE / SRO+RRO 최종 우선순위</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch9_car.html">📝 Ch 9 &amp; Car API 워크시트</a></strong> — 6문항 · 약 8~10분 · 자동 채점
+오버레이 5단 우선순위와 HVAC 왕복 경로, 두 개의 정렬 문항이 이 챕터의 심장이다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="15001600-chapter-10-jetpack-framework-7783">[15:00~16:00] Chapter 10 — Jetpack와 Framework (#77~#83, 압축)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim27_vsync_framedrop.html">㉗ VSync &amp; Frame Drop</a>
+VSync·jank·gfxinfo percentile — #80 렌더링 파트에서 재생</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의</td>
+<td>Compose: State→Recomposition→Layout→Draw→RenderNode→RenderThread→<strong>Choreographer VSync</strong>. WorkManager 내부(JobScheduler/Room/ForegroundService)</td>
+</tr>
+<tr>
+<td>🔍 관찰 3-B (20분, 필수)</td>
+<td><code>dumpsys gfxinfo &lt;pkg&gt;</code> 프레임 시간, 과도한 Recomposition 유발 전후 비교</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>SystemUI Compose 논점(60fps 크리티컬) — 차량 UI Frame Drop 분석 관점</td>
+</tr>
+<tr>
+<td>Quiz (#83)</td>
+<td>Recomposition-렌더링 연동 / WorkManager API / SystemUI Compose</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch10.html">📝 Ch 10 워크시트</a></strong> — 4문항 · 약 5~6분 · 자동 채점
+16.6ms·Choreographer·percentile — 압축 강의인 만큼 워크시트로 핵심만 고정한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="16001700-day-3">[16:00~17:00] Day 3 정리</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim08_hvac_journey.html">⑧ HVAC 값의 여행</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim22_overlay_layers.html">㉒ Overlay 5단 레이어</a>
+✏️ <strong>이해도 점검</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day3.html">📝 Day 3 워크시트</a>
+HVAC 왕복·오버레이 스택 복습</p>
+</blockquote>
+<ul>
+<li>핵심 한 줄: "startActivity에서 Binder IPC는 <strong>최소 3번</strong>"</li>
+<li><strong>과제(필수):</strong> HvacSimulator를 RRO 타겟으로 개조(overlayable.xml) + 브랜드 색상 오버레이 APK — Day 4 워크숍 S5에서 사용</li>
+</ul>
+<hr />
+<h1 id="day-4-native-systemui-apex-automotive-aosp">🔷 DAY 4 — Native 계층 실전 &amp; SystemUI &amp; APEX &amp; Automotive 종합 ★전원 AOSP 실습</h1>
+<blockquote>
+<p><strong>오늘의 키워드:</strong> Native Binder, SurfaceFlinger, APEX, 계층별 트러블슈팅
+<strong>환경:</strong> 오전~오후 1교시 = <strong>전원 AOSP</strong> (<code>sdk_car_x86_64</code>) / 오후 2교시 = Automotive Emulator 워크숍
+<strong>실습:</strong> Native Binder 구현(신설) / surface_test / FloatingOverlayDemo / SplitScreenDemo / <code>apex_build_tutorial.md</code> / HvacSimulator</p>
+</blockquote>
+<h3 id="84115">⏰ 시간 배분 (슬라이드 #84~#115)</h3>
+<table>
+<thead>
+<tr>
+<th>시간</th>
+<th>내용</th>
+<th>실습</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>09:00~09:05</td>
+<td>Day 3 복습 ("startActivity Binder IPC 3회")</td>
+<td></td>
+</tr>
+<tr>
+<td>09:05~10:30</td>
+<td>Ch 11: WindowManager &amp; SystemUI 구조 + 앱 실습</td>
+<td>관찰 4-A, Lab 4-1, 4-2 (필수)</td>
+</tr>
+<tr>
+<td>10:45~12:15</td>
+<td><strong>실습 N-1: Native Binder 서비스 구현</strong></td>
+<td>전원 필수 (신설)</td>
+</tr>
+<tr>
+<td>13:15~14:45</td>
+<td><strong>실습 N-2: surface_test</strong> + Ch 12: APEX 빌드</td>
+<td>전원 필수</td>
+</tr>
+<tr>
+<td>15:00~16:30</td>
+<td>🚗 Automotive 종합 트러블슈팅 워크숍</td>
+<td>HvacSimulator (전원)</td>
+</tr>
+<tr>
+<td>16:30~17:00</td>
+<td>전체 정리 / 최종 Quiz / 수료 (#115)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="09051030-chapter-11-windowmanager-system-ui-8491">[09:05~10:30] Chapter 11 — WindowManager &amp; System UI 구조 (#84~#91)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim25_window_tree.html">㉕ Window 트리 줌인</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim26_multidisplay.html">㉖ 멀티 디스플레이</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim09_surfaceflinger.html">⑨ SurfaceFlinger 합성</a>
+㉕(#91 트리)→㉖(멀티 디스플레이)→⑨(SF 합성) 순서 권장</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의 (#91)</td>
+<td>RootWindowContainer → <strong>DisplayContent(물리 디스플레이 1개=1인스턴스)</strong> → TaskDisplayArea → Task → ActivityRecord → <strong>WindowState(Surface 소유, SurfaceFlinger Layer 대응)</strong> + WindowToken(STATUS/NAV BAR)</td>
+</tr>
+<tr>
+<td>강의</td>
+<td>Window Leak: destroy 후 Dialog 미제거 → "has leaked window". 디버깅: logcat → StrictMode → <code>dumpsys window windows</code> orphaned</td>
+</tr>
+<tr>
+<td>🎬 Animation ⑨</td>
+<td><strong>"한 프레임의 합성"</strong> — WindowState Surface들 → SurfaceFlinger Layer 합성 → 디스플레이 + VSync</td>
+</tr>
+<tr>
+<td>🔍 관찰 4-A (10분, 필수)</td>
+<td><code>dumpsys window windows</code> 트리 스케치 ↔ <code>dumpsys SurfaceFlinger</code> Layer 대응</td>
+</tr>
+<tr>
+<td>🛠 Lab 4-1 (20분, 필수)</td>
+<td><strong>FloatingOverlayDemo</strong>: <code>Settings.canDrawOverlays()</code> → FloatingService가 WindowManager에 View 추가. 권한: <code>adb shell appops set com.example.floatingoverlaydemo SYSTEM_ALERT_WINDOW allow</code> → dumpsys에서 TYPE_APPLICATION_OVERLAY 확인</td>
+</tr>
+<tr>
+<td>🛠 Lab 4-2 (15분, 필수)</td>
+<td><strong>SplitScreenDemo</strong>: left/right FrameLayout 분할(MEDIA 화면 등) — "차량 센터 디스플레이 분할 UI 축소판", Window 트리에서 관찰</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"<strong>멀티 디스플레이(Cluster/Center) = DisplayContent 여러 개</strong>"</td>
+</tr>
+<tr>
+<td>Quiz (#91)</td>
+<td>Window 계층 관계 / Window Leak 디버깅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch11.html">📝 Ch 11 워크시트</a></strong> — 6문항 · 약 8~10분 · 자동 채점
+Window 트리 정렬과 멀티 디스플레이 — dumpsys window 관찰 4-A 직후 푼다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="10451215-n-1-native-binder">[10:45~12:15] 실습 N-1 — Native Binder 서비스 구현 ★전원 필수 (신설)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim02_binder_concept.html">② Binder IPC 개념</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim17_jni_bridge.html">⑰ JNI 브릿지 4형제</a>
+코딩 전 ②(핸들/onTransact 개념)·⑰(Invocation API) 복습 — N-1은 이 둘의 실전판</p>
+</blockquote>
+<p><strong>목표:</strong> Java 없이 C++ libbinder만으로 서비스를 만들어 ServiceManager에 등록하고 호출 — "Binder는 언어가 아니라 커널 메커니즘"을 체득.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>내용 (70분)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Step 1 (15분)</td>
+<td><strong>인터페이스/서버 작성</strong>: <code>~/aosp/vendor/edu/native_hello/</code> 에 <code>main.cpp</code> — <code>BBinder</code> 상속 <code>HelloService</code>(onTransact에서 code=1 처리, Parcel read/write) 또는 AIDL <code>--lang=cpp</code> 방식. <code>defaultServiceManager()-&gt;addService(String16("hello.native"), new HelloService())</code> → <code>ProcessState::self()-&gt;startThreadPool()</code> → <code>IPCThreadState::self()-&gt;joinThreadPool()</code></td>
+</tr>
+<tr>
+<td>Step 2 (10분)</td>
+<td><strong>Android.bp</strong>: <code>cc_binary { name: "native_hello", srcs: ["main.cpp"], shared_libs: ["libbinder","libutils","liblog"] }</code></td>
+</tr>
+<tr>
+<td>Step 3 (10분)</td>
+<td><strong>빌드→전송→배포</strong>: (서버 PuTTY) <code>mm</code> → (WinSCP) <code>$OUT/system/bin/native_hello</code> 다운로드 → (로컬) <code>adb root</code> → <code>adb push native_hello /data/local/tmp/</code> → <code>adb shell chmod +x /data/local/tmp/native_hello</code> → 실행</td>
+</tr>
+<tr>
+<td>Step 4 (15분)</td>
+<td><strong>검증</strong>: <code>adb shell service list | grep hello.native</code> → <code>adb shell service call hello.native 1 s16 "world"</code> → Parcel 응답 확인. SELinux 거부 시 개발용 <code>adb shell setenforce 0</code> 후 재시도 → <strong>Day 2 SELinux 실습과 연결</strong>하여 정식 정책이 필요한 이유 토론</td>
+</tr>
+<tr>
+<td>Step 5 (10분)</td>
+<td><strong>client.cpp(선택)</strong>: <code>getService()</code> → <code>transact()</code> 직접 호출 — Java Proxy가 하던 일을 손으로</td>
+</tr>
+<tr>
+<td>자주 나는 오류</td>
+<td>addService 권한 거부(root/permissive 필요), String16 인코딩, joinThreadPool 누락으로 즉시 종료</td>
+</tr>
+<tr>
+<td>🚗 Automotive</td>
+<td>"VHAL 데몬이 정확히 이 구조의 native 서비스 — <code>hardware/interfaces/automotive/vehicle/</code>의 서비스 등록 코드와 비교"</td>
+</tr>
+<tr>
+<td>소스 참고</td>
+<td><code>frameworks/native/libs/binder/</code>(BBinder/BpBinder/IPCThreadState), Day 2 실습 5-1 스택과 연결</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>✏️ N-1의 워크시트는 N-2와 통합(<a href="https://imguru-mooc.github.io/android_framework/animations/ws_native.html">📝 N-1/N-2 Native</a>) — 다음 세션(N-2) 종료 시 함께 푼다.</p>
+</blockquote>
+<h2 id="13151445-n-2-surface_test-chapter-12-apex">[13:15~14:45] 실습 N-2 surface_test + Chapter 12 APEX ★전원 필수</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim09_surfaceflinger.html">⑨ SurfaceFlinger 합성</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim10_apex.html">⑩ APEX staged/롤백</a>
+⑨의 'My Cpp Surface 난입' 단계가 N-2 성공 판정 장면 / ⑩은 APEX 강의 도입</p>
+</blockquote>
+<h3 id="n-2-surface_test-35">실습 N-2 — surface_test (35분, 전원 필수)</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Step 1</td>
+<td>배포된 <code>surface_test/surface1/main.cpp</code> 확인: <code>SurfaceComposerClient</code> 연결 → <code>createSurface("My Cpp Surface", 400, 400, RGBA_8888)</code> → Transaction(setLayer 최상위/setPosition(100,100)/show/apply) → <code>ANativeWindow_lock</code> → 픽셀 버퍼 붉은색 채우기 → <code>unlockAndPost</code></td>
+</tr>
+<tr>
+<td>Step 2</td>
+<td><code>Android.bp</code>(cc_binary, shared_libs: libgui/libui/libbinder/libutils) 작성 → (서버) <code>mm</code> → (WinSCP) <code>$OUT/system/bin/surface1</code> 다운로드 → (로컬) <code>adb push /data/local/tmp/</code> → <code>chmod +x</code> → 실행</td>
+</tr>
+<tr>
+<td>Step 3</td>
+<td><strong>화면 확인(로컬)</strong>: 로컬 Automotive Emulator 화면에서 <strong>붉은 400×400 Surface</strong>를 바로 확인 → <code>adb shell dumpsys SurfaceFlinger</code>에서 "My Cpp Surface" Layer 찾기</td>
+</tr>
+<tr>
+<td>핵심 메시지</td>
+<td>"앱 없이도 화면에 그릴 수 있다 = SurfaceFlinger가 화면의 진짜 주인. 클러스터 경고 아이콘·부팅 애니메이션이 이 계층"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="chapter-12-apex-20-35-apex_build_tutorialmd">Chapter 12 — APEX (강의 20분 + 실습 35분, 전원 필수) ★ apex_build_tutorial.md</h3>
+<table>
+<thead>
+<tr>
+<th>구성</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>강의</td>
+<td>APEX 구조, apexd: <code>sys.boot_completed</code> 확인 후 영구 활성화 / 부팅 실패 시 factory 롤백, Project Mainline(30+ 모듈: conscrypt/resolv/media), 한계(커널·HAL 범위 밖). GKI/Kernel은 개요만(심화 과정 분리 유지)</td>
+</tr>
+<tr>
+<td>🛠 Lab 4-3 (35분, 전원 필수)</td>
+<td><strong>simple APEX 빌드</strong>: apex_manifest·키 생성(openssl RSA 확인) → <code>system/sepolicy/apex/com.example.simple-file_contexts</code> → <code>lunch sdk_car_x86_64</code> + <code>mm</code> → <code>out/.../system/apex/com.example.simple.apex</code> 확인 → (WinSCP) <code>$OUT/system/apex/com.example.simple.apex</code> 다운로드 → (로컬) <code>adb push com.example.simple.apex /data/</code> → <code>su; mount -o remount,rw /system; cp → /system/apex/; reboot</code> → <code>/apex/com.example.simple/bin/simple_apex_binary</code> 실행</td>
+</tr>
+<tr>
+<td>트러블슈팅</td>
+<td><code>adb install --staged</code> 에러 → <code>logcat -s apexd</code> → <code>pm get-stagedsessions</code> → 에러표(VERIFICATION_FAILURE/VERSION_DOWNGRADE/PRE·POST_REBOOT) → 최후: <code>/data/apex/active/</code> 제거 후 재부팅</td>
+</tr>
+<tr>
+<td>🎬 Animation ⑩</td>
+<td><strong>"APEX의 안전장치"</strong> — staged→재부팅→성공 시 영구화/실패 시 롤백 분기</td>
+</tr>
+<tr>
+<td>Quiz</td>
+<td>apexd 활성화·롤백 / 설치 실패 디버깅 / Mainline 보안 영향</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_native.html">📝 N-1/N-2 Native 워크시트</a></strong> — 5문항 · 약 6~8분 · 자동 채점
+<strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_ch12.html">📝 Ch 12 APEX 워크시트</a></strong> — 4문항 · 약 5~6분 · 자동 채점
+N-1·N-2 두 실습의 통합 점검 + APEX staged/롤백. 두 워크시트 모두 이 세션 종료 시 완료한다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="15001630-automotive-hvacsimulator">[15:00~16:30] 🚗 Automotive 종합 트러블슈팅 워크숍 ★ HvacSimulator (전원)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim30_layer_detective.html">㉚ 계층 탐정 게임</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim28_linktodeath.html">㉘ linkToDeath</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim20_anr_lock.html">⑳ ANR lock 추적</a> · <a href="https://imguru-mooc.github.io/android_framework/animations/anim24_carservice_boot.html">㉔ CarService 기동</a>
+㉚(계층 탐정 게임)이 워크숍 본체 — S1~S6 사건을 게임으로 먼저 1회 플레이 후 실기 / ㉘은 S2, ⑳은 ANR 계열, ㉔은 S2 무대 배경</p>
+</blockquote>
+<p><strong>목표:</strong> 4일간 만든 모든 계층(App/AIDL/System Service/Native/SELinux/RRO)을 관통하는 "어느 계층 문제인가?" 판단 훈련.</p>
+<p><strong>준비:</strong> HvacSimulator(좌/우 온도, FAN LOW/MEDIUM/HIGH 회전 애니메이션, °C/°F, 온도별 배경색) + Day 3 과제 HVAC RRO 오버레이.</p>
+<table>
+<thead>
+<tr>
+<th>시나리오</th>
+<th>증상</th>
+<th>기대 분석 경로</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1. 속성 반영 지연</td>
+<td>온도 버튼 반응 늦음</td>
+<td>App(메인 스레드) → gfxinfo → Binder 지연(Perfetto) → CarService(dumpsys car_service)</td>
+</tr>
+<tr>
+<td>S2. 서비스 호출 실패</td>
+<td>DeadObjectException</td>
+<td>logcat → <code>service list</code> 생존 확인 → linkToDeath → 서비스 재시작 여부</td>
+</tr>
+<tr>
+<td>S3. 부팅 지연</td>
+<td>앱이 부팅 후 한참 뒤 표시</td>
+<td>sys.boot_completed → SystemServer 타임라인 → 콜드 스타트 체인 병목</td>
+</tr>
+<tr>
+<td>S4. UI Frame Drop</td>
+<td>FAN HIGH 애니메이션 끊김</td>
+<td>gfxinfo → dumpsys SurfaceFlinger → RenderThread/VSync</td>
+</tr>
+<tr>
+<td>S5. 브랜딩 미적용</td>
+<td>RRO 켰는데 색 그대로</td>
+<td><code>cmd overlay list/dump</code> → overlayable 공개 → 앱 재시작</td>
+</tr>
+<tr>
+<td>S6. 권한 거부</td>
+<td>SecurityException/avc denied</td>
+<td>logcat avc → 권한 → <strong>Day 2 audit2allow 절차 실전 적용</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>진행:</strong> 조별 2개 시나리오(30분) → 흐름도(증상→계층→도구→원인→해결) 발표(40분) → 강사 총평(20분). 발표에는 반드시 "어떤 명령을 왜 실행했고, 어디를 봤고, 무엇이 정상인지" 포함.</p>
+<h3 id="_17">✏️ 챕터 마무리 — 디지털 워크시트</h3>
+<blockquote>
+<p><strong><a href="https://imguru-mooc.github.io/android_framework/animations/ws_workshop.html">📝 종합 워크숍 워크시트</a></strong> — 6문항 · 약 8~10분 · 자동 채점
+수료 판정용 — 마지막 정렬 문항(계층 조사 순서)이 곧 과정의 최종 목표다. ㉚ 게임과 실기를 마친 뒤 푼다. 채점 즉시 전 문항 해설이 공개되고, 틀린 문항의 🎬 링크로 해당 애니메이션 장면을 바로 복습할 수 있다. 80점 미만이면 복습 후 재도전(↺ 다시 풀기). 이름 입력 후 🖨 인쇄/제출로 결과를 제출한다.</p>
+</blockquote>
+<h2 id="16301700-115">[16:30~17:00] 전체 정리 (#115)</h2>
+<blockquote>
+<p>🎬 <strong>수업 자료(온라인)</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/anim30_layer_detective.html">㉚ 계층 탐정 게임</a>
+✏️ <strong>이해도 점검</strong>: <a href="https://imguru-mooc.github.io/android_framework/animations/ws_day4.html">📝 Day 4 워크시트</a>
+최종 사고 흐름(App→…→Kernel) 정렬 문항으로 수료 점검</p>
+</blockquote>
+<ul>
+<li>최종 메시지: <strong>"Android의 모든 것은 Binder로 연결되어 있고, Binder를 이해하면 시스템의 어떤 문제든 디버깅할 수 있다."</strong></li>
+<li>최종 사고 흐름: 차량 기능 문제 → App? → Framework? → Binder? → CarService? → VHAL? → Kernel/HW?</li>
+<li>4일 완주 체크리스트: Java AIDL 서비스(Day1) ✚ 커스텀 System Service(Day2) ✚ RRO/SRO(Day3) ✚ <strong>Native Binder·Surface·APEX(Day4)</strong> — "전 계층을 한 번씩 직접 만들어 봤다"</li>
+<li>배포물: 트러블슈팅 슬라이드 + 명령어 치트시트</li>
+</ul>
+<hr />
+<h1 id="_18">📦 실습 코드 배포 안내 (챕터별)</h1>
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>챕터</th>
+<th>배포 파일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ch 2</td>
+<td><code>ICalculatorService.aidl</code>, <code>CalculatorService.java</code>, <code>ClientActivity.java</code> (CalcServiceApp)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Ch 3</td>
+<td>ContentProvider + AIDL 콜백 서비스 완성본</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Ch 4~6</td>
+<td><code>Android_Framework16_Day2_실습자료.md</code> + AOSP 패치 diff(AIDL/Service/SystemServer/SELinux)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Ch 5</td>
+<td>JNI_test First~Fourth + <code>jni_build.txt</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Ch 8~9</td>
+<td><code>RRO_example.ipynb</code>, <code>SRO_example.ipynb</code> (RROTarget/RROOverlay)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>N-1</td>
+<td>native_hello 스켈레톤(main.cpp + Android.bp) + client.cpp 참고본</td>
+</tr>
+<tr>
+<td>4</td>
+<td>N-2</td>
+<td>surface_test(main.cpp) + Android.bp</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Ch 12</td>
+<td><code>apex_build_tutorial.md</code>, 커스텀 QS 타일 + RRO 오버레이 APK 샘플</td>
+</tr>
+<tr>
+<td>4</td>
+<td>워크숍</td>
+<td>HvacSimulator 프로젝트</td>
+</tr>
+</tbody>
+</table>
+<h1 id="animation-v2">🎬 Animation 제작 목록 v2 (검토·확장판)</h1>
+<blockquote>
+<p>형식(지침 §10): 학습목표 / 전체 Scene / Scene별 객체 / 호출 방향 / 움직이는 화살표 / 강조 영역 / 화면 텍스트 / 강사 설명 Script
+우선순위: <strong>A</strong>=수업 진행상 필수 제작, <strong>B</strong>=이해도 향상 강력 권장, <strong>C</strong>=여유 시 제작(정지 다이어그램으로 대체 가능)</p>
+</blockquote>
+<h2 id="a-10">A. 기존 10건 재검토 결과</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>주제</th>
+<th>배치</th>
+<th>검토 결과 / 보완 사항</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>Android Boot &amp; Zygote fork(COW)</td>
+<td>Day1 Ch0</td>
+<td>✅ 적합. COW 장면에 "쓰기 순간 Page Fault → 그 페이지만 복사" 클로즈업 씬 추가 (퀴즈 Q2 직결)</td>
+</tr>
+<tr>
+<td>②</td>
+<td>Binder IPC 데이터 여행 (1회 vs Socket 2회)</td>
+<td>Day1 Ch1</td>
+<td>✅ 적합. <strong>④와 역할 분담 명확화</strong>: ②=개념·비교 수준(주니어 첫 노출), ④=같은 씬의 물리 페이지 줌인 — 동일 에셋 재사용으로 제작비 절감</td>
+</tr>
+<tr>
+<td>③</td>
+<td>oneway 콜백 왕복</td>
+<td>Day1 Ch3</td>
+<td>✅ 적합. "예외가 Client에 전달되지 않는" 실패 씬 1개 추가 권장</td>
+</tr>
+<tr>
+<td>④</td>
+<td>mmap 물리 페이지 공유 (PTE 줌인)</td>
+<td>Day2 Ch4</td>
+<td>✅ 적합(★핵심 슬라이드 #34 대응). <code>vm_insert_page()</code> 표기 + 실습 4-1의 <code>/proc/maps</code> 실제 출력과 매칭되는 주소 오버레이 추가</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>System Service의 탄생</td>
+<td>Day2 Ch6</td>
+<td>⚠ 보완: v2.2에서 6-x가 <strong>전원 필수</strong>가 되었으므로 "변경 파일 9개가 하나씩 켜지는" 도입 씬 + 6-5 <code>service check → dumpsys</code> 검증 에필로그 씬 추가</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>startActivity()의 여정 (4-레인)</td>
+<td>Day3 Ch7</td>
+<td>✅ 적합. Binder 화살표 3개(빨강)와 Zygote <strong>Unix Socket</strong>(다른 색) 구분 유지. 퀴즈 Q1 정답 체인과 1:1 대응시킬 것</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td>AssetManager 리소스 탐색</td>
+<td>Day3 Ch8</td>
+<td>⚠ 보완: 신규 ㉒(SRO+RRO 5단 우선순위)와 <strong>연작 구성</strong> — ⑦=탐색 메커니즘, ㉒=우선순위 레이어. idmap2 매핑 씬 1컷 추가</td>
+</tr>
+<tr>
+<td>⑧</td>
+<td>차량 온도 버튼 한 번의 여행</td>
+<td>Day3 Car API</td>
+<td>✅ 적합(★최우선). 신규 ㉓(구독 스트림)과 시리즈로: ⑧=setProperty 왕복, ㉓=subscribe 이벤트</td>
+</tr>
+<tr>
+<td>⑨</td>
+<td>SurfaceFlinger 한 프레임의 합성</td>
+<td>Day4 Ch11</td>
+<td>✅ 적합. <strong>실습 N-2 연계 강화</strong>: "My Cpp Surface" Layer가 합성에 끼어드는 씬을 넣어 실습 결과와 애니메이션이 일치하게</td>
+</tr>
+<tr>
+<td>⑩</td>
+<td>APEX staged 설치·롤백 분기</td>
+<td>Day4 Ch12</td>
+<td>✅ 적합. <code>/apex/</code> 마운트 네임스페이스 씬 1컷 추가 (Lab 4-3에서 <code>ls /apex/com.example.simple/</code> 결과와 매칭)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>검토 총평:</strong> 10건 모두 배치는 유효. 다만 v2.2에서 <strong>전원 필수로 승격된 실습(JNI, Native Binder, SELinux, 데드락/1MB 재현)</strong> 을 직접 다루는 애니메이션이 없어 아래 확장분으로 보강.</p>
+<h2 id="b-20-1130">B. 추가 애니메이션 20건 (⑪~㉚)</h2>
+<h3 id="day-1">Day 1 보강</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>주제</th>
+<th>배치</th>
+<th>우선</th>
+<th>핵심 장면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⑪</td>
+<td><strong>AIDL 컴파일러의 마법</strong></td>
+<td>Ch2 (#20~24)</td>
+<td>B</td>
+<td><code>.aidl</code> 한 파일에서 Stub/Proxy가 생성되고, <code>asInterface()</code>가 같은 프로세스면 Stub 직행·다른 프로세스면 Proxy 생성으로 갈라지는 분기 (퀴즈 Q1 직결)</td>
+</tr>
+<tr>
+<td>⑫</td>
+<td><strong>Parcel 직렬화 순서의 함정</strong></td>
+<td>Ch2 퀴즈 Q2</td>
+<td>C</td>
+<td>write(name→age) vs read(age→name) 불일치 시 String 칸에 int가 꽂히며 데이터가 뒤바뀌는 버그 재연 — "크래시 없이 값만 변질"의 공포</td>
+</tr>
+<tr>
+<td>⑬</td>
+<td><strong>clearCallingIdentity 신원 스위치</strong></td>
+<td>Ch2/Day2 Ch6 공용</td>
+<td>B</td>
+<td>앱 UID(10055) 명찰을 달고 들어온 호출이 서비스 안에서 system(1000) 명찰로 교체 → finally에서 반드시 원복. 원복 누락 시 이후 호출 신원이 꼬이는 실패 씬</td>
+</tr>
+<tr>
+<td>⑭</td>
+<td><strong>CursorWindow — FD로 우회하기</strong></td>
+<td>Ch3</td>
+<td>C</td>
+<td>1MB Binder 문을 통과 못 하는 대용량 데이터가, FD(열쇠)만 Binder로 건네고 실제 데이터는 공유메모리 통로로 흐르는 장면</td>
+</tr>
+</tbody>
+</table>
+<h3 id="day-2-v22">Day 2 보강 (v2.2 전원 필수 실습 대응)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>주제</th>
+<th>배치</th>
+<th>우선</th>
+<th>핵심 장면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⑮</td>
+<td><strong>Thread Pool 데드락</strong></td>
+<td>실습 4-2</td>
+<td><strong>A</strong></td>
+<td>A의 스레드 15개가 전부 B 응답 대기 중 → B가 A를 호출하지만 받아줄 스레드 없음 → 전원 정지. oneway 전환 순간 한 방향이 풀리며 해소되는 비교 씬</td>
+</tr>
+<tr>
+<td>⑯</td>
+<td><strong>1MB 버퍼가 넘치는 순간</strong></td>
+<td>실습 4-3</td>
+<td>B</td>
+<td>트랜잭션들이 1MB 버퍼(물탱크)에 쌓이다 1.5MB Bitmap이 들어오며 TransactionTooLargeException 범람 — 실습 재현 코드와 동일 수치 사용</td>
+</tr>
+<tr>
+<td>⑰</td>
+<td><strong>JNI 브릿지 통과</strong></td>
+<td>JNI_test</td>
+<td><strong>A</strong></td>
+<td>First~Fourth 4단 구성: 정적 등록(javah 헤더) → native의 Java 객체 생성 → <code>RegisterNatives</code> 동적 연결 → <strong>역방향(Invocation API: C++가 JVM을 소환)</strong>. 마지막에 <code>android_util_Binder.cpp</code>가 같은 원리임을 오버랩</td>
+</tr>
+<tr>
+<td>⑱</td>
+<td><strong>SELinux 문지기</strong></td>
+<td>SELinux 실습</td>
+<td><strong>A</strong></td>
+<td>source context가 target context 문 앞에서 정책 조회 → 거부되며 <code>avc: denied</code> 로그 발행 → audit2allow가 규칙 초안 제시 → <strong>neverallow 벽</strong>에 막히는 분기까지 (5단계 흐름도와 1:1)</td>
+</tr>
+<tr>
+<td>⑲</td>
+<td><strong>Watchdog — 60초의 감시자</strong></td>
+<td>Ch5</td>
+<td>B</td>
+<td>어떤 스레드가 lock을 쥔 채 DB 쿼리에 잠김 → Watchdog 타이머 60초 도달 → system_server 전체가 쓰러지고 재부팅 — "내 서비스 하나가 기기를 재부팅시킨다"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="day-3">Day 3 보강</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>주제</th>
+<th>배치</th>
+<th>우선</th>
+<th>핵심 장면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⑳</td>
+<td><strong>ANR lock 추적</strong></td>
+<td>Ch7 퀴즈 Q2</td>
+<td>B</td>
+<td>traces.txt를 따라 main(Blocked) → lock 소유자(tid 15) → 그 스레드의 Binder 대기까지 사슬을 따라가는 탐정 시점 — 분석 순서 ①②③ 자막</td>
+</tr>
+<tr>
+<td>㉑</td>
+<td><strong>OomAdjuster 생존 게임</strong></td>
+<td>Ch7 (#62)</td>
+<td>C</td>
+<td>adj 0/100/500/900 줄에 선 프로세스들, 메모리 게이지가 차오르면 CACHED(900+)부터 퇴장 — persistent는 절대 안 죽는 대비</td>
+</tr>
+<tr>
+<td>㉒</td>
+<td><strong>SRO+RRO 5단 우선순위 레이어</strong></td>
+<td>Ch9</td>
+<td><strong>A</strong></td>
+<td>원본 → DEVICE → PRODUCT → 정적 RRO → 동적 RRO가 위로 쌓이며 최종 색이 결정되는 레이어 케이크. <code>cmd overlay enable/disable</code> 시 실시간 변화</td>
+</tr>
+<tr>
+<td>㉓</td>
+<td><strong>VHAL 구독 스트림</strong></td>
+<td>Car API</td>
+<td><strong>A</strong></td>
+<td><code>registerCallback(PERF_VEHICLE_SPEED)</code> 이후 속도 값이 ECU→VHAL→CarService→앱으로 연속 이벤트로 흘러오는 스트림 — ⑧(set 왕복)과 짝</td>
+</tr>
+<tr>
+<td>㉔</td>
+<td><strong>CarService의 기동</strong></td>
+<td>Car API/Ch0 연결</td>
+<td>B</td>
+<td>SystemServer → CarServiceHelperService → <code>com.android.car</code> 프로세스 기동 → VHAL 바인딩 — Day 2에 만든 DeviceInfoService 기동 씬(⑤)과 나란히 비교</td>
+</tr>
+</tbody>
+</table>
+<h3 id="day-4">Day 4 보강</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>주제</th>
+<th>배치</th>
+<th>우선</th>
+<th>핵심 장면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>㉕</td>
+<td><strong>Window 트리 줌인</strong></td>
+<td>Ch11 (#91)</td>
+<td>B</td>
+<td>실제 에뮬레이터 스크린샷 위에 RootWindowContainer→DisplayContent→Task→ActivityRecord→WindowState 트리가 오버레이로 그려지고, 관찰 4-A의 <code>dumpsys window</code> 출력과 노드가 1:1 하이라이트</td>
+</tr>
+<tr>
+<td>㉖</td>
+<td><strong>멀티 디스플레이 — Cluster &amp; Center</strong></td>
+<td>Ch11 Automotive</td>
+<td>B</td>
+<td>DisplayContent 2개가 각각 클러스터/센터 화면을 소유, 앱이 특정 디스플레이로 launch되는 흐름 — SplitScreenDemo 실습으로 자연 연결</td>
+</tr>
+<tr>
+<td>㉗</td>
+<td><strong>VSync와 Frame Drop</strong></td>
+<td>Ch10/워크숍 S4</td>
+<td><strong>A</strong></td>
+<td>Choreographer가 16.6ms 박자로 지휘, 한 프레임 작업이 박자를 넘기는 순간 화면이 janky하게 밀리는 장면 — HvacSimulator FAN HIGH 끊김(S4) 분석의 사전 지식</td>
+</tr>
+<tr>
+<td>㉘</td>
+<td><strong>linkToDeath — 죽음의 알림</strong></td>
+<td>워크숍 S2</td>
+<td>B</td>
+<td>서비스 프로세스가 쓰러지는 순간 커널이 사망 통지를 뿌리고, linkToDeath 등록 Client는 binderDied 콜백을, 미등록 Client는 다음 호출에서 DeadObjectException을 받는 대비</td>
+</tr>
+<tr>
+<td>㉙</td>
+<td><strong>원격 실습 3단 워크플로</strong></td>
+<td>Day0/Day1 오리엔테이션</td>
+<td><strong>A</strong> (v2.2 신규)</td>
+<td>WinSCP 편집·업로드 → PuTTY(tmux) 빌드 → WinSCP 산출물 다운로드 → 로컬 에뮬레이터 adb push의 순환 루프. tmux detach 후에도 서버에서 빌드가 도는 씬 + SSH 키 인증 자물쇠 씬</td>
+</tr>
+<tr>
+<td>㉚</td>
+<td><strong>계층 탐정 — 문제는 어디에?</strong></td>
+<td>Day4 워크숍 오프닝</td>
+<td><strong>A</strong></td>
+<td>증상 카드가 나오면 App?→Framework?→Binder?→CarService?→VHAL?→Kernel? 의사결정 트리를 따라 내려가며 각 갈림길에 대응 도구(logcat/dumpsys/Perfetto) 아이콘이 켜지는 <strong>인터랙티브</strong>(클릭형 HTML) — 최종 목표 사고 흐름 그 자체</td>
+</tr>
+</tbody>
+</table>
+<h2 id="c-0-html-30">C-0. 구현 현황 (인터랙티브 HTML 패키지 — 30건 전체 배포)</h2>
+<p>배포 위치: https://imguru-mooc.github.io/android_framework/animations/ — 목록 페이지: animation.html(애니메이션, 챕터 순) / workshop.html(워크시트). 개별 파일은 파일명 그대로 접근(예: https://imguru-mooc.github.io/android_framework/animations/anim30_layer_detective.html)</p>
+<p>전체 30건이 <code>animations/</code> 폴더에 <strong>인터랙티브 HTML</strong>(단계 재생·자동재생·패킷 애니메이션·실명령 출력 포함)로 구현 완료. 목록 페이지: <code>animation.html</code>(챕터 순) / <code>workshop.html</code>(워크시트).</p>
+<table>
+<thead>
+<tr>
+<th>구현 파일</th>
+<th>애니메이션</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>anim04_mmap_zerocopy.html</td>
+<td>④ mmap Zero-Copy</td>
+</tr>
+<tr>
+<td>anim06_startactivity.html</td>
+<td>⑥ startActivity 여정</td>
+</tr>
+<tr>
+<td>anim08_hvac_journey.html</td>
+<td>⑧ 차량 온도 버튼 왕복</td>
+</tr>
+<tr>
+<td>anim15_deadlock.html</td>
+<td>⑮ Thread Pool 데드락</td>
+</tr>
+<tr>
+<td>anim17_jni_bridge.html</td>
+<td>⑰ JNI 브릿지 4단</td>
+</tr>
+<tr>
+<td>anim18_selinux.html</td>
+<td>⑱ SELinux 문지기</td>
+</tr>
+<tr>
+<td>anim22_overlay_layers.html</td>
+<td>㉒ 오버레이 5단 레이어</td>
+</tr>
+<tr>
+<td>anim23_vhal_subscribe.html</td>
+<td>㉓ VHAL 구독 스트림</td>
+</tr>
+<tr>
+<td>anim27_vsync_framedrop.html</td>
+<td>㉗ VSync/Frame Drop</td>
+</tr>
+<tr>
+<td>anim29_remote_workflow.html</td>
+<td>㉙ 원격 3단 워크플로</td>
+</tr>
+<tr>
+<td>anim30_layer_detective.html</td>
+<td>㉚ 계층 탐정 (S1~S6 추리 게임)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="c-0-1">C-0-1. 챕터별 디지털 워크시트 (구현 완료)</h2>
+<p><code>animations/ws_day1~4.html</code> — 각 Day 종료(또는 다음 날 아침 복습) 시 사용하는 자동 채점 워크시트(각 12문항). 챕터별 워크시트(ws_ch*.html 16종)와 문항이 겹치지 않도록 개수·유형을 달리해 재출제한 종합판이다. 챕터별 섹션 구성, 문항 유형: 선택형/빈칸/호출 순서 정렬/매칭. 문항마다 관련 애니메이션 링크, 채점 시 전 문항 해설 공개 + 챕터별 부분 점수, 80점 통과 기준, 인쇄/제출 모드 지원. Day 4 워크시트의 마지막 문항은 교육 최종 목표인 계층 조사 순서 정렬이다.</p>
+<h2 id="c">C. 제작 우선순위 요약</h2>
+<table>
+<thead>
+<tr>
+<th>순위</th>
+<th>목록</th>
+<th>사유</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A (8건, 필수)</strong></td>
+<td>⑧ ⑮ ⑰ ⑱ ㉒ ㉓ ㉗ ㉙ ㉚ (+기존 ④⑥)</td>
+<td>전원 필수 실습의 직전 도입부에 사용되거나(⑮⑰⑱㉒㉓), 과정 전체의 뼈대(⑧㉗㉙㉚)</td>
+</tr>
+<tr>
+<td><strong>B (권장)</strong></td>
+<td>⑪ ⑬ ⑯ ⑲ ⑳ ㉔ ㉕ ㉖ ㉘</td>
+<td>퀴즈·트러블슈팅 정답 이해를 크게 도움</td>
+</tr>
+<tr>
+<td><strong>C (여유 시)</strong></td>
+<td>⑫ ⑭ ㉑</td>
+<td>정지 다이어그램 + 강사 구두 설명으로 대체 가능</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>제작 방식 통일 권장: 수업용 인터랙티브는 HTML/CSS/JS(재생/일시정지/단계 버튼), 단순 흐름은 PPT Animation, 순서도형은 Mermaid. 모든 애니메이션은 마지막 프레임을 <strong>정지 다이어그램(요약 1장)</strong> 으로 남겨 복습 자료로 재사용.</p>
+</blockquote>
+<h1 id="v2">✅ v2 실습 구분 요약 — 전원 필수로 전환된 항목 표시(★)</h1>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>항목</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>전원 필수 (Windows/Emulator)</td>
+<td>관찰 1-A/1-B/3-A/3-B/4-A, Lab 1-1(CalcServiceApp), 1-2(콜백), 실습 4-1~4-3, Perfetto, 5-1, Lab 3-1~3-3(RRO/SRO), 4-1(FloatingOverlay), 4-2(SplitScreen), 종합 워크숍</td>
+</tr>
+<tr>
+<td>전원 필수 (AOSP/Ubuntu) ★v2 전환</td>
+<td><strong>실습 6-1~6-5(커스텀 System Service)</strong>, <strong>SELinux audit2allow</strong>, <strong>JNI_test First~Fourth</strong>, <strong>실습 N-1(Native Binder 구현, 신설)</strong>, <strong>실습 N-2(surface_test)</strong>, <strong>Lab 4-3(APEX 빌드)</strong></td>
+</tr>
+<tr>
+<td>후속 심화 과정 분리 (유지)</td>
+<td>SELinux Policy 전체 작성, GKI/Kleaf/Kernel Module, 16KB Page 대응, Kernel Binder Driver 내부</td>
+</tr>
+</tbody>
+</table>
+<h1 id="v2-aosp">⚠️ v2 운영 리스크 &amp; 대응 (전원 AOSP 필수화에 따른 주의)</h1>
+<ol>
+<li><strong>환경 격차:</strong> 최초 full build 미완료 수강생 1명이 전체 진도를 막을 수 있음 → Day 0 완료를 수강 조건으로 명시하고, 예비로 <strong>사전 빌드된 out/ 포함 서버 계정 2~3개</strong> 준비.</li>
+<li><strong>빌드 시간:</strong> Day 2 오후 <code>m framework-minus-apex services</code>가 머신별 20분~1시간+ 편차 → "코드 먼저, 빌드는 백그라운드" 원칙 + Day 3 아침 검증 세션으로 흡수.</li>
+<li><strong>난이도:</strong> Native Binder/JNI는 주니어에게 부담 → 모든 코드는 <strong>완성 스켈레톤 배포 + 빈칸 채우기</strong> 방식, 성공 기준을 "실행되어 로그가 보인다"로 명확화.</li>
+<li><strong>SELinux:</strong> <code>setenforce 0</code>은 개발 환경 전용임을 매 실습마다 고지하고, 정식 정책 작성은 심화 과정으로 연결.</li>
+<li><strong>빌드 서버 동시 부하:</strong> 전원이 14:40에 동시 빌드 시 서버 과부하 가능 → <code>-j</code> 값을 1인당 코어 수로 제한(예: <code>-j8</code>)하거나 2개 조로 5분 시차 시작. ccache 공유 설정으로 재빌드 단축.</li>
+<li><strong>PuTTY 세션 끊김:</strong> keepalive 설정에도 네트워크 단절 가능 → <strong>모든 빌드는 tmux 필수</strong> 규칙화. 끊긴 수강생은 <code>tmux attach -t build</code>로 즉시 복귀하는 절차를 Day 1에 리허설.</li>
+<li><strong>파일 전송 실수:</strong> WinSCP로 잘못된 경로 업로드/덮어쓰기 방지 — 실습 코드는 반드시 북마크 경로에서만 편집, 원본 백업(<code>.orig</code>) 습관화. 서버 홈 용량 쿼터 모니터링(out 디렉토리 비대화).</li>
+<li><strong>빌드-이미지 버전 불일치:</strong> 서버 AOSP 산출 jar을 로컬 AVD에 push할 때 이미지 빌드 차이로 부팅 루프 가능 → 로컬 AVD를 API 36 최신으로 통일, <code>.orig</code> 복원 절차 리허설, 최악 시 이미지 세트 전체 교체(강사 가이드) 준비.</li>
+<li><strong>SSH 키 관리:</strong> 개인키(.ppk) 유출·분실 대응 절차(공개키 폐기·재발급)를 Day 0 안내문에 포함. passphrase 미설정 금지, Pageant 사용 시 이석 시 잠금.</li>
+</ol></article></body></html>

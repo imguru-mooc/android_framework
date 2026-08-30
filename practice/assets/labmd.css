@@ -1,0 +1,48 @@
+:root{--ink:#1f2937;--sub:#6b7280;--blue:#2563eb;--blue-bg:#eff6ff;--green:#059669;--green-bg:#ecfdf5;
+--amber-bg:#fffbeb;--red:#dc2626;--line:#e5e7eb;--card:#fff;--bg:#f6f8fb;--code-bg:#0f172a;--code-txt:#e2e8f0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI','Malgun Gothic',sans-serif;line-height:1.75;font-size:14.5px}
+header{position:sticky;top:0;z-index:20;background:#ffffffee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header .id{background:var(--blue);color:#fff;font-weight:800;font-size:13px;padding:4px 12px;border-radius:999px}
+header h1{font-size:16.5px;margin:0;flex:1}
+header .prog{font-size:12.5px;color:var(--sub)}header .prog b{color:var(--blue)}
+header button{background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer}
+#wrap{max-width:920px;margin:0 auto;padding:22px 20px 90px}
+#wrap>h1{display:none}
+h2{font-size:17px;margin:34px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h4{font-size:14px;color:var(--blue);margin:16px 0 6px}
+a{color:var(--blue)}
+strong{color:#0f172a}
+blockquote{background:var(--blue-bg);border:1px solid #bfdbfe;border-left:5px solid var(--blue);border-radius:0 12px 12px 0;padding:11px 16px;margin:14px 0}
+blockquote p{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0;display:block;overflow-x:auto}
+th{background:#f1f5f9;text-align:left;padding:8px 11px;border:1px solid var(--line);font-size:12.5px;white-space:nowrap}
+td{border:1px solid var(--line);padding:8px 11px;vertical-align:top;background:#fff}
+code{font-family:Consolas,'D2Coding',monospace;font-size:13px;background:#eef2f7;color:#1e3a8a;padding:1px 6px;border-radius:5px}
+pre{position:relative;background:var(--code-bg);border-radius:10px;padding:13px 15px;overflow-x:auto;margin:10px 0}
+pre code{background:none;color:var(--code-txt);padding:0;font-size:13px;line-height:1.65}
+.copy{position:absolute;top:8px;right:8px;background:#334155;color:#e2e8f0;border:0;border-radius:7px;font-size:11px;padding:4px 10px;cursor:pointer}
+.copy:hover{background:var(--blue)}
+kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-size:12px}
+/* step cards (자동 생성) */
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:14px 0;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.step-h{display:flex;align-items:center;gap:12px;padding:13px 16px;background:#fafbfe;border-bottom:1px solid var(--line)}
+.step-h .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.step-h h3{margin:0;font-size:14.5px;flex:1}
+.step-h .t{font-size:11.5px;color:var(--sub);white-space:nowrap}
+.step-h input{width:19px;height:19px;accent-color:var(--green);cursor:pointer}
+.step.done .step-h{background:var(--green-bg)}.step.done .step-h .n{background:var(--green)}
+.step-b{padding:12px 18px 15px}
+/* emoji 지시 문단 → 색 박스 */
+p.expect{background:var(--green-bg);border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;font-size:13.5px}
+p.warnbox{background:var(--amber-bg);border:1px solid #fde68a;border-left:5px solid #f59e0b;border-radius:0 10px 10px 0;padding:10px 14px;font-size:13.5px}
+p.tip{background:var(--blue-bg);border-radius:10px;padding:11px 15px;font-size:13.5px}
+p.gui{border:1px dashed #cbd5e1;border-radius:10px;padding:10px 14px;background:#f8fafc;font-size:13.5px}
+p.why{font-size:12.9px;color:#475569;background:#f3f4f6;border-radius:8px;padding:7px 12px}
+/* Pass 체크리스트 (- [ ] 작업 목록) */
+ul.contains-task-list{list-style:none;padding:14px 18px;margin:14px 0;background:var(--card);border:2px solid var(--green);border-radius:14px}
+.task-list-item{padding:4px 0;font-size:14px}
+.task-list-item input{width:17px;height:17px;accent-color:var(--green);margin-right:9px;vertical-align:-3px}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--sub)}
+#err{max-width:760px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;text-align:center}
+@media print{header{display:none}body{background:#fff}.copy{display:none}}

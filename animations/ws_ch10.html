@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📝 Ch 10 — Jetpack & 렌더링 워크시트</title>
+<link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
+<header><h1>📝 챕터 워크시트 — Ch 10 — Jetpack & 렌더링</h1><span class="tag">Day 3</span></header>
+<div id="ws"></div>
+<script src="assets/ws.js"></script>
+<script>initWS({"chapters": [{"title": "Ch 10 — Jetpack & 렌더링", "short": "Ch", "sub": "16.6ms의 규율", "questions": [{"type": "blank", "q": "60Hz에서 한 프레임 허용 시간 약 ___ms (소수 한 자리)", "ans": ["16.6", "16.7", "16"], "exp": "Choreographer가 VSync 박자마다 input→anim→layout→draw를 지휘합니다.", "anim": "anim27_vsync_framedrop.html"}, {"type": "blank", "q": "VSync 박자에 맞춰 프레임 작업을 지휘하는 Framework 클래스는?", "ans": ["Choreographer", "코레오그래퍼"], "exp": "doFrame()이 한 박자의 시작 — systrace/Perfetto에서 그대로 보입니다.", "anim": "anim27_vsync_framedrop.html"}, {"type": "mc", "q": "jank(프레임 드랍)의 정확한 정의는?", "opts": ["앱 크래시", "한 프레임 작업이 시한을 넘겨 SurfaceFlinger가 직전 프레임을 반복 표시", "메모리 부족", "터치 무반응"], "ans": 1, "exp": "사용자 눈에는 '순간 멈칫' — 28ms짜리 프레임 하나가 범인.", "anim": "anim27_vsync_framedrop.html"}, {"type": "mc", "q": "dumpsys gfxinfo에서 평균보다 중요한 지표는?", "opts": ["Total frames", "90th/95th/99th percentile과 Janky 비율", "UID", "버전"], "ans": 1, "exp": "jank는 꼬리에서 드러납니다 — 평균 8ms여도 99th 34ms면 끊깁니다.", "anim": "anim27_vsync_framedrop.html"}]}]});</script></body></html>

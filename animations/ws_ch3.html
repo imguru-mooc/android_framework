@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📝 Ch 3 — 콜백 & oneway 워크시트</title>
+<link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
+<header><h1>📝 챕터 워크시트 — Ch 3 — 콜백 & oneway</h1><span class="tag">Day 1</span></header>
+<div id="ws"></div>
+<script src="assets/ws.js"></script>
+<script>initWS({"chapters": [{"title": "Ch 3 — 콜백 & oneway", "short": "Ch", "sub": "서버→클라이언트 역방향 통신", "questions": [{"type": "mc", "q": "oneway 메서드의 특징으로 옳은 것은?", "opts": ["reply 없이 즉시 리턴, 서버측에서 앱측 예외를 받을 수 없음", "리턴값 가능", "같은 대상 호출 순서도 무보장", "Socket으로 전송"], "ans": 0, "exp": "비동기 non-blocking — 시스템→앱 콜백의 표준. 같은 노드에 대한 순서는 유지됩니다.", "anim": "anim03_oneway_callback.html"}, {"type": "mc", "q": "시스템 서비스가 앱 콜백에 oneway를 쓰는 결정적 이유는?", "opts": ["코드 간결", "느린 앱이 시스템 스레드를 붙잡지 못하게", "보안", "Parcel 무제한"], "ans": 1, "exp": "동기 콜백은 스레드 인질극 → ⑮ 데드락의 서막이 됩니다.", "anim": "anim15_deadlock.html"}, {"type": "mc", "q": "콜백 보관에 List 대신 RemoteCallbackList를 쓰는 이유는?", "opts": ["더 빠른 자료구조라서", "죽은 앱의 콜백 Binder를 자동 정리(linkToDeath)하고 broadcast 동시성을 처리해줘서", "제네릭 지원", "직렬화 가능"], "ans": 1, "exp": "㉘의 linkToDeath 관리를 내장한 시스템 서비스 표준 부품입니다.", "anim": "anim03_oneway_callback.html"}, {"type": "blank", "q": "Binder 객체 참조를 Parcel에 싣는 메서드는 write___Binder()", "ans": ["strong", "writestrongbinder"], "exp": "<code>writeStrongBinder</code> — 콜백 등록이 int가 아닌 '객체 참조'를 전달하는 방법입니다."}]}]});</script></body></html>

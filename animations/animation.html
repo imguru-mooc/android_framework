@@ -1,0 +1,100 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🎬 애니메이션 목록 — Android Automotive Framework</title><style>
+body{background:#0d1117;color:#dbe4f3;font-family:'Segoe UI','Malgun Gothic',sans-serif;margin:0}
+header{background:#10182b;border-bottom:1px solid #2a3552;padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;color:#ffb454}
+header a.sw{color:#4fc3f7;text-decoration:none;font-size:13px;background:#14283d;padding:5px 12px;border-radius:12px}
+header a.sw:hover{text-decoration:underline}
+#wrap{max-width:1080px;margin:18px auto;padding:0 16px 50px}
+h2{font-size:15.5px;color:#ffb454;border-left:4px solid #ffb454;padding-left:10px;margin:26px 0 10px}
+h3{font-size:13.5px;color:#7ee787;margin:18px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+th{background:#1a2440;color:#8b98b8;text-align:left;padding:7px 10px;font-size:12px}
+td{border-bottom:1px solid #1d2740;padding:7px 10px;vertical-align:top}
+a.play{color:#0d1117;background:#4fc3f7;text-decoration:none;font-weight:700;font-size:12px;padding:3px 12px;border-radius:10px;white-space:nowrap}
+a.play:hover{background:#7ee787}
+.day{color:#8b98b8;font-size:12px}
+.note{background:#101a30;border-left:3px solid #4fc3f7;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.7;color:#b9c8e8;margin:10px 0}
+</style></head><body>
+<header><h1>🎬 인터랙티브 애니메이션 (30건 · 챕터 순)</h1><a class="sw" href="workshop.html">✏️ 워크시트 목록 →</a><a class="sw" href="../practice/practice.html">🛠 실습 자료</a><a class="sw" href="labs.html">📋 실습 리스트</a><a class="sw" href="curriculum.html">📚 커리큘럼</a></header>
+<div id="wrap">
+<div class="note">커리큘럼 진행 순서(Day·챕터) 그대로 배치했습니다. 각 애니메이션은 ◀/▶ 단계 이동, 자동재생, 키보드 ←→를 지원합니다. '투입 시점'은 강의 슬라이드/실습과의 연결 지점입니다.</div>
+<h2>Day 0 · 공통 — 원격 빌드 워크플로</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>㉙</td><td>원격 빌드 워크플로 (SSH키→WinSCP→tmux→검증)</td><td class="day">Day 2~4 매 빌드 세션 시작 시 재생</td><td><a class="play" href="anim29_remote_workflow.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 1 · Ch 0 — 아키텍처 & 부팅</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>①</td><td>Android Boot & Zygote fork(COW)</td><td class="day">#8~#10</td><td><a class="play" href="anim01_boot_zygote.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 1 · Ch 1 — Binder 개념 & IPC</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>②</td><td>Binder IPC 데이터 여행 (개념·비교편)</td><td class="day">#14~#18 · ④의 도입부</td><td><a class="play" href="anim02_binder_concept.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 1 · Ch 2 — AIDL & Parcel</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑪</td><td>AIDL 컴파일러의 마법 (Stub·Proxy·asInterface)</td><td class="day">생성 코드 열람 직전</td><td><a class="play" href="anim11_aidl_compiler.html">▶ 재생</a></td></tr>
+<tr><td>⑫</td><td>Parcel 직렬화 순서의 함정</td><td class="day">퀴즈 Q2 직후</td><td><a class="play" href="anim12_parcel_order.html">▶ 재생</a></td></tr>
+<tr><td>⑬</td><td>clearCallingIdentity 신원 명찰</td><td class="day">권한 검사 설명 시 · Ch6 공용</td><td><a class="play" href="anim13_calling_identity.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 1 · Ch 3 — 콜백 & oneway</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>③</td><td>oneway 콜백 왕복 (RemoteCallbackList)</td><td class="day">콜백 실습 직전</td><td><a class="play" href="anim03_oneway_callback.html">▶ 재생</a></td></tr>
+<tr><td>⑭</td><td>CursorWindow — FD로 1MB 우회</td><td class="day">대용량 논의 시 · ⑯의 해법편</td><td><a class="play" href="anim14_cursorwindow_fd.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 2 · Ch 4 — Binder 심화 (커널)</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>④</td><td>Binder mmap zero-copy (1회 복사)</td><td class="day">실습 4-1 직전 필수</td><td><a class="play" href="anim04_mmap_zerocopy.html">▶ 재생</a></td></tr>
+<tr><td>⑯</td><td>1MB 버퍼가 넘치는 순간</td><td class="day">실습 4-3 도입</td><td><a class="play" href="anim16_1mb_buffer.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 2 · Ch 5 — SystemServer · 스레드 · Watchdog</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑮</td><td>Binder 스레드풀 데드락</td><td class="day">실습 4-2 직전</td><td><a class="play" href="anim15_deadlock.html">▶ 재생</a></td></tr>
+<tr><td>⑲</td><td>Watchdog — 60초의 감시자</td><td class="day">#46</td><td><a class="play" href="anim19_watchdog.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 2 · Ch 6 — 커스텀 System Service</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑤</td><td>System Service의 탄생 (9개 파일)</td><td class="day">실습 6-1~6-5와 동일 순서 · 코딩 전 전체 재생</td><td><a class="play" href="anim05_system_service_birth.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 2 · JNI & SELinux</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑰</td><td>JNI 브릿지 4형제 (First~Fourth)</td><td class="day">JNI 빌드 대기 중</td><td><a class="play" href="anim17_jni_bridge.html">▶ 재생</a></td></tr>
+<tr><td>⑱</td><td>SELinux — avc denied에서 해결까지</td><td class="day">실습 6-4 직전 필수</td><td><a class="play" href="anim18_selinux.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 3 · Ch 7 — Framework Core</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑥</td><td>startActivity 대장정 (콜드 스타트)</td><td class="day">#60 필수</td><td><a class="play" href="anim06_startactivity.html">▶ 재생</a></td></tr>
+<tr><td>⑳</td><td>ANR lock 추적 — traces 3단 독법</td><td class="day">#61</td><td><a class="play" href="anim20_anr_lock.html">▶ 재생</a></td></tr>
+<tr><td>㉑</td><td>OomAdjuster 생존 게임</td><td class="day">#62</td><td><a class="play" href="anim21_oomadjuster.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 3 · Ch 8 — 리소스 & RRO</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑦</td><td>AssetManager 리소스 탐색</td><td class="day">㉒의 전편 · 연속 재생</td><td><a class="play" href="anim07_assetmanager.html">▶ 재생</a></td></tr>
+<tr><td>㉒</td><td>Overlay 5단 레이어 (idmap2)</td><td class="day">RRO 실습 직전</td><td><a class="play" href="anim22_overlay_layers.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 3 · Ch 9 — SRO & 🚗 Car API</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑧</td><td>HVAC 값의 여행 (setProperty 왕복)</td><td class="day">Car API 3부작 1</td><td><a class="play" href="anim08_hvac_journey.html">▶ 재생</a></td></tr>
+<tr><td>㉓</td><td>VHAL 구독 스트림 (registerCallback)</td><td class="day">Car API 3부작 2</td><td><a class="play" href="anim23_vhal_subscribe.html">▶ 재생</a></td></tr>
+<tr><td>㉔</td><td>CarService의 기동 (SystemServer→VHAL)</td><td class="day">Car API 3부작 3 · S2 무대</td><td><a class="play" href="anim24_carservice_boot.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 3 · Ch 10 — Jetpack & 렌더링</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>㉗</td><td>VSync & Frame Drop (gfxinfo)</td><td class="day">#80</td><td><a class="play" href="anim27_vsync_framedrop.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 4 · Ch 11 — WindowManager & SystemUI</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>㉕</td><td>Window 트리 줌인 (dumpsys와 1:1)</td><td class="day">#91 · 관찰 4-A</td><td><a class="play" href="anim25_window_tree.html">▶ 재생</a></td></tr>
+<tr><td>㉖</td><td>멀티 디스플레이 — Cluster & Center</td><td class="day">SplitScreenDemo 연계</td><td><a class="play" href="anim26_multidisplay.html">▶ 재생</a></td></tr>
+<tr><td>⑨</td><td>SurfaceFlinger 한 프레임의 합성</td><td class="day">N-2 연계</td><td><a class="play" href="anim09_surfaceflinger.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 4 · N-1/N-2 & Ch 12 — Native & APEX</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>⑩</td><td>APEX — staged 설치·자동 롤백</td><td class="day">APEX 강의 도입 · Lab 4-3</td><td><a class="play" href="anim10_apex.html">▶ 재생</a></td></tr>
+</table>
+<h2>Day 4 · 종합 트러블슈팅 워크숍</h2>
+<table><tr><th style="width:46px">번호</th><th>제목</th><th>투입 시점</th><th style="width:92px">실행</th></tr>
+<tr><td>㉚</td><td>계층 탐정 — 문제는 어디에? (S1~S6게임)</td><td class="day">워크숍 본체 · 실기 전 1회 플레이</td><td><a class="play" href="anim30_layer_detective.html">🎮 플레이</a></td></tr>
+<tr><td>㉘</td><td>linkToDeath — 죽음의 알림</td><td class="day">S2 사전 지식</td><td><a class="play" href="anim28_linktodeath.html">▶ 재생</a></td></tr>
+</table>
+</div></body></html>

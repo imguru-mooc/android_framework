@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📝 Ch 12 — APEX 워크시트</title>
+<link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
+<header><h1>📝 챕터 워크시트 — Ch 12 — APEX</h1><span class="tag">Day 4</span></header>
+<div id="ws"></div>
+<script src="assets/ws.js"></script>
+<script>initWS({"chapters": [{"title": "Ch 12 — APEX", "short": "Ch", "sub": "시스템 부품의 안전한 교체", "questions": [{"type": "mc", "q": "APEX staged 설치가 '재부팅 후 활성화'인 이유는?", "opts": ["다운로드 속도", "부팅 초기에 마운트되는 구성요소라 실행 중 교체가 위험 + 부팅 실패 시 자동 롤백 위해", "서명 검증 시간", "APK 충돌"], "ans": 1, "exp": "checkpoint 기반 시험 부팅 — 실패하면 이전 버전 자동 복귀.", "anim": "anim10_apex.html"}, {"type": "blank", "q": "활성 APEX 내용의 런타임 마운트 경로: /___/<모듈명>/", "ans": ["apex"], "exp": "이미지 복사가 아니라 마운트 네임스페이스로 제공됩니다.", "anim": "anim10_apex.html"}, {"type": "mc", "q": "새 APEX로 부팅이 크래시 루프에 빠지면?", "opts": ["벽돌", "checkpoint rollback으로 이전 버전 자동 복귀 — 기기는 살아 돌아옴", "공장 초기화 필요", "커널 교체"], "ans": 1, "exp": "차량 OTA의 마지막 안전망 — '업데이트하다 벽돌'을 막는 장치.", "anim": "anim10_apex.html"}, {"type": "blank", "q": "staged 세션 확인: adb shell pm ___", "ans": ["get-stagedsessions", "getstagedsessions"], "exp": "state=staged ready=true를 확인 후 재부팅 — Lab 4-3 절차.", "anim": "anim10_apex.html"}]}]});</script></body></html>

@@ -1,0 +1,74 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🛠 실습 자료 목록 — Android Automotive Framework</title>
+<style>
+body{margin:0;background:#f6f8fb;color:#1f2937;font-family:'Segoe UI','Malgun Gothic',sans-serif;line-height:1.7;font-size:14.5px}
+header{position:sticky;top:0;background:#ffffffee;backdrop-filter:blur(6px);border-bottom:1px solid #e5e7eb;padding:12px 22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:16.5px;margin:0;flex:1}
+header a{color:#2563eb;text-decoration:none;font-size:12.5px;background:#eff6ff;padding:5px 12px;border-radius:12px}
+#wrap{max-width:920px;margin:0 auto;padding:20px 20px 80px}
+h2{font-size:15.5px;color:#2563eb;border-left:4px solid #2563eb;padding-left:10px;margin:26px 0 10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:#fff}
+th{background:#f1f5f9;text-align:left;padding:8px 11px;border:1px solid #e5e7eb;font-size:12.5px}
+td{border:1px solid #e5e7eb;padding:8px 11px}
+a.open{color:#fff;background:#2563eb;text-decoration:none;font-weight:700;font-size:12px;padding:4px 12px;border-radius:10px;white-space:nowrap}
+a.open:hover{background:#059669}
+.note{background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:10px 14px;font-size:12.8px;color:#334155;margin:10px 0}
+</style></head><body>
+<header><h1>🛠 실습 자료 목록 (36건)</h1>
+<a href="../animations/animation.html">🎬 애니메이션</a>
+<a href="../animations/workshop.html">✏️ 워크시트</a>
+<a href="../animations/curriculum.html">📚 커리큘럼</a></header>
+<div id="wrap">
+<div class="note">각 문서는 md 원본(lab_XX.md)을 뷰어(lab.html)가 렌더링합니다 — 강사는 md만 수정하면 즉시 반영됩니다. 스텝 체크박스로 진행률을 확인하며 따라 하세요.</div>
+<h2>Day 0 — 사전 준비 (전원 필수)</h2>
+<table><tr><th style="width:70px">ID</th><th>실습</th><th style="width:96px">열기</th></tr>
+<tr><td><b>D0-1</b></td><td>Windows 11 로컬 환경 구축</td><td><a class="open" href="lab.html?file=lab_d0_1.md">📄 열기</a></td></tr>
+<tr><td><b>D0-2</b></td><td>AOSP 최초 full build (tmux)</td><td><a class="open" href="lab.html?file=lab_d0_2.md">📄 열기</a></td></tr>
+<tr><td><b>D0-3</b></td><td>PuTTY 설정</td><td><a class="open" href="lab.html?file=lab_d0_3.md">📄 열기</a></td></tr>
+<tr><td><b>D0-4</b></td><td>SSH 키 페어 생성·등록</td><td><a class="open" href="lab.html?file=lab_d0_4.md">📄 열기</a></td></tr>
+<tr><td><b>D0-5</b></td><td>WinSCP 편집기 연동 + 북마크</td><td><a class="open" href="lab.html?file=lab_d0_5.md">📄 열기</a></td></tr>
+<tr><td><b>D0-6</b></td><td>JNI용 JDK 11 확인</td><td><a class="open" href="lab.html?file=lab_d0_6.md">📄 열기</a></td></tr>
+</table>
+<h2>Day 1 — 아키텍처 & Binder·AIDL</h2>
+<table><tr><th style="width:70px">ID</th><th>실습</th><th style="width:96px">열기</th></tr>
+<tr><td><b>D1-0</b></td><td>환경 삼중 점검 + tmux 3명령</td><td><a class="open" href="lab.html?file=lab_d1_0.md">📄 열기</a></td></tr>
+<tr><td><b>D1-1</b></td><td>관찰 1-A 시스템 지도</td><td><a class="open" href="lab.html?file=lab_d1_1.md">📄 열기</a></td></tr>
+<tr><td><b>D1-2</b></td><td>관찰 1-B Binder 흔적</td><td><a class="open" href="lab.html?file=lab_d1_2.md">📄 열기</a></td></tr>
+<tr><td><b>D1-3</b></td><td>Lab 1-1 CalcServiceApp</td><td><a class="open" href="lab.html?file=lab_d1_3.md">📄 열기</a></td></tr>
+<tr><td><b>D1-4</b></td><td>Lab 1-2 oneway 콜백 + URI 우회</td><td><a class="open" href="lab.html?file=lab_d1_4.md">📄 열기</a></td></tr>
+</table>
+<h2>Day 2 — Binder 심화 & 커스텀 System Service (전원 AOSP)</h2>
+<table><tr><th style="width:70px">ID</th><th>실습</th><th style="width:96px">열기</th></tr>
+<tr><td><b>D2-1</b></td><td>4-1 mmap Zero-Copy 관찰</td><td><a class="open" href="lab.html?file=lab_d2_1.md">📄 열기</a></td></tr>
+<tr><td><b>D2-2</b></td><td>4-2 Thread Pool & 데드락</td><td><a class="open" href="lab.html?file=lab_d2_2.md">📄 열기</a></td></tr>
+<tr><td><b>D2-3</b></td><td>4-3 TransactionTooLarge 재현</td><td><a class="open" href="lab.html?file=lab_d2_3.md">📄 열기</a></td></tr>
+<tr><td><b>D2-4</b></td><td>5-1 호출 스택 추적</td><td><a class="open" href="lab.html?file=lab_d2_4.md">📄 열기</a></td></tr>
+<tr><td><b>D2-5</b></td><td>6-1 AIDL 정의</td><td><a class="open" href="lab.html?file=lab_d2_5.md">📄 열기</a></td></tr>
+<tr><td><b>D2-6</b></td><td>6-2 Service 구현 (3대 보안 패턴)</td><td><a class="open" href="lab.html?file=lab_d2_6.md">📄 열기</a></td></tr>
+<tr><td><b>D2-7</b></td><td>6-3 Manager·Registry·SystemServer</td><td><a class="open" href="lab.html?file=lab_d2_7.md">📄 열기</a></td></tr>
+<tr><td><b>D2-8</b></td><td>6-4 SELinux 정책 + 통합 빌드 시작</td><td><a class="open" href="lab.html?file=lab_d2_8.md">📄 열기</a></td></tr>
+<tr><td><b>D2-9</b></td><td>JNI_test First~Fourth</td><td><a class="open" href="lab.html?file=lab_d2_9.md">📄 열기</a></td></tr>
+<tr><td><b>D2-10</b></td><td>5-2 Binder 보안 검증 (커널 UID)</td><td><a class="open" href="lab.html?file=lab_d2_10.md">📄 열기</a></td></tr>
+<tr><td><b>D2-11</b></td><td>SELinux avc 디버깅 5단계</td><td><a class="open" href="lab.html?file=lab_d2_11.md">📄 열기</a></td></tr>
+<tr><td><b>D2-12</b></td><td>6-5 산출물 적용·검증 착수</td><td><a class="open" href="lab.html?file=lab_d2_12.md">📄 열기</a></td></tr>
+</table>
+<h2>Day 3 — Framework Core · Overlay · Car API</h2>
+<table><tr><th style="width:70px">ID</th><th>실습</th><th style="width:96px">열기</th></tr>
+<tr><td><b>D3-0</b></td><td>6-5 검증 완주 세션 (전원 Pass)</td><td><a class="open" href="lab.html?file=lab_d3_0.md">📄 열기</a></td></tr>
+<tr><td><b>D3-1</b></td><td>관찰 3-A 콜드/웜 실측</td><td><a class="open" href="lab.html?file=lab_d3_1.md">📄 열기</a></td></tr>
+<tr><td><b>D3-2</b></td><td>Lab 3-1 RRO 1차 (문자열·색)</td><td><a class="open" href="lab.html?file=lab_d3_2.md">📄 열기</a></td></tr>
+<tr><td><b>D3-3</b></td><td>Lab 3-2 RRO 2차 (Drawable)</td><td><a class="open" href="lab.html?file=lab_d3_3.md">📄 열기</a></td></tr>
+<tr><td><b>D3-4</b></td><td>Lab 3-3 SRO + 비교표</td><td><a class="open" href="lab.html?file=lab_d3_4.md">📄 열기</a></td></tr>
+<tr><td><b>D3-5</b></td><td>관찰 3-B gfxinfo 프레임 성능</td><td><a class="open" href="lab.html?file=lab_d3_5.md">📄 열기</a></td></tr>
+</table>
+<h2>Day 4 — Native 실전 · APEX · 종합 워크숍</h2>
+<table><tr><th style="width:70px">ID</th><th>실습</th><th style="width:96px">열기</th></tr>
+<tr><td><b>D4-1</b></td><td>관찰 4-A window↔SF 두 장부</td><td><a class="open" href="lab.html?file=lab_d4_1.md">📄 열기</a></td></tr>
+<tr><td><b>D4-2</b></td><td>Lab 4-1 FloatingOverlayDemo</td><td><a class="open" href="lab.html?file=lab_d4_2.md">📄 열기</a></td></tr>
+<tr><td><b>D4-3</b></td><td>Lab 4-2 SplitScreenDemo</td><td><a class="open" href="lab.html?file=lab_d4_3.md">📄 열기</a></td></tr>
+<tr><td><b>D4-4</b></td><td>N-1 Native Binder 서비스</td><td><a class="open" href="lab.html?file=lab_d4_4.md">📄 열기</a></td></tr>
+<tr><td><b>D4-5</b></td><td>N-2 surface_test (C++ 화면 그리기)</td><td><a class="open" href="lab.html?file=lab_d4_5.md">📄 열기</a></td></tr>
+<tr><td><b>D4-6</b></td><td>Lab 4-3 simple APEX 빌드</td><td><a class="open" href="lab.html?file=lab_d4_6.md">📄 열기</a></td></tr>
+<tr><td><b>D4-7</b></td><td>🚗 종합 워크숍 S1~S6</td><td><a class="open" href="lab.html?file=lab_d4_7.md">📄 열기</a></td></tr>
+</table>
+</div></body></html>

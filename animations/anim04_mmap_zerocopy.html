@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>④ Binder mmap Zero-Copy — 물리 페이지의 마법</title><link rel="stylesheet" href="assets/player.css"></head><body>
-<header><a href="index.html">◀ 목록</a><h1>④ Binder mmap Zero-Copy — 물리 페이지의 마법</h1><span class="tag">Day 2 · Ch 4 · 실습 4-1 도입</span></header>
+<header><h1>④ Binder mmap Zero-Copy — 물리 페이지의 마법</h1><span class="tag">Day 2 · Ch 4 · 실습 4-1 도입</span></header>
 <div id="wrap">
 <div class="goal">학습 목표: <b>copy_from_user() 1회</b>가 유일한 복사이며, 커널 버퍼와 서버 mmap 영역의 PTE가 <b>동일한 물리 프레임</b>을 가리켜 서버 측 복사가 0회임을 커널 함수 수준에서 이해한다.</div>
 <svg id="stage" viewBox="0 0 960 560">

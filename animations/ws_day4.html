@@ -1,52 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📝 Day 4 워크시트 — SystemUI·Native·APEX·종합 진단</title>
+<title>📝 Day 4 종합 — Window·Native·APEX·종합 진단</title>
 <link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
-<header><a href="index.html">◀ 목록</a><h1>📝 Day 4 디지털 워크시트 — Window/SurfaceFlinger · Native Binder · APEX · 종합 진단</h1><span class="tag">Ch 11 ~ 12 + N-1/N-2 + 워크숍</span></header>
+<header><h1>📝 Day 4 종합 — Window·Native·APEX·종합 진단</h1><span class="tag">종합 재출제판 · 12문항</span></header>
 <div id="ws"></div>
 <script src="assets/ws.js"></script>
-<script>
-initWS({chapters:[
-{title:"Ch 11. Window와 SurfaceFlinger",short:"Ch11",sub:"화면에 그려지기까지",questions:[
- {type:'order',q:"WindowManager 계층 트리를 최상위부터 순서대로 클릭하세요. (dumpsys window의 구조)",
-  items:["ActivityRecord","DisplayContent","WindowState","RootWindowContainer","Task"],
-  ans:[3,1,4,0,2],
-  exp:"RootWindowContainer → DisplayContent(디스플레이별!) → Task → ActivityRecord → WindowState. Automotive 멀티 디스플레이는 <b>DisplayContent가 여러 개</b>인 세계입니다."},
- {type:'mc',q:"SurfaceFlinger의 역할로 옳은 것은?",
-  opts:["앱의 onDraw를 실행한다","여러 프로세스가 제출한 Layer(버퍼)를 VSync 박자에 합성해 디스플레이로 보낸다","Window 포커스를 결정한다","GPU 드라이버를 컴파일한다"],ans:1,
-  exp:"앱(RenderThread)이 그린 버퍼를 모아 <b>합성(composition)</b>하는 별도 네이티브 프로세스. 실습 N-2의 'My Cpp Surface'가 앱 없이 Layer로 직접 끼어드는 실험입니다."},
- {type:'mc',q:"실습 N-2에서 C++만으로 화면에 붉은 Surface를 띄울 수 있었던 이유는?",
-  opts:["Activity를 몰래 생성해서","SurfaceComposerClient로 SurfaceFlinger에 직접 Layer를 만들었기 때문","커널 프레임버퍼에 직접 썼기 때문","RRO로 배경을 바꿨기 때문"],ans:1,
-  exp:"Java Framework를 거치지 않아도 <b>Native에서 SurfaceFlinger와 Binder로 직접</b> 대화할 수 있음을 증명 — 부팅 애니메이션(bootanimation)이 실제로 이 방식입니다."},
-],},
-{title:"Native Binder (N-1 전원 필수)",short:"N-1",sub:"Java 없는 Binder 서비스",questions:[
- {type:'mc',q:"N-1에서 만든 native 서비스 HelloService의 구조로 옳은 것은?",
-  opts:["Java Stub을 JNI로 감쌌다","BBinder를 상속해 onTransact()를 직접 구현하고 defaultServiceManager()->addService()로 등록했다","HAL 인터페이스를 구현했다","커널 모듈로 등록했다"],ans:1,
-  exp:"Java의 Stub.onTransact()와 <b>완전히 같은 자리</b>를 C++에서 직접 구현한 것. VHAL 같은 네이티브 데몬의 뼈대가 이 구조입니다."},
- {type:'blank',q:"등록된 native 서비스는 adb shell service ___ hello.native 1 i32 5 처럼 셸에서 직접 호출해 검증할 수 있다.",
-  ans:["call"],exp:"<code>service call</code>은 Parcel을 손으로 조립해 transact를 날리는 도구 — code 번호와 인자 타입을 맞춰야 하며, 리턴 Parcel의 hex를 읽는 연습까지가 N-1 검증입니다."},
-],},
-{title:"Ch 12. APEX",short:"Ch12",sub:"모듈 업데이트와 롤백",questions:[
- {type:'mc',q:"APEX staged 설치가 '재부팅 후 활성화' 방식을 쓰는 이유는?",
-  opts:["다운로드가 느려서","부팅 초기에 마운트되는 시스템 구성요소라 실행 중 교체가 위험하고, 부팅 실패 시 자동 롤백하기 위해","서명 검증에 하루가 걸려서","APK와 충돌해서"],ans:1,
-  exp:"checkpoint 기반: 새 버전으로 부팅 실패 → <b>이전 버전 자동 롤백</b>. Lab 4-3에서 com.example.simple.apex의 staged 세션과 /apex 마운트를 직접 확인했습니다."},
- {type:'blank',q:"활성화된 APEX의 내용은 런타임에 /___/&lt;모듈명&gt;/ 경로에 마운트된다.",
-  ans:["apex"],exp:"<code>ls /apex/com.example.simple/</code> — 이미지가 아닌 <b>마운트 네임스페이스</b>로 제공됩니다."},
-],},
-{title:"종합 진단 워크숍 (S1~S6)",short:"워크숍",sub:"계층 탐정 — 최종 목표 사고 흐름",questions:[
- {type:'mc',q:"HVAC 팬 애니메이션이 끊긴다(S4). gfxinfo에서 Janky 18.7%가 확인됐다. 이때 올바른 결론은?",anim:"anim30_layer_detective.html",
-  opts:["Framework 렌더링 버그이므로 AOSP 패치를 기다린다","jank가 '나타난' 곳은 렌더링이지만 원인은 다를 수 있으니 앱 코드(메인 스레드 작업)를 리뷰한다","VHAL을 재시작한다","SELinux를 끈다"],ans:1,
-  exp:"<b>증상이 나타나는 계층 ≠ 원인 계층.</b> S4의 진범은 onClick의 메인스레드 Bitmap 디코딩이었습니다. 현상 지표(gfxinfo) → 원인 코드로 내려가는 2단 추적."},
- {type:'mc',q:"모든 차량 속성 호출이 갑자기 DeadObjectException을 던진다(S2). 가장 먼저 확인할 것은?",anim:"anim30_layer_detective.html",
-  opts:["앱 재설치","pidof com.android.car로 CarService 생존/재시작 여부 + logcat의 FATAL","CAN 케이블","에뮬레이터 재설치"],ans:1,
-  exp:"DeadObjectException은 '상대가 죽었다'는 <b>통지</b>일 뿐. 발원지(CarService 크래시)를 확인하고, 앱은 linkToDeath+재바인딩으로 방어합니다."},
- {type:'match',q:"진단 도구와 주 용도를 연결하세요.",
-  pairs:[["dumpsys gfxinfo",1],["logcat | grep avc",2],["dumpsys car_service",0],["/data/anr/traces.txt",3]],
-  opts:["차량 속성 값·구독자·디스패치 상태","프레임 시간 percentile·Janky 비율","SELinux 거부(denied) 확인","ANR 시점 스레드 상태·lock 대기 체인"],
-  exp:"도구를 계층에 매핑하는 감각이 곧 진단 속도입니다: 렌더링=gfxinfo, 보안=avc, 차량=car_service, 멈춤=traces."},
- {type:'order',q:"차량 기능 장애 발생 시 조사 순서(교육 최종 목표 사고 흐름)를 순서대로 클릭하세요.",anim:"anim30_layer_detective.html",
-  items:["HAL/VHAL 문제인가?","App 문제인가?","Kernel/HW 문제인가?","Binder 문제인가?","Framework 문제인가?","CarService 문제인가?"],
-  ans:[1,4,3,5,0,2],
-  exp:"App→Framework→Binder→CarService→VHAL→Kernel/HW. 각 갈림길의 도구(logcat/dumpsys/Perfetto/avc)와 함께 이 사다리를 내려가는 것 — 4일 과정 전체가 이 한 문제를 위한 훈련이었습니다."},
-],}
-]});
-</script></body></html>
+<script>initWS({"chapters": [{"title": "Day 4 종합 — Window·Native·APEX·종합 진단", "short": "Day 4", "sub": "Ch 11 ~ 12 + N-1/N-2 + 워크숍 통합 12문항 (재출제)", "questions": [{"type": "match", "q": "dumpsys 명령과 보여주는 내용을 연결하세요.", "pairs": [["dumpsys window", 1], ["dumpsys SurfaceFlinger", 0], ["dumpsys display", 2]], "opts": ["Layer 목록·버퍼·합성 상태", "컨테이너 트리·포커스·가시성", "연결된 디스플레이 목록·해상도"], "exp": "같은 화면의 세 장부 — '안 보인다'는 window→SF 순으로 2단 점검.", "anim": "anim25_window_tree.html"}, {"type": "blank", "q": "현재 포커스 창 확인: adb shell dumpsys window | grep ___", "ans": ["mCurrentFocus"], "exp": "입력이 어디로 가는지의 즉답 — 터치 무반응 디버깅의 첫 명령.", "anim": "anim25_window_tree.html"}, {"type": "mc", "q": "setLaunchDisplayId(1)로 클러스터에 앱을 띄웠는데 센터(#0)에 뜬다. 다음 조사처는?", "opts": ["에뮬레이터 재설치", "배치 정책(CarLaunchParamsModifier류)과 권한 — 요청은 정책 검사를 통과해야 함", "APK 서명만", "해상도 설정"], "ans": 1, "exp": "옵션은 '요청'일 뿐 — 거부 주체(정책)의 로그를 찾는 것이 다음 수입니다.", "anim": "anim26_multidisplay.html"}, {"type": "order", "q": "실습 N-1(Native Binder 서비스) 제작 절차를 순서대로 클릭하세요.", "items": ["Android.bp에 cc_binary 모듈 작성", "BBinder 상속 클래스에 onTransact 구현", "service call로 호출 검증", "main에서 defaultServiceManager()->addService(\"hello.native\")", "빌드 → push → 실행", "joinThreadPool로 수신 대기"], "ans": [1, 3, 5, 0, 4, 2], "exp": "Java Stub과 같은 자리를 C++로 — VHAL 데몬의 뼈대와 동일한 골격입니다.", "anim": "anim02_binder_concept.html"}, {"type": "blank", "q": "N-2에서 C++이 SurfaceFlinger와 대화할 때 쓴 클라이언트 클래스: Surface___Client", "ans": ["Composer", "surfacecomposerclient"], "exp": "Layer 생성·z-order 지정이 이 클래스 경유 — bootanimation과 같은 통로.", "anim": "anim09_surfaceflinger.html"}, {"type": "mc", "q": "pm get-stagedsessions에서 state=staged, ready=true의 의미는?", "opts": ["이미 활성화됨", "검증 완료, 다음 재부팅 때 활성화 예정", "설치 실패", "롤백됨"], "ans": 1, "exp": "재부팅 전까지는 절대 활성화하지 않는 것이 staged의 본질입니다.", "anim": "anim10_apex.html"}, {"type": "blank", "q": "APEX 시험 부팅의 성공/실패를 판정해 commit 또는 rollback하는 장치: ___point", "ans": ["check", "checkpoint"], "exp": "실패 시 이전 버전 자동 복귀 — 차량 OTA의 마지막 안전망.", "anim": "anim10_apex.html"}, {"type": "mc", "q": "특정 속성 하나만 업데이트가 2~3초 지연된다(S1류). 계층을 좁히는 첫 도구는?", "opts": ["재부팅", "dumpsys car_service로 해당 속성의 구독·디스패치 상태 확인", "앱 재설치", "커널 로그"], "ans": 1, "exp": "앱↔CarService↔VHAL 중 어느 구간의 지연인지부터 — 도구가 계층을 가릅니다.", "anim": "anim24_carservice_boot.html"}, {"type": "mc", "q": "부팅 후 첫 화면이 유독 늦다(S3류). 조사 순서로 옳은 것은?", "opts": ["앱 코드부터", "logcat 부팅 타임라인 → SystemServer 각 서비스 onStart 소요 → CarService init 지연 여부", "VHAL부터", "화면 밝기"], "ans": 1, "exp": "결과(Displayed)에서 원인(기동 순서)으로 거슬러 오르기 — ⑤와 ㉔의 접점.", "anim": "anim24_carservice_boot.html"}, {"type": "order", "q": "DeadObjectException 발생 시 올바른 대응 순서대로 클릭하세요.", "items": ["서비스 재기동 완료 대기", "예외 포착 + UI 안전 상태 전환", "콜백 재등록 + 상태 복원", "pidof로 상대 프로세스 생존/재기동 확인", "새 IBinder로 재바인딩"], "ans": [1, 3, 0, 4, 2], "exp": "죽은 Proxy 재시도 반복은 영원한 실패 — 새 참조를 받아야 합니다.", "anim": "anim28_linktodeath.html"}, {"type": "match", "q": "워크숍 사건과 원인 계층을 연결하세요.", "pairs": [["S2: 전 속성 DeadObjectException", 1], ["S4: 팬 애니메이션 jank", 0], ["S6: 조용한 접근 실패 + avc denied", 2]], "opts": ["앱 (메인 스레드 무거운 작업)", "CarService 프로세스 크래시", "SELinux (vendor 라벨/정책)"], "exp": "증상이 나타난 계층 ≠ 원인 계층 — 이 표를 스스로 채우는 것이 수료 조건입니다.", "anim": "anim30_layer_detective.html"}, {"type": "blank", "q": "native 서비스 등록 확인: adb shell service ___ hello.native", "ans": ["check"], "exp": "found가 나오면 ServiceManager 장부 등록 성공 — Java와 같은 장부입니다.", "anim": "anim02_binder_concept.html"}]}]});</script></body></html>

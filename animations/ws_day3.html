@@ -1,55 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📝 Day 3 워크시트 — Framework Core·리소스·Car API</title>
+<title>📝 Day 3 종합 — Framework Core·Overlay·Car API·렌더링</title>
 <link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
-<header><a href="index.html">◀ 목록</a><h1>📝 Day 3 디지털 워크시트 — Activity 여정 · RRO/SRO · 렌더링 · Car API</h1><span class="tag">Ch 7 ~ Ch 10 + Car API</span></header>
+<header><h1>📝 Day 3 종합 — Framework Core·Overlay·Car API·렌더링</h1><span class="tag">종합 재출제판 · 12문항</span></header>
 <div id="ws"></div>
 <script src="assets/ws.js"></script>
-<script>
-initWS({chapters:[
-{title:"Ch 7. startActivity와 AMS",short:"Ch7",sub:"콜드 스타트의 해부",questions:[
- {type:'order',q:"콜드 스타트에서 startActivity() 이후 일어나는 일을 순서대로 클릭하세요.",anim:"anim06_startactivity.html",
-  items:["Zygote가 fork()로 새 프로세스 생성","앱 Proxy가 Binder로 ATMS 호출","새 프로세스가 attachApplication()으로 신고","ActivityStarter가 정책 판정, 대상 프로세스 없음 확인","scheduleLaunchActivity → onCreate()","AMS가 Unix Socket으로 Zygote에 요청"],
-  ans:[1,3,5,0,2,4],
-  exp:"Binder(빨강) 3회 + Socket(초록) 1회 + fork 1회. <b>Zygote 통신만 Socket</b>인 이유(fork 시 Binder 상태 복제 위험)는 단골 퀴즈."},
- {type:'blank',q:"콜드 스타트 여정에서 프로세스 경계를 넘는 Binder IPC는 총 ___회다. (숫자)",anim:"anim06_startactivity.html",
-  ans:["3","3회"],exp:"① startActivity(앱→ATMS) ② attachApplication(새앱→AMS) ③ scheduleLaunchActivity(AMS→새앱)."},
- {type:'mc',q:"logcat의 'Displayed +4812ms'가 과도하게 클 때 다음으로 봐야 할 곳은? (부팅 직후 상황)",
-  opts:["GPU 드라이버 버전","SystemServer 서비스 기동 타임라인(어느 서비스 onStart가 늦었나)","앱 아이콘 캐시","Wi-Fi 신호"],ans:1,
-  exp:"부팅 지연 분석의 정석: Displayed(결과) → SystemServer 타임라인(원인)으로 거슬러 오르기. 워크숍 S3에서 실전으로 다룹니다."},
-],},
-{title:"Ch 8~9. 리소스와 오버레이",short:"Ch8·9",sub:"RRO/SRO 실습의 원리",questions:[
- {type:'order',q:"같은 리소스를 정의했을 때 <b>이기는 순서(높은 우선순위부터)</b>로 클릭하세요.",anim:"anim22_overlay_layers.html",
-  items:["원본 APK 리소스","정적 RRO (isStatic)","DEVICE_PACKAGE_OVERLAYS","동적 RRO (cmd overlay enable)","PRODUCT_PACKAGE_OVERLAYS"],
-  ans:[3,1,4,2,0],
-  exp:"동적RRO > 정적RRO > PRODUCT > DEVICE > 원본. '값이 이상하다' = 이 스택을 위에서부터 <code>cmd overlay list</code>로 읽는 것."},
- {type:'mc',q:"cmd overlay enable을 했는데 특정 색만 안 바뀐다. 가장 먼저 의심할 것은?",anim:"anim22_overlay_layers.html",
-  opts:["VHAL 연결","타겟 앱의 overlayable.xml에 해당 리소스가 공개되지 않음 (+앱 미재시작)","SELinux 정책","APEX 버전"],ans:1,
-  exp:"동적 RRO는 <b>overlayable로 공개된 리소스만</b> 덮을 수 있습니다. <code>cmd overlay dump</code>로 매핑 확인 → 앱 재시작. 워크숍 S5의 정답 경로."},
- {type:'mc',q:"RRO가 타겟 APK를 1바이트도 수정하지 않고 리소스를 바꿀 수 있는 이유는?",
-  opts:["APK를 몰래 재서명해서","idmap2가 오버레이↔타겟 리소스ID 매핑을 만들어 AssetManager 탐색 경로 위에 얹기 때문","커널이 파일을 바꿔치기해서","리소스가 서버에서 내려오기 때문"],ans:1,
-  exp:"OverlayManagerService + <code>idmap2</code>(/data/resource-cache/*.idmap)가 <b>탐색 경로</b>를 바꾸는 방식 — OEM 브랜딩의 표준 메커니즘."},
-],},
-{title:"Ch 10. 렌더링과 프레임",short:"Ch10",sub:"16.6ms의 규율",questions:[
- {type:'blank',q:"60Hz 디스플레이에서 한 프레임에 허용되는 시간은 약 ___ms다. (소수 한 자리)",anim:"anim27_vsync_framedrop.html",
-  ans:["16.6","16.7","16"],exp:"Choreographer가 VSync 박자마다 input→anim→measure/layout→draw를 지휘 — 이 시간을 넘기면 SurfaceFlinger가 직전 프레임을 반복(jank)."},
- {type:'mc',q:"dumpsys gfxinfo에서 성능을 판단할 때 평균보다 중요한 지표는?",anim:"anim27_vsync_framedrop.html",
-  opts:["Total frames","90th/95th/99th percentile과 Janky frames 비율","앱 버전","프로세스 UID"],ans:1,
-  exp:"jank는 <b>꼬리(percentile)</b>에서 드러납니다. 평균 8ms여도 99th가 34ms면 사용자는 '끊긴다'고 느낍니다."},
-],},
-{title:"Car API (Automotive 핵심)",short:"Car",sub:"HVAC 왕복과 구독 스트림",questions:[
- {type:'order',q:"setProperty(HVAC_TEMPERATURE_SET, 23f)의 전진 경로를 순서대로 클릭하세요.",anim:"anim08_hvac_journey.html",
-  items:["Vehicle HAL (IVehicle.setValues)","CarPropertyManager","CAN 프레임 → HVAC ECU","CarPropertyService 권한 검사","PropertyHalService 변환"],
-  ans:[1,3,4,0,2],
-  exp:"Manager→(Binder)→CarPropertyService(권한)→PropertyHalService→(Binder)→VHAL→CAN/ECU. 값 확정은 <b>ECU 이벤트가 돌아와야</b> — set 직후 UI를 바꾸지 않는 이유."},
- {type:'blank',q:"HVAC 제어에 필요한 권한은 android.car.permission.___ 이다.",
-  ans:["CONTROL_CAR_CLIMATE"],exp:"속성마다 요구 권한이 다릅니다. 권한 실패는 SecurityException — 단, 그 아래 SELinux 차단(S6)과 구분할 것."},
- {type:'match',q:"VHAL 속성 유형과 예시를 연결하세요.",anim:"anim23_vhal_subscribe.html",
-  pairs:[["CONTINUOUS",2],["ON_CHANGE",0],["STATIC",1]],
-  opts:["GEAR_SELECTION · 도어 상태 (변할 때만 이벤트)","VIN (불변)","PERF_VEHICLE_SPEED · RPM (rate 주기 샘플링)"],
-  exp:"유형을 모르면 '기어 이벤트가 왜 안 와요?'(안 바뀌었으니까) 같은 헛디딤이 생깁니다. 구독 rate는 요청들의 최대값으로 병합."},
- {type:'mc',q:"registerCallback으로 속도를 구독한 화면에서 onDestroy 시 반드시 해야 할 일은?",anim:"anim23_vhal_subscribe.html",
-  opts:["setProperty(0) 호출","unregisterCallback() — 스트림 해제","CarService 재시작","adb reboot"],ans:1,
-  exp:"해제를 잊으면 화면을 떠나도 이벤트가 계속 흘러 배터리·Binder 낭비 + 죽은 콜백 예외. <b>등록과 해제는 쌍</b>."},
-],}
-]});
-</script></body></html>
+<script>initWS({"chapters": [{"title": "Day 3 종합 — Framework Core·Overlay·Car API·렌더링", "short": "Day 3", "sub": "Ch 7 ~ Ch 10 + Car API 통합 12문항 (재출제)", "questions": [{"type": "match", "q": "콜드 스타트의 세 통신 구간과 수단을 연결하세요.", "pairs": [["앱 → ATMS (startActivity)", 0], ["AMS → Zygote (프로세스 요청)", 2], ["AMS → 새 앱 (launch 지시)", 1]], "opts": ["Binder", "Binder (scheduleLaunchActivity)", "Unix Socket"], "exp": "Binder 3회 중 2개 구간 + Socket 1회 — 수단이 다른 이유까지 설명할 수 있어야 합니다.", "anim": "anim06_startactivity.html"}, {"type": "blank", "q": "앱 시작 시간이 기록되는 logcat 키워드: ___ +812ms", "ans": ["Displayed"], "exp": "am_activity_launch_time 이벤트와 함께 성능 회귀 추적의 기본 지표입니다.", "anim": "anim06_startactivity.html"}, {"type": "order", "q": "ANR 발생부터 원인 확정까지 순서대로 클릭하세요.", "items": ["/data/anr/에 전 스레드 덤프 기록", "그 스레드가 Binder 대기면 상대 프로세스로 조사 확장", "main 스레드 상태·대기 락 확인", "입력 무응답 → 시스템이 ANR 판정", "held by tid=N의 스택으로 점프"], "ans": [3, 0, 2, 4, 1], "exp": "3단 독법에 '판정·덤프' 단계를 붙인 전체 그림입니다.", "anim": "anim20_anr_lock.html"}, {"type": "mc", "q": "lmkd에 대한 설명으로 옳은 것은?", "opts": ["커널 스레드다", "PSI 압박 지표를 보고 oom_score_adj 높은 순으로 SIGKILL하는 유저스페이스 데몬", "AMS 내부 클래스", "GC의 일종"], "ans": 1, "exp": "점수는 AMS(OomAdjuster)가, 집행은 lmkd가 — 역할 분담을 구분하세요.", "anim": "anim21_oomadjuster.html"}, {"type": "blank", "q": "컴파일된 리소스 표가 담기는 APK 내 파일: resources.___", "ans": ["arsc"], "exp": "aapt2가 만든 좌표표 — 0x7f14002a는 이 표의 인덱스입니다.", "anim": "anim07_assetmanager.html"}, {"type": "mc", "q": "정적 RRO와 동적 RRO의 차이로 옳은 것은?", "opts": ["정적이 항상 우선", "정적은 isStatic으로 부팅 시 고정 적용, 동적은 cmd overlay로 런타임 on/off — 우선순위는 동적이 위", "동적은 재서명 필요", "정적은 idmap 불필요"], "ans": 1, "exp": "SRO 실습 값이 동적 enable 후 뒤집히는 이유가 이 우선순위입니다.", "anim": "anim22_overlay_layers.html"}, {"type": "blank", "q": "활성 오버레이 목록 확인: adb shell cmd overlay ___", "ans": ["list"], "exp": "[x] 표시가 활성 — 값 이상 시 이 스택을 위에서부터 읽습니다.", "anim": "anim22_overlay_layers.html"}, {"type": "match", "q": "Car 구성요소가 사는 프로세스를 연결하세요.", "pairs": [["CarPropertyManager", 2], ["CarPropertyService", 0], ["VHAL 데몬", 1]], "opts": ["com.android.car", "vendor 프로세스 (android.hardware.automotive.vehicle…)", "앱 프로세스 (라이브러리)"], "exp": "경계마다 Binder — 어느 경계에서 끊겼는지가 곧 진단입니다.", "anim": "anim24_carservice_boot.html"}, {"type": "mc", "q": "주차 상태에서 GEAR_SELECTION 콜백이 '안 온다'는 신고 — 가장 흔한 진실은?", "opts": ["버그", "ON_CHANGE 속성이라 값이 변하지 않으면 이벤트가 없는 것이 정상 (초기값은 getProperty로)", "권한 부족", "VHAL 다운"], "ans": 1, "exp": "속성 유형(CONTINUOUS/ON_CHANGE/STATIC)을 모르면 정상을 버그로 오인합니다.", "anim": "anim23_vhal_subscribe.html"}, {"type": "mc", "q": "앱 A가 10Hz, 앱 B가 1Hz로 같은 속도 속성을 구독하면 VHAL의 실제 샘플링은?", "opts": ["1Hz", "10Hz — 요청들의 최대 rate로 병합", "5.5Hz 평균", "앱별 개별 스트림"], "ans": 1, "exp": "구독은 공유 스트림 — 해제(unregister)를 잊으면 최대 rate가 유지되어 낭비됩니다.", "anim": "anim23_vhal_subscribe.html"}, {"type": "blank", "q": "프레임 성능 통계 덤프: adb shell dumpsys ___ &lt;패키지&gt;", "ans": ["gfxinfo"], "exp": "percentile과 Janky 비율을 먼저 — 평균은 거짓말을 합니다.", "anim": "anim27_vsync_framedrop.html"}, {"type": "mc", "q": "60Hz에서 한 프레임이 28ms 걸리면 화면에서 일어나는 일은?", "opts": ["해상도 저하", "VSync 한 박자를 놓쳐 SurfaceFlinger가 직전 프레임을 반복(1프레임 드랍)", "앱 종료", "자동 90Hz 전환"], "ans": 1, "exp": "이 '반복'이 jank의 실체 — ㉗의 타임라인 그대로입니다.", "anim": "anim27_vsync_framedrop.html"}]}]});</script></body></html>
