@@ -1,0 +1,40 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑫ Parcel 순서의 함정</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑫ Parcel 직렬화 순서의 함정 — 조용한 데이터 오염</h1><span class="tag">Day 1 · Ch 2 퀴즈 Q2</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Parcel은 타입 정보 없는 바이트 스트림이므로 쓰기/읽기 순서 불일치가 크래시 대신 값 오염으로 나타날 수 있음을 바이트 수준에서 확인한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bW" class="box" x="30" y="40" width="330" height="90"/><text class="lbl" x="45" y="65">보내는 쪽 (쓰기)</text><text class="code" x="45" y="88">p.writeInt(seatId);   // 3</text><text class="code" x="45" y="106">p.writeFloat(temp);   // 23.0f</text>
+<rect id="bBuf" class="box" x="30" y="180" width="900" height="86" style="fill:#181f33"/><text class="lbl" x="45" y="205">Parcel 버퍼 — 그냥 바이트의 나열 (타입 꼬리표 없음!)</text>
+<text class="code" x="45" y="232">offset 0        offset 4</text>
+<text class="code" x="45" y="252">[03 00 00 00]   [00 00 B8 41]      ← int 3 · float 23.0의 IEEE754</text>
+<rect id="bR1" class="box hidden-ctl hid" x="30" y="310" width="430" height="96" style="stroke:#2f7a52"/><text class="lbl" x="45" y="335" style="fill:#7ee787">✅ 올바른 읽기 (같은 순서)</text><text class="code" x="45" y="360">seatId = p.readInt();    // 3</text><text class="code" x="45" y="380">temp = p.readFloat();    // 23.0</text>
+<rect id="bR2" class="box hidden-ctl hid" x="500" y="310" width="430" height="96" style="stroke:#ff5252"/><text class="lbl" x="515" y="335" style="fill:#ff7b72">❌ 순서 뒤바뀐 읽기</text><text class="code" x="515" y="360">temp = p.readFloat();  // 4.2E-45 (int 3을 float로!)</text><text class="code" x="515" y="380">seatId = p.readInt();  // 1102577664 (23.0f를 int로!)</text>
+<text id="tNoCrash" class="code hidden-ctl hid" x="480" y="450" text-anchor="middle" style="fill:#ff9a9a">예외 없음 — 크래시 없이 '이상한 값'만. 좌석 3번 대신 좌석 1102577664번의 온도를 4.2E-45도로…</text>
+<text id="tAidl" class="code hidden-ctl hid" x="480" y="482" text-anchor="middle" style="fill:#7ee787">AIDL(⑪)이 존재하는 이유 = 이 순서를 사람 대신 기계가 지키게 하는 것</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4000,steps:[
+{t:"쓰기 — HVAC 좌석 온도 전송",on:["bW"],
+ n:"seatId(int 3), temp(float 23.0f)를 순서대로 씁니다. Parcel은 이를 <b>바이트로 이어붙일 뿐</b> '여기는 int, 여기는 float'이라는 꼬리표를 남기지 않습니다."},
+{t:"버퍼의 진실 — 타입 없는 바이트",on:["bBuf"],
+ n:"offset 0에 <span class='code'>03 00 00 00</span>, offset 4에 <span class='code'>00 00 B8 41</span>(23.0의 IEEE754). 읽는 쪽이 '무엇으로' 해석할지는 전적으로 <b>read 호출 순서</b>에 달렸습니다."},
+{t:"✅ 같은 순서로 읽으면",show:["bR1"],on:["bR1"],
+ n:"readInt→readFloat: 3, 23.0 — 완벽. AIDL이 생성한 코드는 항상 이 경우입니다(⑪)."},
+{t:"❌ 순서가 뒤바뀌면 — 조용한 재앙",show:["bR1","bR2","tNoCrash"],on:["bR2"],dead:true,
+ n:"readFloat이 먼저 오면 int 3의 바이트를 float로 해석 → <b>4.2E-45</b>. 다음 readInt는 23.0f의 바이트를 → <b>1102577664</b>. <b>예외는 없습니다.</b> 어딘가에서 '가끔 이상한 값'으로만 나타나는, 가장 추적하기 어려운 부류의 버그."},
+{t:"현업 교훈",show:["bR2","tAidl"],on:["bW"],
+ n:"수동 Parcel 코드(Parcelable 직접 구현, service call 조립)를 만질 때 write/read 순서를 <b>계약처럼</b> 다루세요. 플랫폼-vendor 간 구조체가 한 필드라도 어긋난 채 배포되면? — 차량에서 '가끔 엉뚱한 좌석이 데워지는' 종류의 사고가 됩니다.",
+ c:"<span class='c'># service call로 수동 조립할 때가 바로 이 위험 지대</span>\n$ adb shell service call device_info 1 i32 3 f 23.0\n<span class='c'># code·타입·순서 전부 계약과 일치해야 함</span>"}
+]});
+</script></body></html>

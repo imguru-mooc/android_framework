@@ -1,0 +1,60 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑨ SurfaceFlinger 한 프레임의 합성</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑨ SurfaceFlinger — 한 프레임의 합성 (+N-2 My Cpp Surface)</h1><span class="tag">Day 4 · Ch 11 · 실습 N-2 연계</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 여러 프로세스의 버퍼(BufferQueue)가 VSync 박자에 Layer로 합성되어 화면이 되는 구조와, N-2에서 만든 C++ Surface가 이 대열에 끼어드는 지점을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bA1" class="box" x="30" y="40" width="240" height="62"/><text class="lbl" x="45" y="63" style="font-size:12.5px">HVAC 앱 (RenderThread)</text><text class="code" x="45" y="83">Surface → BufferQueue</text>
+<rect id="bA2" class="box" x="30" y="120" width="240" height="62"/><text class="lbl" x="45" y="143" style="font-size:12.5px">CarSystemUI (상태바 등)</text><text class="code" x="45" y="163">Surface → BufferQueue</text>
+<rect id="bA3" class="box hidden-ctl hid" x="30" y="200" width="240" height="62" style="stroke:#ff6b6b"/><text class="lbl" x="45" y="223" style="font-size:12.5px">surface_test (N-2, C++!)</text><text class="code" x="45" y="243">SurfaceComposerClient</text>
+<rect id="bSF" class="box" x="380" y="90" width="280" height="150"/><text class="lbl" x="395" y="115">SurfaceFlinger 프로세스</text>
+<text id="l1" class="code" x="395" y="140">Layer: com.example.hvac (z=2)</text>
+<text id="l2" class="code" x="395" y="160">Layer: StatusBar (z=10)</text>
+<text id="l3" class="code hidden-ctl hid" x="395" y="180" style="fill:#ff9a9a">Layer: My Cpp Surface (z=INT_MAX)</text>
+<text class="sub" x="395" y="205">VSync마다 latchBuffer → 합성</text>
+<text class="sub" x="395" y="222">frameworks/native/services/surfaceflinger/</text>
+<rect id="bHwc" class="box" x="720" y="105" width="210" height="70"/><text class="lbl" x="735" y="130" style="font-size:12.5px">HWC (Hardware Composer HAL)</text><text class="code" x="735" y="150">오버레이 평면 or GPU 합성</text>
+<rect id="scr" x="720" y="230" width="210" height="140" rx="10" fill="#182238" stroke="#33415e" stroke-width="2"/>
+<rect id="sApp" class="hidden-ctl hid" x="728" y="266" width="194" height="96" fill="#1f3a5c" rx="6"/>
+<rect id="sBar" class="hidden-ctl hid" x="728" y="238" width="194" height="22" fill="#2c3f68" rx="4"/>
+<rect id="sRed" class="hidden-ctl hid" x="760" y="280" width="130" height="66" fill="#c0392b" rx="6"/>
+<text class="sub" x="825" y="392" text-anchor="middle">디스플레이</text>
+<path id="p1" class="mpath" d="M270,70 C330,70 340,125 378,128"/>
+<path id="p2" class="mpath" d="M270,150 L378,152"/>
+<path id="p3" class="mpath" d="M270,230 C330,230 340,180 378,176"/>
+<path id="a1" class="arrow" d="M270,70 C330,70 340,125 378,128"/>
+<path id="a2" class="arrow" d="M270,150 L378,152"/>
+<path id="a3" class="arrow hidden-ctl hid" d="M270,230 C330,230 340,180 378,176"/>
+<path id="a4" class="arrow" d="M660,150 L718,143"/>
+<path id="a5" class="arrow" d="M825,175 L825,228"/>
+<text id="tVs" class="code" x="480" y="300" text-anchor="middle" style="fill:#ffb454">⏱ VSync 신호 = 합성 시작 신호 (㉗의 그 박자)</text>
+<text id="tBoot" class="code hidden-ctl hid" x="480" y="480" text-anchor="middle" style="fill:#8fd18f">bootanimation도 같은 방식의 native 클라이언트 — Java 없이 화면을 그리는 공식 통로</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4300,steps:[
+{t:"생산자들 — 각 앱은 자기 버퍼에만 그린다",on:["bA1","bA2"],arrows:["a1","a2"],pkts:[{path:"p1",dur:1000,loop:true,gap:600},{path:"p2",dur:1000,delay:300,loop:true,gap:600}],
+ n:"앱의 RenderThread(㉗)가 그린 결과는 화면이 아니라 <b>자기 Surface의 BufferQueue</b>에 들어갑니다. HVAC 앱도, CarSystemUI도 각자 생산자 — 화면 직접 접근 권한은 아무 앱에도 없습니다."},
+{t:"수집가 — SurfaceFlinger의 Layer 목록",on:["bSF"],
+ n:"별도 네이티브 프로세스 <b>SurfaceFlinger</b>가 각 Surface를 <b>Layer</b>로 관리합니다. Layer는 z-order·위치·크기·투명도를 가진 창문 — <span class='fn'>dumpsys SurfaceFlinger</span>로 이 목록을 그대로 볼 수 있습니다.",
+ c:"$ adb shell dumpsys SurfaceFlinger --list | head\ncom.example.hvacsimulator/...MainActivity#0\nStatusBar#0\nWallpaper#0"},
+{t:"VSync — 합성의 박자",on:["bSF","bHwc"],arrows:["a4:flow"],
+ n:"㉗의 그 VSync가 여기서도 지휘합니다. 박자마다 SF가 각 Layer의 최신 버퍼를 <span class='fn'>latch</span>하고, <b>HWC(Hardware Composer HAL)</b>에게 물어봅니다: '이 조합, 하드웨어 오버레이 평면으로 되겠어?' — 되면 GPU를 아예 안 쓰고 합성(전력 절약), 안 되면 GPU 합성."},
+{t:"화면 완성 — 층층이 쌓인 결과",show:["sApp","sBar"],on:["bHwc"],arrows:["a5:grn"],
+ n:"합성 결과가 디스플레이로 — 여러분이 보는 '화면'은 항상 <b>여러 프로세스 Layer의 샌드위치</b>입니다. z-order가 곧 시각적 위아래(StatusBar가 앱 위에 뜨는 이유)."},
+{t:"🔴 난입 — N-2 My Cpp Surface",show:["bA3","a3","l3","sApp","sBar","sRed"],on:["bA3"],arrows:["a3:red"],pkts:[{path:"p3",cls:"red",dur:1000,loop:true,gap:600}],
+ n:"실습 N-2의 <span class='fn'>surface_test</span>는 Activity도 Java도 없이 <span class='fn'>SurfaceComposerClient</span>로 SF와 <b>Binder 직접 대화</b> → Layer 생성 → 붉은 사각형을 z=INT_MAX로 최상단에! 화면에 붉은 창이 뜨는 순간, '그리기'의 실체가 Layer 등록임을 몸으로 알게 됩니다."},
+{t:"의미 — Java는 편의였을 뿐",show:["l3","sRed","sApp","sBar","tBoot"],on:["bSF"],
+ n:"<b>bootanimation</b>이 정확히 이 방식의 공식 클라이언트입니다(부팅 중엔 Java Framework가 없으므로). Window/View는 SF 위의 편의 계층 — 그래서 dumpsys window(㉕)와 dumpsys SurfaceFlinger는 <b>같은 화면을 다른 층에서</b> 보여주는 두 개의 창입니다.",
+ c:"$ adb shell dumpsys SurfaceFlinger --list | grep Cpp\n<span class='y'>My Cpp Surface#0</span>   <span class='c'># ← N-2 검증 성공 라인</span>"}
+]});
+</script></body></html>

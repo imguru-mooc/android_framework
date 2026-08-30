@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑯ 1MB 버퍼가 넘치는 순간</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑯ 1MB 버퍼가 넘치는 순간 — TransactionTooLargeException</h1><span class="tag">Day 2 · 실습 4-3</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 트랜잭션 버퍼(≈1MB)가 프로세스당 공유 자원이며, 초과 시 예외가 발생하는 조건과 3가지 우회로를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bTank" class="box" x="340" y="60" width="280" height="300" style="fill:#141c30"/>
+<text class="lbl" x="480" y="45" text-anchor="middle">트랜잭션 버퍼 (mmap 창, ≈1MB) — 프로세스당 공유!</text>
+<rect id="w1" class="hidden-ctl hid" x="345" y="315" width="270" height="40" fill="#2a5b8a" rx="4"/><text id="w1t" class="mini hidden-ctl hid" x="480" y="340" text-anchor="middle">진행 중 트랜잭션 A (200KB)</text>
+<rect id="w2" class="hidden-ctl hid" x="345" y="270" width="270" height="40" fill="#2a6b5a" rx="4"/><text id="w2t" class="mini hidden-ctl hid" x="480" y="295" text-anchor="middle">진행 중 트랜잭션 B (300KB)</text>
+<rect id="w3" class="hidden-ctl hid" x="345" y="120" width="270" height="145" fill="#8a3d3d" rx="4"/><text id="w3t" class="mini hidden-ctl hid" x="480" y="195" text-anchor="middle" style="fill:#ffc9c9">setLargeData(Bitmap 1.5MB)?!</text>
+<line x1="340" y1="65" x2="620" y2="65" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="6 4"/><text class="mini" x="630" y="70" style="fill:#ff9a9a">한계선</text>
+<rect id="bExc" class="box hidden-ctl hid" x="660" y="120" width="270" height="90" style="stroke:#ff5252"/><text class="lbl" x="675" y="146" style="fill:#ff7b72">TransactionTooLargeException</text><text class="code" x="675" y="168">data parcel size 1572864 bytes</text><text class="code" x="675" y="186">호출자에게 예외 전달</text>
+<rect id="bFix" class="box hidden-ctl hid" x="30" y="120" width="270" height="150"/><text class="lbl" x="45" y="146">우회로 3형제</text><text class="code" x="45" y="170">① FD/공유메모리 (⑭)</text><text class="code" x="45" y="192">② URI 전달 → 수신측이 열기</text><text class="code" x="45" y="214">③ 분할 전송 (페이징)</text><text class="code" x="45" y="244" style="fill:#ffd166">＋Intent extras도 같은 버퍼!</text>
+<text id="tHid" class="code hidden-ctl hid" x="480" y="440" text-anchor="middle" style="fill:#ff9a9a">함정: 예외가 '큰 놈'이 아니라 그 순간의 '다른 작은 호출'에서 터질 수도 있다 (버퍼는 공유 자원)</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4000,steps:[
+{t:"물탱크 — 프로세스당 1MB",on:["bTank"],
+ n:"④의 mmap 창(≈1MB)이 곧 이 물탱크입니다. 중요: 이 용량은 트랜잭션 하나가 아니라 <b>그 프로세스의 진행 중 트랜잭션 전체</b>가 나눠 씁니다."},
+{t:"평상시 — 여유 있는 수위",show:["w1","w1t","w2","w2t"],on:["bTank"],
+ n:"200KB, 300KB짜리 트랜잭션이 진행 중이어도 여유가 있습니다. 일반적인 API 호출은 수 KB — 탱크는 거의 항상 한산합니다."},
+{t:"💥 1.5MB Bitmap 투하",show:["w1","w1t","w2","w2t","w3","w3t","bExc"],on:["w3","bExc"],dead:true,
+ n:"실습 4-3의 그 코드 — Bitmap을 Parcel에 직접 실으면 한계선을 넘는 순간 커널이 할당을 거부하고 <b>TransactionTooLargeException</b>이 호출자에게 돌아옵니다.",
+ c:"E JavaBinder: <span class='r'>!!! FAILED BINDER TRANSACTION !!!</span>\n  (parcel size = 1572864)\nandroid.os.TransactionTooLargeException: data parcel size 1572864 bytes"},
+{t:"함정 — 공유 자원의 배신",show:["w1","w1t","w2","w2t","w3","w3t","tHid"],on:["bTank"],
+ n:"탱크가 공유라서, 900KB짜리 호출들이 겹친 순간엔 <b>200KB짜리 '무고한' 호출이</b> 예외를 맞을 수도 있습니다. '작은 호출인데 왜?'라는 미스터리의 정체 — 그 순간의 <b>동시 트랜잭션 총량</b>을 봐야 합니다."},
+{t:"우회로 — 문을 넓히지 말고 창고를 지어라",show:["bFix"],on:["bFix"],
+ n:"① <b>FD/공유메모리</b>(⑭ CursorWindow 방식) ② <b>URI 전달</b>(FileProvider) ③ <b>분할 전송</b>. 그리고 복병: <b>Intent extras·onSaveInstanceState도 같은 Binder 버퍼</b>를 탑니다 — '액티비티 전환하다 죽는' TransactionTooLarge의 정체입니다.",
+ c:"<span class='c'># 실습 4-3 검증: 크기를 바꿔가며 임계점 찾기</span>\n$ adb logcat -s JavaBinder:E | grep FAILED"}
+]});
+</script></body></html>

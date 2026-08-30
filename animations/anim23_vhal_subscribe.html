@@ -1,0 +1,55 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉓ VHAL 구독 스트림 — 속도 데이터의 강</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉓ VHAL 구독 스트림 — 속도 데이터의 강</h1><span class="tag">Day 3 · Car API · ⑧의 짝(subscribe 편)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: <span class="fn">registerCallback</span> 이후 ECU→VHAL→CarService→앱으로 <b>이벤트가 스트림으로 흐르는</b> 구독 모델과 SENSOR_RATE, CONTINUOUS/ON_CHANGE 속성 유형을 이해한다. (⑧이 set 왕복이라면 ㉓은 흐름)</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bEcu" class="box" x="30" y="150" width="180" height="90"/><text class="lbl" x="45" y="178">차량 ECU</text><text class="code" x="45" y="198">휠 스피드 센서</text><text class="code" x="45" y="216">CAN 10~100Hz</text>
+<rect id="bHal" class="box" x="260" y="150" width="200" height="90"/><text class="lbl" x="275" y="178">VHAL 데몬</text><text class="code" x="275" y="198">PERF_VEHICLE_SPEED</text><text class="code" x="275" y="216">CONTINUOUS 속성</text>
+<rect id="bCar" class="box" x="510" y="150" width="200" height="90"/><text class="lbl" x="525" y="178">CarPropertyService</text><text class="code" x="525" y="198">구독자 테이블 관리</text><text class="code" x="525" y="216">rate 병합/샘플링</text>
+<rect id="bApp" class="box" x="760" y="150" width="175" height="90"/><text class="lbl" x="775" y="178">계기판 앱</text><text class="code" x="775" y="198">onChangeEvent()</text><text id="tSpd" class="lbl" x="847" y="226" text-anchor="middle" style="font-size:19px;fill:#7ee787">-- km/h</text>
+<path id="aReg" class="arrow hidden-ctl hid" d="M760,265 C650,300 420,300 335,244"/>
+<path id="p1" class="mpath" d="M210,180 L258,180"/>
+<path id="p2" class="mpath" d="M460,180 L508,180"/>
+<path id="p3" class="mpath" d="M710,180 L758,180"/>
+<line id="a1" class="arrow" x1="210" y1="195" x2="256" y2="195"/>
+<line id="a2" class="arrow" x1="460" y1="195" x2="506" y2="195"/>
+<line id="a3" class="arrow" x1="710" y1="195" x2="756" y2="195"/>
+<text id="tReg" class="code hidden-ctl hid" x="480" y="320" text-anchor="middle" style="fill:#a8c7fa">registerCallback(cb, PERF_VEHICLE_SPEED, SENSOR_RATE_UI /* 5Hz */)</text>
+<text id="tTypes" class="code hidden-ctl hid" x="480" y="400" text-anchor="middle">CONTINUOUS(속도·RPM: 주기 샘플링) · ON_CHANGE(기어·문: 변할 때만) · STATIC(VIN: 불변)</text>
+<text id="tUnsub" class="lbl hidden-ctl hid" x="480" y="440" text-anchor="middle" style="fill:#ff9a9a;font-size:14px">unregisterCallback() — 강이 마른다 (누수 방지: onDestroy에서 반드시!)</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+let spdTimer=null; const tS=document.getElementById('tSpd');
+function spd(on){ if(spdTimer){clearInterval(spdTimer);spdTimer=null} if(!on){tS.textContent='-- km/h';return}
+ let v=42; spdTimer=setInterval(()=>{v=Math.max(0,Math.min(140,v+(Math.random()*10-5)));tS.textContent=v.toFixed(0)+' km/h'},350)}
+initAnim({autoMs:4300,steps:[
+{t:"구독 전 — 강은 흐르지만 앱에는 닿지 않는다",on:["bEcu","bHal"],arrows:["a1"],pkts:[{path:"p1",cls:"grn",r:5,dur:600,loop:true,gap:120}],
+ n:"휠 스피드 센서 데이터는 CAN 위를 항상 흐르고 VHAL이 <span class='fn'>PERF_VEHICLE_SPEED</span>(CONTINUOUS 속성)로 보유합니다. 하지만 구독자가 없으면 Framework 위로는 <b>아무것도 전달되지 않습니다</b> — 불필요한 Binder 트래픽 방지."},
+{t:"registerCallback — 수문을 연다",show:["aReg","tReg"],on:["bApp","bCar"],arrows:["aReg:flow"],
+ n:"앱이 <span class='fn'>CarPropertyManager.registerCallback(cb, PERF_VEHICLE_SPEED, SENSOR_RATE_UI)</span>를 부르면 CarPropertyService가 구독자 테이블에 등록하고 VHAL에 <span class='fn'>subscribe(propId, sampleRate)</span>를 겁니다. <b>rate는 요청들의 최대값으로 병합</b> — 다른 앱이 10Hz를 원하면 VHAL은 10Hz로 올립니다."},
+{t:"🟢 스트림 개통 — 데이터의 강",show:["tReg"],on:["bEcu","bHal","bCar","bApp"],arrows:["a1","a2:grn","a3:grn"],
+ pkts:[{path:"p1",cls:"grn",r:5,dur:600,loop:true,gap:120},{path:"p2",cls:"grn",r:5,dur:600,delay:200,loop:true,gap:300},{path:"p3",cls:"grn",r:5,dur:600,delay:400,loop:true,gap:300}],
+ n:"이제 값이 바뀔 때마다 ECU→VHAL→<span class='fn'>onPropertyEvent</span>(oneway)→CarService→구독자 <span class='fn'>onChangeEvent</span>로 <b>연속 이벤트</b>가 흐릅니다. 계기판 숫자가 살아 움직입니다. (우측 숫자 관찰) ⑧의 단발 왕복과 대비되는 <b>push 모델</b>입니다. (spd:on)"},
+{t:"속성 유형 3종 — 강의 성격이 다르다",show:["tReg","tTypes"],on:["bHal"],arrows:["a1","a2:grn","a3:grn"],
+ pkts:[{path:"p1",cls:"grn",r:5,dur:600,loop:true,gap:120},{path:"p2",cls:"grn",r:5,dur:600,loop:true,gap:300},{path:"p3",cls:"grn",r:5,dur:600,loop:true,gap:300}],
+ n:"<b>CONTINUOUS</b>(속도·RPM)는 rate 주기 샘플링, <b>ON_CHANGE</b>(GEAR_SELECTION·도어)는 값이 바뀔 때만 1건, <b>STATIC</b>(VIN)은 변하지 않음. 유형을 모르면 '기어 이벤트가 왜 안 와요?'(안 바뀌었으니까) 같은 헛디딤이 생깁니다. (spd:on)"},
+{t:"지연 분석의 관점 — 워크숍 S1",show:["tReg"],on:["bCar"],arrows:["a2:grn","a3:grn"],pkts:[{path:"p2",cls:"grn",r:5,dur:1600,loop:true,gap:900},{path:"p3",cls:"grn",r:5,dur:1600,delay:500,loop:true,gap:900}],
+ n:"속성 반영이 느리면 이 강의 <b>어느 구간이 막혔는지</b> 좁힙니다: 앱 콜백 스레드 블로킹? CarService 디스패치 큐? VHAL rate 설정? 에뮬레이터 가짜 ECU 주기? — <span class='fn'>dumpsys car_service</span>로 구독 상태부터 확인. (spd:on)",
+ c:"$ adb shell dumpsys car_service | grep -B1 -A4 \"PERF_VEHICLE_SPEED\"\n  Property: PERF_VEHICLE_SPEED (0x11600207) type: CONTINUOUS\n    <span class='y'>subscribers: 1, maxRate: 5.0Hz</span>  <span class='c'># ← rate 병합 결과</span>"},
+{t:"unregister — 강을 닫는 책임",show:["tUnsub"],on:["bApp"],
+ n:"<span class='fn'>unregisterCallback()</span>을 잊으면 화면을 떠난 뒤에도 이벤트가 계속 흘러 배터리·Binder 낭비 + 죽은 콜백으로 인한 예외가 생깁니다. <b>onDestroy()에서 반드시 해제</b> — RemoteCallbackList가 죽은 Binder를 정리해 주지만, 등록 해제는 앱의 예의입니다. (spd:off)"}
+]});
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ spd(n.includes('(spd:on)'))}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>

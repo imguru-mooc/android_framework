@@ -1,0 +1,53 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>③ oneway 콜백 왕복</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>③ oneway 콜백 왕복 — 서버가 앱을 부르는 법</h1><span class="tag">Day 1 · Ch 3 · CalcService 콜백 실습</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 콜백 등록(RemoteCallbackList) → 이벤트 발생 → oneway 통지의 왕복 구조와, 동기 콜백의 위험·oneway의 한계(예외 미전달)를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zC" class="zone" x="20" y="20" width="360" height="470"/><text class="lbl" x="36" y="46">Client 앱</text>
+<rect id="zS" class="zone" x="560" y="20" width="380" height="470"/><text class="lbl" x="576" y="46">Server (CalcService)</text>
+<rect id="bCb" class="box" x="45" y="80" width="310" height="70"/><text class="lbl" x="60" y="104" style="font-size:12.5px">ICalcCallback.Stub 구현</text><text class="code" x="60" y="124">onResult(int v) { UI 갱신 }</text><text class="code" x="60" y="140" style="fill:#7ee787">← 앱이 이번엔 '서버' 역할!</text>
+<rect id="bReg" class="box" x="45" y="180" width="310" height="55"/><text class="lbl" x="60" y="203" style="font-size:12.5px">registerCallback(cb)</text><text class="code" x="60" y="222">Binder 객체 자체를 Parcel에 실어 전달</text>
+<rect id="bRCL" class="box" x="585" y="150" width="330" height="80"/><text class="lbl" x="600" y="174" style="font-size:12.5px">RemoteCallbackList&lt;ICalcCallback&gt;</text><text class="code" x="600" y="194">register(cb) — 죽은 Binder 자동 정리</text><text class="code" x="600" y="212">beginBroadcast()/finishBroadcast()</text>
+<rect id="bWork" class="box" x="585" y="270" width="330" height="55"/><text class="lbl" x="600" y="293" style="font-size:12.5px">긴 계산 완료! (HandlerThread)</text><text class="code" x="600" y="312">result = 42</text>
+<rect id="bUi" class="box" x="45" y="300" width="310" height="55"/><text class="lbl" x="60" y="323" style="font-size:12.5px">onResult(42) 수신</text><text class="code" x="60" y="342">runOnUiThread { text = 42 }</text>
+<path id="aReg" class="arrow" d="M355,207 C470,207 480,185 583,185"/>
+<path id="aCb" class="arrow" d="M585,300 C460,300 420,325 357,325"/>
+<path id="mReg" class="mpath" d="M355,207 C470,207 480,185 583,185"/>
+<path id="mCb" class="mpath" d="M585,300 C460,300 420,325 357,325"/>
+<g id="gSync" class="hidden-ctl hid">
+<rect class="zone" x="20" y="380" width="920" height="115" style="stroke:#4a2f45"/>
+<text class="lbl" x="36" y="406" style="fill:#ff9a9a">⚠ 만약 콜백이 동기(blocking)라면</text>
+<text class="code" x="36" y="430">서버 스레드가 앱의 onResult 리턴을 기다림 → 앱이 느리면 서버 스레드 인질</text>
+<text class="code" x="36" y="450">콜백 대상이 100개면? → 느린 앱 하나가 나머지 99개 통지를 지연</text>
+<text class="code" x="36" y="470" style="fill:#ffd166">→ 시스템→앱 방향은 관례적으로 oneway (⑮ 데드락의 예방주사)</text>
+</g>
+<text id="tExc" class="code hidden-ctl hid" x="480" y="505" text-anchor="middle" style="fill:#ff9a9a">oneway의 대가: 리턴값 없음 · 앱측 예외가 서버로 전달되지 않음 (조용한 실패 가능)</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"역할 반전 — 앱이 Binder '서버'가 된다",on:["zC","bCb"],
+ n:"콜백을 받으려면 앱도 <b>수신 창구</b>가 필요합니다. <span class='fn'>ICalcCallback.Stub</span>을 구현하는 순간, 앱 프로세스 안에도 onTransact를 가진 Binder 객체가 생깁니다 — Client/Server는 역할일 뿐 고정이 아닙니다."},
+{t:"등록 — Binder 객체가 Parcel을 타고 간다",on:["bReg","bRCL"],arrows:["aReg:flow"],pkts:[{path:"mReg",dur:1100,loop:true,gap:700}],
+ n:"<span class='fn'>registerCallback(cb)</span>은 int나 String이 아니라 <b>Binder 객체 참조</b>를 전달합니다(<span class='fn'>writeStrongBinder</span>). 커널이 핸들 테이블에 등록해주므로(②) 서버는 이제 앱을 '가리킬' 수 있습니다."},
+{t:"보관 — RemoteCallbackList의 책임",on:["bRCL"],
+ n:"서버는 콜백을 <span class='fn'>RemoteCallbackList</span>에 보관합니다. 그냥 List가 아닌 이유: <b>앱이 죽으면 그 Binder를 자동 제거</b>(내부적으로 linkToDeath, ㉘)하고, broadcast 중 동시 수정도 안전하게 처리합니다. 시스템 서비스의 표준 부품."},
+{t:"🟢 이벤트 → oneway 통지",on:["bWork","bUi"],arrows:["aCb:grn"],pkts:[{path:"mCb",cls:"grn",dur:1000,loop:true,gap:700}],
+ n:"계산이 끝나면 <span class='fn'>beginBroadcast()</span> 루프에서 각 콜백의 <span class='fn'>onResult(42)</span>를 호출 — AIDL에 <b>oneway</b>로 선언했으므로 서버 스레드는 <b>기다리지 않고 즉시 다음으로</b> 넘어갑니다. 앱은 Binder 스레드로 수신하므로 UI 갱신은 runOnUiThread로."},
+{t:"⚠ 반사실 — 동기 콜백이었다면",show:["gSync"],on:["bWork"],arrows:["aCb:red"],
+ n:"동기라면 느린 앱 하나가 서버 스레드를 인질로 잡고, 100개 브로드캐스트가 줄줄이 밀립니다. 최악의 경우 ⑮의 데드락으로 — <b>시스템→앱 방향 oneway는 생존 수칙</b>입니다."},
+{t:"oneway의 대가 — 조용한 실패",show:["tExc"],on:["bCb"],
+ n:"oneway는 리턴값이 없고, <b>앱측 onResult에서 터진 예외가 서버로 전달되지 않습니다.</b> '분명 보냈는데 반응이 없다'면: 앱 로그에서 콜백측 예외를 따로 확인하는 습관 — CalcService 콜백 실습의 함정 문제이자, ⑧ HVAC 콜백에도 똑같이 적용되는 원리입니다.",
+ c:"<span class='c'># 서버측: 보냈다는 로그만 남음</span>\nD CalcService: broadcast onResult(42) to 3 callbacks — ok\n<span class='c'># 앱측: 여기서만 보이는 진실</span>\nE AndroidRuntime: <span class='r'>NullPointerException at MainActivity$1.onResult()</span>"}
+]});
+</script></body></html>

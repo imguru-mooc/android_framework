@@ -1,0 +1,45 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑭ CursorWindow — FD로 1MB 우회</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑭ CursorWindow — FD로 1MB 문을 우회하기</h1><span class="tag">Day 1 · Ch 3 (⑯의 해법편)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 대용량 데이터는 Binder로 '내용' 대신 'FD(열쇠)'만 보내고 실제 데이터는 공유 메모리로 읽게 하는 패턴(CursorWindow/ashmem)을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bP" class="box" x="30" y="60" width="260" height="80"/><text class="lbl" x="45" y="85">ContentProvider (DB 소유)</text><text class="code" x="45" y="107">query() 결과 5MB</text><text class="code" x="45" y="125">CursorWindow 생성</text>
+<rect id="bGate" class="box" x="400" y="60" width="180" height="80" style="fill:#241a2e"/><text class="lbl" x="490" y="92" text-anchor="middle" style="font-size:12.5px">Binder 문</text><text class="code" x="490" y="112" text-anchor="middle">폭 ≈1MB (⑯)</text>
+<rect id="bC" class="box" x="690" y="60" width="240" height="80"/><text class="lbl" x="705" y="85">앱 (Cursor 사용)</text><text class="code" x="705" y="107">cursor.getString(...)</text>
+<rect id="bShm" class="box" x="280" y="270" width="400" height="90" style="fill:#26203a"/><text class="lbl" x="480" y="300" text-anchor="middle">ashmem 공유 메모리 (5MB)</text><text class="code" x="480" y="322" text-anchor="middle">/dev/ashmem · 실제 행 데이터</text><text class="code" x="480" y="340" text-anchor="middle">양쪽 프로세스가 mmap</text>
+<path id="aBig" class="arrow hidden-ctl hid" d="M290,90 L398,95"/>
+<path id="aFd" class="arrow hidden-ctl hid" d="M290,110 C380,110 420,100 580,100"/>
+<path id="aFd2" class="arrow hidden-ctl hid" d="M580,100 L688,100"/>
+<path id="aM1" class="arrow hidden-ctl hid" d="M180,140 C200,220 240,270 285,295"/>
+<path id="aM2" class="arrow hidden-ctl hid" d="M800,140 C780,220 730,270 678,295"/>
+<path id="mFd" class="mpath" d="M290,110 C420,105 560,100 688,100"/>
+<text id="tX" class="lbl hidden-ctl hid" x="490" y="180" text-anchor="middle" style="fill:#ff6b6b;font-size:15px">❌ 5MB는 문을 통과 못 함 (TransactionTooLarge)</text>
+<text id="tKey" class="code hidden-ctl hid" x="490" y="215" text-anchor="middle" style="fill:#7ee787">✅ 대신 FD(열쇠 🔑) 하나만 통과 — 커널이 수신측 fd 테이블에 복제(dup)</text>
+<text id="tRead" class="code hidden-ctl hid" x="480" y="430" text-anchor="middle" style="fill:#8fd18f">앱의 getString()은 Binder 재호출 없이 공유 메모리를 직접 읽는다 — 행 이동 시 window 교체만 IPC</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4000,steps:[
+{t:"문제 — 5MB 쿼리 결과",show:["aBig","tX"],on:["bP","bGate"],arrows:["aBig:red"],dead:false,
+ n:"DB 쿼리 결과 5MB를 Parcel에 그대로 실으면? — ⑯에서 본 그 문(≈1MB)에 막혀 <b>TransactionTooLargeException</b>. 내용을 문으로 밀어 넣는 발상 자체를 바꿔야 합니다."},
+{t:"발상 전환 — 열쇠만 보낸다",show:["bShm","tKey","aFd","aFd2"],on:["bP","bShm"],arrows:["aFd:grn","aFd2:grn"],pkts:[{path:"mFd",cls:"grn",dur:1200,loop:true,gap:800}],
+ n:"Provider는 <span class='fn'>CursorWindow</span>(내부 <b>ashmem</b> 공유 메모리)에 데이터를 담고, Binder로는 그 영역의 <b>파일 디스크립터(FD)</b>만 보냅니다. Parcel의 <span class='fn'>writeFileDescriptor</span> — 커널이 수신 프로세스의 fd 테이블에 <b>dup</b>해 주는 특수 화물입니다."},
+{t:"양쪽 mmap — 같은 방을 함께 본다",show:["bShm","aM1","aM2","tKey"],on:["bC","bShm"],arrows:["aM1","aM2:grn"],
+ n:"앱은 받은 FD를 <span class='fn'>mmap</span> — 이제 Provider와 앱이 <b>같은 물리 페이지</b>를 봅니다(④의 원리 재등장!). 5MB는 한 번도 Parcel을 타지 않았습니다."},
+{t:"읽기 — IPC 없는 getString()",show:["bShm","aM1","aM2","tRead"],on:["bC"],
+ n:"<span class='fn'>cursor.getString()</span>은 공유 메모리에서 <b>직접</b> 읽습니다(Binder 재호출 없음). 스크롤로 window 범위를 벗어날 때만 다음 window 채우기 IPC가 발생 — ContentProvider가 대용량에도 견고한 이유."},
+{t:"일반화 — 대용량 전달의 3가지 길",on:["bGate","bShm"],
+ n:"큰 데이터는 ① <b>FD/공유메모리</b>(지금 본 것, Bitmap도 내부적으로 유사) ② <b>URI 전달</b> 후 수신측이 열기(ContentProvider/FileProvider) ③ <b>분할 전송</b>. '1MB 문을 넓히려' 하지 말고 <b>문 옆에 창고를 만드는</b> 것이 Android식 정답 — ⑯ 퀴즈의 모범답안입니다.",
+ c:"$ adb shell dumpsys meminfo com.example.app | grep -i ashmem\n<span class='c'># CursorWindow가 쓰는 ashmem 확인</span>"}
+]});
+</script></body></html>

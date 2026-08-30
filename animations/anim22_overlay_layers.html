@@ -1,0 +1,59 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉒ SRO+RRO 5단 우선순위 레이어</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉒ 리소스 오버레이 5단 우선순위 — 누구의 색이 이기는가</h1><span class="tag">Day 3 · Ch 8~9 · RRO/SRO 실습 연결</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 원본 → DEVICE → PRODUCT → 정적 RRO → 동적 RRO로 쌓이는 우선순위와 AssetManager의 해석 순서를 이해하고, <span class="fn">cmd overlay enable/disable</span>이 최종 값을 어떻게 바꾸는지 확인한다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- layer stack -->
+<text class="lbl" x="60" y="45">레이어 스택 (위가 이긴다)</text>
+<rect id="L5" class="box hidden-ctl hid" x="60" y="70"  width="480" height="58" style="fill:#3a2a4e"/><text class="lbl" x="78" y="93" style="font-size:12.5px">⑤ 동적 RRO — cmd overlay enable</text><text class="code" x="78" y="112">com.example.rrooverlay · hello="Hello, RRO! 🚀" · color=<tspan fill="#c792ff">보라</tspan></text>
+<rect id="L4" class="box hidden-ctl hid" x="60" y="140" width="480" height="58" style="fill:#2c3a56"/><text class="lbl" x="78" y="163" style="font-size:12.5px">④ 정적 RRO — isStatic="true"</text><text class="code" x="78" y="182">/vendor/overlay/OEMTheme.apk · color=<tspan fill="#4fc3f7">파랑</tspan> (항상 활성)</text>
+<rect id="L3" class="box hidden-ctl hid" x="60" y="210" width="480" height="58"/><text class="lbl" x="78" y="233" style="font-size:12.5px">③ SRO: PRODUCT_PACKAGE_OVERLAYS</text><text class="code" x="78" y="252">제품 브랜딩 (빌드 시 적용) · color=<tspan fill="#7ee787">초록</tspan></text>
+<rect id="L2" class="box hidden-ctl hid" x="60" y="280" width="480" height="58"/><text class="lbl" x="78" y="303" style="font-size:12.5px">② SRO: DEVICE_PACKAGE_OVERLAYS</text><text class="code" x="78" y="322">하드웨어별 기본값 · color=<tspan fill="#ffd166">노랑</tspan></text>
+<rect id="L1" class="box" x="60" y="350" width="480" height="58"/><text class="lbl" x="78" y="373" style="font-size:12.5px">① 원본 리소스 — 타겟 APK</text><text class="code" x="78" y="392">res/values: hello="Hello World" · color=<tspan fill="#ff8a80">빨강</tspan></text>
+<!-- app query -->
+<rect id="bApp" class="box" x="640" y="70" width="290" height="90"/><text class="lbl" x="655" y="95">앱: RROTarget</text><text class="code" x="655" y="115">getString(R.string.hello_world)</text><text class="code" x="655" y="132">getColor(R.color.background)</text><text class="sub" x="655" y="150">AssetManager가 위→아래로 탐색</text>
+<rect id="bIdmap" class="box hidden-ctl hid" x="640" y="185" width="290" height="72"/><text class="lbl" x="655" y="208" style="font-size:12.5px">idmap2</text><text class="code" x="655" y="228">오버레이 리소스ID ↔ 타겟 ID 매핑</text><text class="code" x="655" y="245">/data/resource-cache/*.idmap</text>
+<!-- result screen -->
+<rect id="scr" x="640" y="300" width="290" height="180" rx="14" fill="#ff8a80" stroke="#33415e" stroke-width="2"/>
+<text id="scrT" x="785" y="380" text-anchor="middle" style="font-size:17px;font-weight:700" fill="#1a1a2a">Hello World</text>
+<text class="sub" x="785" y="500" text-anchor="middle">최종 화면 (해석 결과)</text>
+<path id="aQ" class="arrow" d="M640,110 C600,110 590,95 542,95"/>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+const scr=document.getElementById('scr'), scrT=document.getElementById('scrT');
+function paint(c,t){scr.setAttribute('fill',c);scrT.textContent=t}
+initAnim({autoMs:4200,steps:[
+{t:"바닥 — 원본 리소스",on:["L1","bApp"],arrows:["aQ"],
+ n:"오버레이가 하나도 없으면 AssetManager는 타겟 APK의 res/를 그대로 씁니다. 화면=빨강 · \"Hello World\". <b>규칙: 스택 위에 있는 자가 이긴다.</b> 이제 한 층씩 쌓아봅니다. (paint→빨강)",
+ c:"<span class='c'># 우선순위 (높은 것이 이김)</span>\n동적RRO > 정적RRO > PRODUCT_PACKAGE_OVERLAYS > DEVICE_PACKAGE_OVERLAYS > 원본"},
+{t:"② DEVICE 오버레이 (SRO, 빌드 시)",show:["L2"],on:["L2"],
+ n:"보드/하드웨어별 기본값. <b>빌드 시점에</b> 리소스가 교체되므로 기기에서는 켜고 끌 수 없습니다. 화면이 노랑으로. (실습 3-3의 sro_overlay 폴더가 이 계층의 미니어처)"},
+{t:"③ PRODUCT 오버레이 — DEVICE를 이긴다",show:["L2","L3"],on:["L3"],
+ n:"제품(브랜드) 오버레이는 DEVICE보다 우선 — 같은 color를 정의하면 <b>초록이 노랑을 덮습니다.</b> 하드웨어 기본값 위에 제품 브랜딩을 얹는 OEM의 표준 구조입니다."},
+{t:"④ 정적 RRO — 설치형이지만 항상 켜짐",show:["L2","L3","L4"],on:["L4"],
+ n:"<span class='fn'>isStatic=\"true\"</span> RRO는 /vendor/overlay/ 등에 탑재되어 <b>비활성화 불가</b>, 시스템 서명 필수. 빌드 시 SRO보다 우선합니다. 화면=파랑."},
+{t:"⑤ 동적 RRO — cmd overlay enable ⚡",show:["L2","L3","L4","L5","bIdmap"],on:["L5","bIdmap"],
+ n:"실습 3-1의 그 순간입니다. <span class='fn'>OverlayManagerService</span>가 오버레이를 활성화하면 <span class='fn'>idmap2</span> 매핑을 통해 AssetManager 탐색 경로 <b>맨 위</b>에 얹힙니다 — 타겟 APK는 1바이트도 수정되지 않습니다. 화면=보라 · \"Hello, RRO! 🚀\". 단, <b>overlayable.xml에 공개된 리소스만</b> 교체 가능(워크숍 S5 힌트).",
+ c:"$ adb shell cmd overlay enable com.example.rrooverlay\n$ adb shell cmd overlay list | grep rrooverlay\n<span class='y'>[x]</span> com.example.rrooverlay\n$ adb shell cmd overlay dump com.example.rrooverlay | head"},
+{t:"disable — 스택에서 빠지면 아래가 드러난다",show:["L2","L3","L4","bIdmap"],on:["L4"],
+ n:"<span class='fn'>cmd overlay disable</span> 하면 ⑤가 스택에서 빠지고, 그 아래 정적 RRO(파랑)가 다시 최종값이 됩니다. <b>'값이 이상하다'의 디버깅 = 이 스택을 위에서부터 읽는 것</b> — cmd overlay list로 활성 오버레이부터 확인하세요. 앱 재시작을 잊으면 옛 값이 보일 수 있습니다(S5 함정)."},
+{t:"실습 연결",show:["L2","L3","L4","L5","bIdmap"],on:["L1","L5"],
+ n:"Lab 3-1/3-2(RRO 문자열·색·drawable) → Lab 3-3(SRO) → Day 3 과제(HvacSimulator RRO)까지, 오늘 여러분은 이 스택의 ①⑤③ 층을 직접 만듭니다. Day 4 워크숍 S5에서 이 그림이 정답지가 됩니다."}
+]});
+// paint per step via hook: override narr update by listening dots
+const stepPaint=['#ff8a80|Hello World','#ffd166|Hello World','#7ee787|Hello World','#4fc3f7|Hello World','#c792ff|Hello, RRO! 🚀','#4fc3f7|Hello World','#c792ff|Hello, RRO! 🚀'];
+new MutationObserver(()=>{const m=document.getElementById('steplbl').textContent.split('/')[0].trim();
+ const p=stepPaint[+m-1]; if(p){const[a,b]=p.split('|');paint(a,b)}}).observe(document.getElementById('steplbl'),{childList:true});
+paint('#ff8a80','Hello World');
+</script></body></html>

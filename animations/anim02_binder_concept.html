@@ -1,0 +1,47 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>② Binder IPC 데이터 여행 (개념편)</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>② Binder IPC 데이터 여행 — 개념·비교편 (④의 도입부)</h1><span class="tag">Day 1 · Ch 1</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 프로세스는 서로의 메모리를 볼 수 없고, 모든 IPC는 커널을 경유한다는 대원칙 위에서 Binder의 위치(1회 복사·핸들·UID 주입)를 개념 수준으로 잡는다. 물리 페이지 상세는 ④에서.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zA" class="zone" x="20" y="20" width="300" height="200"/><text class="lbl" x="36" y="46">앱 A (HVAC UI)</text><text class="sub" x="36" y="63">가상 주소 공간 A</text>
+<rect id="zB" class="zone" x="640" y="20" width="300" height="200"/><text class="lbl" x="656" y="46">프로세스 B (CarService)</text><text class="sub" x="656" y="63">가상 주소 공간 B</text>
+<rect id="zK" class="zone kern" x="20" y="270" width="920" height="230"/><text class="lbl" x="36" y="296">Kernel — 유일한 공용 구역</text>
+<rect id="bAd" class="box" x="50" y="90" width="240" height="60"/><text class="lbl" x="65" y="113" style="font-size:12.5px">데이터 "temp=23"</text><text class="code" x="65" y="133">0x7f12a000 (A만의 주소)</text>
+<rect id="bBd" class="box hidden-ctl hid" x="670" y="90" width="240" height="60"/><text class="lbl" x="685" y="113" style="font-size:12.5px">도착한 "temp=23"</text><text class="code" x="685" y="133">0x7e55b000 (B만의 주소)</text>
+<text id="tWall" class="lbl" x="480" y="120" text-anchor="middle" style="fill:#ff6b6b;font-size:15px">✋ 직접 접근 불가 (MMU 격리)</text>
+<rect id="bDrv" class="box" x="330" y="320" width="300" height="70"/><text class="lbl" x="345" y="345">/dev/binder 드라이버</text><text class="code" x="345" y="365">복사 1회 + 대상 프로세스 깨움</text><text class="code" x="345" y="381">호출자 PID/UID 자동 주입</text>
+<rect id="bHnd" class="box hidden-ctl hid" x="680" y="320" width="240" height="70"/><text class="lbl" x="695" y="345" style="font-size:12.5px">핸들 테이블</text><text class="code" x="695" y="365">A의 handle 3 = B의 서비스</text><text class="code" x="695" y="381">프로세스별 번호(불투명)</text>
+<rect id="bSock" class="box hidden-ctl hid" x="60" y="320" width="230" height="70"/><text class="lbl" x="75" y="345" style="font-size:12.5px">비교: Socket/Pipe</text><text class="code" x="75" y="365">복사 2회 · 신원 보장 약함</text><text class="code" x="75" y="381">스트림(경계 없음)</text>
+<path id="aDown" class="arrow" d="M170,150 C170,240 300,300 330,340"/>
+<path id="aUp" class="arrow" d="M630,345 C700,300 760,220 780,152"/>
+<path id="mDown" class="mpath" d="M170,150 C170,240 300,300 330,340"/>
+<path id="mUp" class="mpath" d="M630,345 C700,300 760,220 780,152"/>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4000,steps:[
+{t:"대원칙 — 프로세스는 남의 메모리를 못 본다",on:["zA","zB","bAd"],
+ n:"A의 0x7f12a000은 <b>A만의 가상 주소</b> — B에게 이 숫자를 알려줘도 B의 같은 주소엔 전혀 다른 것이 있습니다. MMU가 프로세스를 격리하기 때문. 그래서 <b>모든 IPC는 반드시 커널을 경유</b>합니다."},
+{t:"Binder 드라이버 — 커널 속 우체국",on:["zK","bDrv"],arrows:["aDown:flow"],pkts:[{path:"mDown",dur:1100,loop:true,gap:700}],
+ n:"A가 <span class='fn'>transact()</span>하면 데이터는 <span class='path'>/dev/binder</span> 드라이버로 들어갑니다. 드라이버는 <b>단 1회 복사</b>로 B가 볼 수 있는 곳에 데이터를 놓고(상세 메커니즘은 ④), B의 Binder 스레드를 깨웁니다."},
+{t:"도착 — B의 주소로 다시 태어난 데이터",show:["bBd"],on:["bBd"],arrows:["aUp:grn"],pkts:[{path:"mUp",cls:"grn",dur:1100,loop:true,gap:700}],
+ n:"B의 <span class='fn'>onTransact()</span>가 받는 Parcel은 <b>B의 가상 주소</b>(0x7e55b000)로 보입니다. 같은 데이터, 다른 주소 — 주소가 아니라 <b>내용</b>이 여행한 것입니다."},
+{t:"핸들 — 참조도 커널이 번역한다",show:["bBd","bHnd"],on:["bHnd"],
+ n:"A가 가진 '서비스 참조'의 실체는 커널 핸들 테이블의 <b>번호(handle)</b>일 뿐입니다. A의 handle 3과 B의 실제 객체를 잇는 것도 커널 — 그래서 가짜 참조를 위조할 수 없고, <b>호출자 UID도 커널이 주입</b>하므로 신뢰할 수 있습니다(권한 검사의 근거)."},
+{t:"Socket과의 위상 비교",show:["bBd","bHnd","bSock"],on:["bSock","bDrv"],
+ n:"Socket/Pipe도 커널 경유는 같지만: <b>복사 2회</b>, 메시지 경계 없음(스트림), 신원 보장 약함, 객체 참조 전달 불가. Binder는 1회 복사 + 트랜잭션 단위 + UID 주입 + 핸들 — <b>RPC를 위해 태어난 IPC</b>입니다. (Zygote만 예외적으로 Socket을 쓰는 이유는 ⑥에서)",
+ c:"$ adb shell ls -l /dev/binder /dev/hwbinder /dev/vndbinder\n<span class='c'># framework용 / HAL(HIDL 시절)용 / vendor간용 — 3형제</span>"},
+{t:"다음 단계 → ④ 물리 페이지 줌인",on:["bDrv"],
+ n:"여기까지가 개념 지도입니다. Day 2의 ④에서 이 '1회 복사'가 <b>mmap + vm_insert_page</b>로 어떻게 구현되는지 물리 페이지 수준으로 확대합니다 — 같은 그림의 현미경 버전이니 이 장면을 기억해 두세요."}
+]});
+</script></body></html>

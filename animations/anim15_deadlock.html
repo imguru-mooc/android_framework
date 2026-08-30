@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑮ Binder Thread Pool 데드락</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑮ Thread Pool 데드락 — 15개의 스레드가 전부 멈추는 날</h1><span class="tag">Day 2 · 실습 4-2 도입</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 동기 Binder 호출의 상호 대기가 Thread Pool을 고갈시켜 교착에 이르는 조건과, <b>oneway 전환</b>이 어떻게 사슬을 끊는지 스레드 단위로 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zA" class="zone" x="20" y="15" width="400" height="440"/><text class="lbl" x="36" y="42">Process A (예: system_server)</text><text class="sub" x="36" y="60">Binder Thread Pool — MAX 15 (여기선 4개로 축약)</text>
+<rect id="zB" class="zone" x="540" y="15" width="400" height="440"/><text class="lbl" x="556" y="42">Process B (예: com.android.car)</text><text class="sub" x="556" y="60">A의 요청을 처리하려면 A를 다시 불러야 하는 구조</text>
+<g id="tA1"><rect class="box" x="45" y="90" width="350" height="52"/><text class="lbl" x="60" y="112" style="font-size:12.5px">binder:1842_1</text><text id="sA1" class="code" x="60" y="130">IDLE — 대기 중</text></g>
+<g id="tA2"><rect class="box" x="45" y="160" width="350" height="52"/><text class="lbl" x="60" y="182" style="font-size:12.5px">binder:1842_2</text><text id="sA2" class="code" x="60" y="200">IDLE — 대기 중</text></g>
+<g id="tA3"><rect class="box" x="45" y="230" width="350" height="52"/><text class="lbl" x="60" y="252" style="font-size:12.5px">binder:1842_3</text><text id="sA3" class="code" x="60" y="270">IDLE — 대기 중</text></g>
+<g id="tA4"><rect class="box" x="45" y="300" width="350" height="52"/><text class="lbl" x="60" y="322" style="font-size:12.5px">binder:1842_4 (마지막!)</text><text id="sA4" class="code" x="60" y="340">IDLE — 대기 중</text></g>
+<rect id="bAin" class="box" x="45" y="380" width="350" height="52" style="stroke-dasharray:5 4"/><text class="lbl" x="60" y="402" style="font-size:12.5px">📥 B→A 수신 큐</text><text id="sQ" class="code" x="60" y="420">비어 있음</text>
+<rect id="bBsvc" class="box" x="565" y="150" width="350" height="70"/><text class="lbl" x="580" y="175" style="font-size:12.5px">B.onTransact()</text><text class="code" x="580" y="195">처리 중 A의 다른 서비스가 필요</text><text class="code" x="580" y="211">→ A를 동기 호출 (reply 대기)</text>
+<path id="a1" class="arrow" d="M395,116 C480,116 480,170 563,170"/>
+<path id="a2" class="arrow" d="M395,186 C475,186 485,180 563,180"/>
+<path id="a3" class="arrow" d="M395,256 C480,256 480,195 563,193"/>
+<path id="a4" class="arrow" d="M395,326 C490,326 490,205 563,203"/>
+<path id="aBack" class="arrow" d="M565,215 C450,300 420,395 397,404"/>
+<path id="mBack" class="mpath" d="M565,215 C450,300 420,395 397,404"/>
+<text id="tDead" class="lbl hidden-ctl hid" x="480" y="505" text-anchor="middle" style="fill:#ff6b6b;font-size:20px">💀 DEADLOCK — 양쪽 모두 영원히 대기</text>
+<text id="tFix" class="lbl hidden-ctl hid" x="480" y="505" text-anchor="middle" style="fill:#7ee787;font-size:17px">✅ oneway: reply를 기다리지 않으므로 스레드가 즉시 풀린다</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+const S=id=>document.getElementById(id);
+function busy(id,txt){S(id).textContent=txt;S(id).style.fill= txt.startsWith('IDLE')?'#a8c7fa':'#ff9a9a'}
+initAnim({autoMs:3800,steps:[
+{t:"평화로운 시작",on:["zA","tA1","tA2","tA3","tA4"],
+ n:"A의 Binder Thread Pool(기본 최대 15, 그림은 4개로 축약)이 모두 IDLE. 각 스레드는 <span class='fn'>IPCThreadState::joinThreadPool()</span> 안에서 커널의 일감을 기다립니다. 실습 4-2에서 실제 스레드 수를 세어봅니다.",
+ c:"$ adb shell ps -T -p $(pidof system_server) | grep binder: | wc -l\n15"},
+{t:"스레드들이 하나씩 B를 동기 호출",on:["tA1","tA2"],arrows:["a1","a2"],
+ n:"A의 스레드 1·2가 B의 서비스를 <b>동기(reply 대기)</b> 호출합니다. transact()가 리턴할 때까지 이 스레드들은 <b>아무 일도 못 합니다</b> — Native 상태로 커널에서 잠듭니다."},
+{t:"풀 고갈 직전",on:["tA1","tA2","tA3","tA4"],arrows:["a1","a2","a3","a4"],
+ n:"트래픽이 몰려 스레드 3, 그리고 <b>마지막 4번</b>까지 전부 B 응답 대기에 들어갑니다. 이제 A에는 새 Binder 요청을 받아줄 스레드가 <b>0개</b>입니다."},
+{t:"B가 A를 되부른다 — 운명의 호출",on:["bBsvc","bAin"],arrows:["aBack:red"],pkts:[{path:"mBack",cls:"red",dur:1400,loop:true,gap:600}],
+ n:"B는 A의 요청을 처리하려면 A의 다른 서비스가 필요합니다(실제 사례: AMS↔WMS 순환, CarService↔앱 콜백). B→A 요청이 A의 수신 큐에 도착하지만…"},
+{t:"💀 교착",dead:true,show:["tDead"],arrows:["a1","a2","a3","a4","aBack:red"],
+ n:"A의 스레드 전원이 'B의 reply'를 기다리고, B는 'A가 내 요청을 처리해 주기'를 기다립니다. <b>서로가 서로의 결과를 기다리는 원</b> — 아무도 깨어나지 못하고, 5초 뒤 앱 ANR, 60초 뒤 Watchdog이 system_server를 사살합니다(Animation ⑲).",
+ c:"<span class='c'># /data/anr/traces.txt 에서 보게 될 모습</span>\n\"binder:1842_4\" prio=5 tid=8 <span class='r'>Native</span>\n  at android.os.BinderProxy.transactNative(Native Method)\n  <span class='c'># 15개 전부 이 모양이면 → Thread Pool 고갈 확정</span>"},
+{t:"해법 ① oneway — 사슬 끊기",show:["tFix"],on:["bBsvc"],arrows:["aBack:grn"],
+ n:"순환의 한 방향을 <b>oneway</b>로 바꾸면 호출자가 reply를 기다리지 않으므로 스레드가 즉시 풀립니다. 그래서 <b>시스템→앱 콜백은 관례적으로 oneway</b>입니다(Day 1 Animation ③). 그 외: 호출 방향 단일화, BINDER_SET_MAX_THREADS 증설(임시방편), 아키텍처 재설계."},
+{t:"실습 4-2로",on:["tA1","tA2","tA3","tA4"],
+ n:"이제 로컬 에뮬레이터에서 Thread Pool을 실시간 관찰하고, 데드락 성립 조건 4가지 해법을 각자 정리해 발표합니다. Perfetto에서 binder 스레드가 전부 sleeping이면 무엇을 의심해야 할까요?",
+ c:"$ adb shell cat /sys/kernel/debug/binder/proc/$(pidof system_server) | grep -E \"threads|requested\"\n  threads: 15  requested threads: 0+15/15  <span class='c'># ← 15/15 = 포화</span>"}
+]});
+</script></body></html>

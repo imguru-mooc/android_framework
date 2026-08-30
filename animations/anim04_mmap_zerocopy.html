@@ -1,0 +1,82 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>④ Binder mmap Zero-Copy — 물리 페이지의 마법</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>④ Binder mmap Zero-Copy — 물리 페이지의 마법</h1><span class="tag">Day 2 · Ch 4 · 실습 4-1 도입</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: <b>copy_from_user() 1회</b>가 유일한 복사이며, 커널 버퍼와 서버 mmap 영역의 PTE가 <b>동일한 물리 프레임</b>을 가리켜 서버 측 복사가 0회임을 커널 함수 수준에서 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- zones -->
+<rect id="zClient" class="zone" x="15" y="15" width="280" height="230"/><text class="lbl" x="30" y="40">Client 앱 프로세스</text><text class="sub" x="30" y="57">UID 10123 · 사용자 공간</text>
+<rect id="zKern" class="zone kern" x="315" y="15" width="330" height="530"/><text class="lbl" x="330" y="40">Linux Kernel</text><text class="sub" x="330" y="57">drivers/android/binder.c</text>
+<rect id="zServer" class="zone" x="665" y="15" width="280" height="230"/><text class="lbl" x="680" y="40">Server: system_server</text><text class="sub" x="680" y="57">UID 1000 · 사용자 공간</text>
+<!-- client -->
+<rect id="bParcel" class="box" x="40" y="80" width="230" height="55" rx="8"/><text class="lbl" x="55" y="103">Parcel (data)</text><text class="code" x="55" y="122">writeInt(1); writeInt(2);</text>
+<rect id="bTransact" class="box" x="40" y="155" width="230" height="55" rx="8"/><text class="lbl" x="55" y="178">BinderProxy.transact()</text><text class="code" x="55" y="197">→ ioctl(BINDER_WRITE_READ)</text>
+<!-- kernel -->
+<rect id="bIoctl" class="box" x="345" y="80" width="270" height="50" rx="8"/><text class="lbl" x="360" y="101">binder_ioctl()</text><text class="code" x="360" y="119">→ binder_transaction()</text>
+<rect id="bAlloc" class="box" x="345" y="150" width="270" height="50" rx="8"/><text class="lbl" x="360" y="171">binder_alloc_buf()</text><text class="code" x="360" y="189">alloc_page(GFP_KERNEL)</text>
+<!-- physical frame -->
+<rect id="bFrame" class="box" x="395" y="235" width="170" height="90" rx="8" style="fill:#26203a"/>
+<text class="lbl" x="480" y="262" text-anchor="middle">물리 페이지 프레임</text>
+<text class="code" x="480" y="282" text-anchor="middle">PFN 0x8a3f2</text>
+<text id="tData" class="code hidden-ctl hid" x="480" y="304" text-anchor="middle" style="fill:#ffd166">data: [1, 2]</text>
+<!-- PTE boxes -->
+<rect id="bPteK" class="box" x="345" y="360" width="130" height="62" rx="8"/><text class="lbl" x="410" y="384" text-anchor="middle" style="font-size:12px">커널 PTE</text><text class="code" x="410" y="404" text-anchor="middle">kmap()</text>
+<rect id="bPteS" class="box" x="485" y="360" width="130" height="62" rx="8"/><text class="lbl" x="550" y="384" text-anchor="middle" style="font-size:12px">서버 VMA PTE</text><text class="code" x="550" y="404" text-anchor="middle">vm_insert_page()</text>
+<line id="aPteK" class="arrow" x1="410" y1="360" x2="455" y2="328"/>
+<line id="aPteS" class="arrow" x1="550" y1="360" x2="505" y2="328"/>
+<!-- server -->
+<rect id="bMmap" class="box" x="690" y="80" width="230" height="60" rx="8"/><text class="lbl" x="705" y="103">mmap 영역 (~1MB)</text><text class="code" x="705" y="124">/dev/binder  r--p</text>
+<rect id="bOnT" class="box" x="690" y="160" width="230" height="55" rx="8"/><text class="lbl" x="705" y="183">onTransact()</text><text class="code" x="705" y="202">Parcel.readInt() ← 포인터만</text>
+<!-- socket comparison -->
+<g id="gSock" class="hidden-ctl hid">
+<rect class="zone" x="315" y="440" width="330" height="100"/>
+<text class="lbl" x="330" y="463" style="fill:#ff9a9a">비교: Socket IPC</text>
+<text class="code" x="330" y="485">① copy_from_user()  Client→커널 소켓버퍼</text>
+<text class="code" x="330" y="505">② copy_to_user()    커널→Server</text>
+<text class="code" x="330" y="527" style="fill:#ff6b6b">= 복사 2회 (Binder는 1회)</text>
+</g>
+<!-- motion paths -->
+<path id="mpC2K" class="mpath" d="M270,182 C310,182 320,105 345,105"/>
+<path id="mpK2F" class="mpath" d="M480,200 L480,235"/>
+<path id="mpMmapRead" class="mpath" d="M480,280 C620,280 660,110 690,110"/>
+<path id="mpSrvRead" class="mpath" d="M805,140 L805,160"/>
+<!-- arrows -->
+<path id="aC2K" class="arrow" d="M270,182 C310,182 320,105 345,105"/>
+<line id="aK2A" class="arrow" x1="480" y1="130" x2="480" y2="150"/>
+<line id="aA2F" class="arrow" x1="480" y1="200" x2="480" y2="230"/>
+<path id="aF2M" class="arrow" d="M565,270 C640,265 660,120 685,113"/>
+<line id="aM2O" class="arrow" x1="805" y1="140" x2="805" y2="155"/>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"서버가 Binder를 여는 순간 — binder_mmap()",on:["zServer","bMmap"],
+ n:"system_server가 <span class='fn'>open(\"/dev/binder\")</span> 후 mmap을 호출하면 커널의 <span class='fn'>binder_mmap()</span>이 서버 주소 공간에 <b>약 1MB의 VMA</b>를 만듭니다. 이 시점엔 물리 페이지가 없는 빈 껍데기(on-demand)입니다. 권한이 <b>r--p(읽기 전용)</b>인 점을 기억하세요 — 서버는 이 창을 '읽기만' 합니다.",
+ c:"$ adb shell cat /proc/$(pidof system_server)/maps | grep /dev/binder\n7f8a00000000-7f8a000ff000 <span class='y'>r--p</span> 00000000 00:06 1234  /dev/binder\n<span class='c'># 0xff000 ≈ 1,044,480 바이트 ≈ 1MB — 트랜잭션 최대 크기와 일치 (실습 4-1)</span>"},
+{t:"Client가 transact() 호출",on:["zClient","bParcel","bTransact"],arrows:["aC2K"],pkts:[{path:"mpC2K",cls:"blu",dur:1400,loop:true,gap:800}],
+ n:"Client는 <span class='fn'>Parcel</span>에 인자를 직렬화하고 <span class='fn'>BinderProxy.transact()</span> → JNI → <span class='fn'>IPCThreadState::talkWithDriver()</span> → <span class='fn'>ioctl(BINDER_WRITE_READ)</span>로 커널에 진입합니다. 데이터는 아직 Client 사용자 공간에 있습니다."},
+{t:"커널: 버퍼 할당 + 물리 페이지 확보",on:["zKern","bIoctl","bAlloc","bFrame"],arrows:["aK2A","aA2F"],
+ n:"<span class='fn'>binder_transaction()</span>이 <span class='fn'>binder_alloc_buf()</span>로 트랜잭션 크기만큼 버퍼를 할당하고, <span class='fn'>alloc_page(GFP_KERNEL)</span>로 <b>물리 페이지 프레임(PFN)</b>을 이제서야 확보합니다."},
+{t:"★ 트릭의 핵심 — 두 PTE가 같은 프레임을 가리킨다",on:["bFrame","bPteK","bPteS"],arrows:["aPteK","aPteS"],
+ n:"커널은 이 프레임을 <span class='fn'>kmap()</span>으로 커널 주소에 매핑하는 <b>동시에</b>, <span class='fn'>vm_insert_page()</span>로 <b>서버 VMA의 페이지 테이블에도 같은 프레임을 꽂아 넣습니다.</b> 커널 PTE와 서버 PTE → 동일 물리 프레임. 이것이 zero-copy의 전부입니다.",
+ c:"<span class='c'>// drivers/android/binder_alloc.c (개념 흐름)</span>\npage = alloc_page(GFP_KERNEL);\nkmap(page);                       <span class='c'>// 커널 매핑</span>\nvm_insert_page(vma, addr, page);  <span class='c'>// ★ 서버 사용자공간에 삽입</span>"},
+{t:"유일한 복사 1회 — copy_from_user()",on:["bTransact","bFrame"],show:["tData"],arrows:["aC2K","aK2A","aA2F"],pkts:[{path:"mpC2K",cls:"",dur:1100},{path:"mpK2F",cls:"",dur:600,delay:1150}],
+ n:"<span class='fn'>copy_from_user()</span>가 Client의 Parcel 데이터를 방금 확보한 물리 페이지로 <b>딱 1회</b> 복사합니다. 전체 여정에서 데이터가 이동하는 것은 이 한 번뿐입니다."},
+{t:"서버는 복사 없이 그냥 '보인다'",on:["bFrame","bMmap","bOnT"],show:["tData"],arrows:["aF2M:grn","aM2O:grn"],pkts:[{path:"mpMmapRead",cls:"grn",dur:1300,loop:true,gap:900}],
+ n:"서버의 <span class='fn'>onTransact()</span>가 받는 Parcel의 데이터 포인터는 <b>mmap 영역의 가상 주소</b> — 4단계에서 꽂은 그 물리 프레임입니다. <span class='fn'>copy_to_user()</span>는 호출되지 않습니다. <b>서버 측 복사 0회.</b>"},
+{t:"Socket과의 비교 — 왜 Binder인가",show:["gSock","tData"],on:["bFrame"],
+ n:"Socket은 커널 소켓 버퍼로 들어갈 때 1회, 서버로 나갈 때 <span class='fn'>copy_to_user()</span> 1회 — <b>총 2회</b>. Binder는 페이지 테이블 트릭으로 <b>1회</b>. 이 차이가 초당 수만 건의 시스템 IPC에서 성능 격차를 만듭니다."},
+{t:"실습 4-1로 직접 확인",on:["bMmap","bFrame"],show:["tData"],
+ n:"이제 여러분의 <b>로컬 Automotive Emulator</b>에서 이 구조를 눈으로 확인합니다. mmap 시작 주소·크기·권한을 기록표에 채우세요. <span class='path'>/sys/kernel/debug/binder/state</span>에서 할당 버퍼 수까지 — 애니메이션의 모든 요소가 실제로 존재합니다.",
+ c:"$ adb root\n$ adb shell cat /proc/$(pidof system_server)/maps | grep binder\n$ adb shell cat /sys/kernel/debug/binder/state | head -30\n<span class='c'># 기록: 시작주소 / 크기 / 권한(r--p) / allocated buffers</span>"}
+]});
+</script></body></html>

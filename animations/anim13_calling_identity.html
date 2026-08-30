@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑬ clearCallingIdentity 신원 스위치</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑬ clearCallingIdentity — 신원 명찰 갈아끼우기</h1><span class="tag">Day 1 Ch2 / Day 2 Ch6 공용</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Binder 호출 스레드에 붙는 호출자 신원(UID/PID)이 언제 필요한지, 내부 작업을 위해 잠시 내려놓고(clear) 반드시 복원(restore)해야 하는 이유를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bApp" class="box" x="30" y="50" width="240" height="70"/><text class="lbl" x="45" y="75">HVAC 앱</text><text class="code" x="45" y="96">UID 10123 · 명찰 🎫</text>
+<rect id="bSvc" class="box" x="360" y="40" width="560" height="120"/><text class="lbl" x="375" y="65">CarPropertyService — Binder 스레드</text>
+<text id="tBadge" class="code" x="375" y="90" style="fill:#ffd166">현재 명찰: (도착 전)</text>
+<text class="code" x="375" y="112">① enforcePermission(CONTROL_CAR_CLIMATE) ← 호출자 명찰로!</text>
+<text class="code" x="375" y="132">② 내부 설정 파일 접근 ← system만 가능</text>
+<rect id="bClear" class="box hidden-ctl hid" x="360" y="200" width="560" height="110"/><text class="lbl" x="375" y="225" style="font-size:12.5px">신원 스위치</text>
+<text class="code" x="375" y="250">final long token = Binder.clearCallingIdentity();  // 🎫→👑(1000)</text>
+<text class="code" x="375" y="270">try { settings.write(...); }                       // system으로 수행</text>
+<text class="code" x="375" y="290" style="fill:#7ee787">finally { Binder.restoreCallingIdentity(token); }  // 👑→🎫 반드시!</text>
+<rect id="bLeak" class="box hidden-ctl hid" x="30" y="350" width="890" height="100" style="stroke:#ff5252"/><text class="lbl" x="45" y="375" style="fill:#ff7b72">⚠ restore를 잊으면 (finally 밖에 두면)</text>
+<text class="code" x="45" y="400">이 Binder 스레드는 명찰 👑(system)을 단 채 스레드 풀로 반납된다</text>
+<text class="code" x="45" y="420">→ 다음에 이 스레드로 들어온 다른 앱 호출의 getCallingUid()가 1000!</text>
+<text class="code" x="45" y="440" style="fill:#ffd166">→ 간헐적 권한 우회/오검사 — 재현 안 되는 보안 버그의 고전</text>
+<path id="aCall" class="arrow" d="M270,85 L358,85"/><path id="mCall" class="mpath" d="M270,85 L358,85"/>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+const badge=document.getElementById('tBadge');
+initAnim({autoMs:4200,steps:[
+{t:"명찰의 도착 — 커널이 붙여준다",on:["bApp","bSvc"],arrows:["aCall:flow"],pkts:[{path:"mCall",dur:900,loop:true,gap:600}],
+ n:"호출이 도착하면 이 Binder 스레드에는 <b>호출자 신원(UID 10123)</b>이 붙습니다 — 앱이 보낸 게 아니라 커널이 붙인 것(②). <span class='fn'>Binder.getCallingUid()</span>가 읽는 값. [badge:app]"},
+{t:"명찰이 필요한 순간 — 권한 검사",on:["bSvc"],
+ n:"<span class='fn'>enforceCallingPermission(CONTROL_CAR_CLIMATE)</span>은 <b>호출자 명찰 기준</b>으로 판정해야 합니다. 여기서 명찰을 미리 지우면 검사가 무의미 — <b>검사 먼저, 스위치 나중</b>이 철칙. [badge:app]"},
+{t:"스위치 — clearCallingIdentity",show:["bClear"],on:["bClear"],
+ n:"검사 통과 후 내부 설정 파일 접근은 <b>system(1000)</b> 권한이 필요합니다. <span class='fn'>clearCallingIdentity()</span>가 명찰을 🎫(10123)→👑(1000)으로 바꾸고 <b>token</b>(이전 신원)을 돌려줍니다. [badge:sys]"},
+{t:"복원 — finally의 존재 이유",show:["bClear"],on:["bClear"],
+ n:"작업이 성공하든 예외가 나든 <span class='fn'>restoreCallingIdentity(token)</span>은 <b>반드시 finally에서</b>. 이 try/finally 관용구는 AOSP 전역에서 수천 번 반복되는 패턴 — grep 해보면 도처에 있습니다. [badge:app]",
+ c:"$ grep -rn \"clearCallingIdentity\" frameworks/base/services/core/java/ | wc -l\n<span class='c'># 수백 건 — 시스템 서비스의 기본 문법</span>"},
+{t:"⚠ 복원을 잊으면 — 명찰이 오염된 스레드",show:["bClear","bLeak"],on:["bLeak"],dead:true,
+ n:"restore 없이 리턴하면 이 스레드는 <b>system 명찰을 단 채 풀로 반납</b>됩니다. 스레드는 재사용되므로(⑮), 다음 호출의 getCallingUid()가 1000으로 보일 수 있음 — <b>간헐적으로만 재현되는</b> 권한 버그의 고전적 원인. 실습 6-2 코드 리뷰 체크리스트 1번입니다. [badge:sys]"}
+]});
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ if(n.includes('[badge:app]'))badge.textContent='현재 명찰: 🎫 UID 10123 (호출자)';
+ else if(n.includes('[badge:sys]'))badge.textContent='현재 명찰: 👑 UID 1000 (system)';const _el=document.getElementById('narr');if(/\[[a-z가-힣]+:[^\]]*\]/.test(_el.innerHTML))_el.innerHTML=_el.innerHTML.replace(/\s*\[[a-z가-힣]+:[^\]]*\]/g,'');}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>

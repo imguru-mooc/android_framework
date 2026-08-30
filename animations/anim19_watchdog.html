@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑲ Watchdog — 60초의 감시자</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑲ Watchdog — system_server를 감시하는 60초 타이머</h1><span class="tag">Day 2 · Ch 5</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Watchdog이 핵심 락/HandlerThread의 응답성을 감시하다 60초 무응답 시 system_server를 재시작시키는 메커니즘과, 내 서비스 코드가 그 방아쇠가 될 수 있음을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zSS" class="zone" x="20" y="20" width="920" height="330"/><text class="lbl" x="36" y="46">system_server</text>
+<rect id="bWd" class="box" x="50" y="70" width="280" height="100"/><text class="lbl" x="65" y="95">Watchdog 스레드</text><text class="code" x="65" y="117">30초마다 Monitor 순회:</text><text class="code" x="65" y="135">AMS락·WMS락·주요 HandlerThread</text>
+<text id="tTimer" class="lbl" x="190" y="160" text-anchor="middle" style="fill:#7ee787;font-size:15px">⏱ 0s — 모두 응답</text>
+<rect id="bLock" class="box" x="420" y="70" width="230" height="100"/><text class="lbl" x="435" y="95" style="font-size:12.5px">AMS 락 🔒</text><text id="tHold" class="code" x="435" y="117">보유자: (없음)</text><text class="code" x="435" y="137">monitor() 진입 검사 대상</text>
+<rect id="bBad" class="box" x="700" y="70" width="220" height="100"/><text class="lbl" x="715" y="95" style="font-size:12.5px">MyCustomService</text><text id="tBad" class="code" x="715" y="117">idle</text><text class="code" x="715" y="137">락 잡고 DB 쿼리 중?!</text>
+<rect id="bKill" class="box hidden-ctl hid" x="50" y="230" width="870" height="90" style="stroke:#ff5252"/><text class="lbl" x="65" y="256" style="fill:#ff7b72">WATCHDOG KILLING SYSTEM PROCESS</text><text class="code" x="65" y="278">Blocked in monitor com.android.server.am.ActivityManagerService on foreground thread</text><text class="code" x="65" y="298">→ Process.killProcess(Process.myPid()) → Zygote가 system_server 재기동 = 사실상 소프트 재부팅</text>
+<text id="tLog" class="code hidden-ctl hid" x="480" y="400" text-anchor="middle" style="fill:#8fd18f">부검: /data/anr/traces.txt + logcat "Watchdog" — 60초 동안 무엇이 락을 쥐고 있었나</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"평시 — 30초 순찰",on:["bWd","bLock"],
+ n:"Watchdog은 system_server 안의 전담 스레드로, 30초마다 등록된 <b>Monitor</b>(핵심 락 획득 시도)와 주요 HandlerThread(빈 메시지 응답)를 점검합니다. 모두 즉시 응답하면 평화. [t:0]"},
+{t:"사건 — 락을 쥔 채 잠수",on:["bBad","bLock"],
+ n:"내가 만든 서비스가 AMS 락(또는 자체 락을 통해 연쇄적으로)을 쥔 채 <b>동기 DB 쿼리/네트워크</b>에 들어갑니다. Watchdog의 락 획득 시도가 블로킹 — 카운트다운 시작. [t:30][hold:my]"},
+{t:"60초 — 판정",show:[],on:["bWd","bBad"],dead:false,
+ n:"두 사이클(약 60초) 연속 무응답이면 Watchdog은 '시스템 심장이 멈췄다'고 판정합니다. 먼저 스택 덤프를 남기고… [t:60][hold:my]"},
+{t:"💀 처형 — system_server 재시작",show:["bKill"],on:["bKill"],dead:true,
+ n:"<span class='fn'>Process.killProcess(myPid())</span> — system_server가 죽으면 Zygote(①)가 재기동하지만, 사용자에겐 <b>화면이 꺼졌다 켜지는 소프트 재부팅</b>. 차량이라면 주행 중 클러스터가 리셋되는 대형 사고입니다. 내 서비스 한 줄이 방아쇠가 될 수 있습니다. [t:60][hold:my]",
+ c:"W Watchdog: <span class='r'>*** WATCHDOG KILLING SYSTEM PROCESS ***</span>\nW Watchdog: Blocked in monitor com.android.server.am.ActivityManagerService"},
+{t:"부검과 예방",show:["bKill","tLog"],on:["bWd"],
+ n:"부검: logcat의 Watchdog 라인 + traces에서 <b>60초간 락을 쥔 범인 스레드</b>를 찾습니다(⑳ 기법 동일). 예방: Binder/락 구간에서 <b>I/O 금지</b>, 무거운 일은 HandlerThread로(Ch 5 패턴), 락 범위 최소화. — ANR(앱, 5초)과 Watchdog(시스템, 60초)의 관계를 비교 정리하세요. [t:0]"}
+]});
+const tT=document.getElementById('tTimer'),tH=document.getElementById('tHold'),tB=document.getElementById('tBad');
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ if(n.includes('[t:0]')){tT.textContent='⏱ 0s — 모두 응답';tT.style.fill='#7ee787';tH.textContent='보유자: (없음)';tB.textContent='idle'}
+ if(n.includes('[t:30]')){tT.textContent='⏱ 30s — AMS락 무응답 1회';tT.style.fill='#ffd166'}
+ if(n.includes('[t:60]')){tT.textContent='⏱ 60s — 무응답 2회 확정';tT.style.fill='#ff6b6b'}
+ if(n.includes('[hold:my]')){tH.textContent='보유자: MyCustomService 스레드';tB.textContent='DB 쿼리 7초째…'}
+const _el=document.getElementById('narr');if(/\[[a-z가-힣]+:[^\]]*\]/.test(_el.innerHTML))_el.innerHTML=_el.innerHTML.replace(/\s*\[[a-z가-힣]+:[^\]]*\]/g,'');}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>

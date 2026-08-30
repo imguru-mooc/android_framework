@@ -1,0 +1,59 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑤ System Service의 탄생 — DeviceInfoService</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑤ System Service의 탄생 — 9개의 파일, 하나의 서비스</h1><span class="tag">Day 2 · Ch 6 · 실습 6-1~6-5 (전원 필수)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 실습 6-x에서 만드는 파일 9개가 각각 어느 계층의 부품인지, SystemServer 기동 시 서비스가 등록·공개되는 순서와 6-5 검증 방법까지 한 흐름으로 잇는다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- file wall -->
+<g id="gFiles"><text class="lbl" x="30" y="40">변경/생성 파일 9개</text>
+<rect id="f1" class="box hidden-ctl hid" x="30" y="55" width="430" height="34"/><text class="code" x="42" y="77">① IDeviceInfoService.aidl — 계약서</text>
+<rect id="f2" class="box hidden-ctl hid" x="30" y="95" width="430" height="34"/><text class="code" x="42" y="117">② DeviceInfoService.java — Stub 상속 구현</text>
+<rect id="f3" class="box hidden-ctl hid" x="30" y="135" width="430" height="34"/><text class="code" x="42" y="157">③ DeviceInfoManager.java — 앱측 포장지</text>
+<rect id="f4" class="box hidden-ctl hid" x="30" y="175" width="430" height="34"/><text class="code" x="42" y="197">④ Context(＋SystemServiceRegistry) — getSystemService 연결</text>
+<rect id="f5" class="box hidden-ctl hid" x="30" y="215" width="430" height="34"/><text class="code" x="42" y="237">⑤ SystemServer.java — 기동 코드 추가</text>
+<rect id="f6" class="box hidden-ctl hid" x="30" y="255" width="430" height="34"/><text class="code" x="42" y="277">⑥ device_info.te — SELinux 타입 선언</text>
+<rect id="f7" class="box hidden-ctl hid" x="30" y="295" width="430" height="34"/><text class="code" x="42" y="317">⑦ service_contexts — 전용 라벨 부여</text>
+<rect id="f8" class="box hidden-ctl hid" x="30" y="335" width="430" height="34"/><text class="code" x="42" y="357">⑧ 앱 도메인 allow 규칙(.te)</text>
+<rect id="f9" class="box hidden-ctl hid" x="30" y="375" width="430" height="34"/><text class="code" x="42" y="397">⑨ Android.bp / api txt — 빌드·API 노출</text>
+</g>
+<!-- boot flow -->
+<rect id="bSS" class="box" x="520" y="60" width="410 " height="66"/><text class="lbl" x="535" y="84" style="font-size:12.5px">SystemServer.startOtherServices()</text><text class="code" x="535" y="104">new DeviceInfoService(context)</text>
+<rect id="bPub" class="box" x="520" y="150" width="410" height="66"/><text class="lbl" x="535" y="174" style="font-size:12.5px">publishBinderService("device_info", svc)</text><text class="code" x="535" y="194">→ ServiceManager.addService()</text>
+<rect id="bSM" class="box" x="520" y="240" width="410" height="60"/><text class="lbl" x="535" y="264" style="font-size:12.5px">ServiceManager 장부 등록 완료</text><text class="code" x="535" y="283">service list 에 등장</text>
+<rect id="bApp" class="box" x="520" y="330" width="410" height="72"/><text class="lbl" x="535" y="354" style="font-size:12.5px">앱: getSystemService("device_info")</text><text class="code" x="535" y="373">→ DeviceInfoManager → Proxy</text><text class="code" x="535" y="390">→ Binder → onTransact()</text>
+<line id="aB1" class="arrow" x1="725" y1="126" x2="725" y2="148"/>
+<line id="aB2" class="arrow" x1="725" y1="216" x2="725" y2="238"/>
+<line id="aB3" class="arrow" x1="725" y1="300" x2="725" y2="328"/>
+<text id="tVerify" class="code hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#7ee787">6-5 검증: service check device_info → dumpsys device_info → 테스트앱 호출 → avc denied 없음</text>
+<text id="tCar" class="code hidden-ctl hid" x="480" y="505" text-anchor="middle" style="fill:#8fd18f">CarService(㉔)도 구조는 동일 — 별도 프로세스에 산다는 점만 다르다</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"부품 목록 — 계약과 구현",show:["f1","f2","f3"],on:["f1","f2","f3"],
+ n:"①<b>AIDL</b>은 계약서(Stub/Proxy 자동 생성, ⑪), ②<b>Service</b>는 Stub을 상속한 실제 구현(권한 검사+로직), ③<b>Manager</b>는 앱 개발자에게 Binder를 숨겨주는 포장지 — CarPropertyManager와 똑같은 3층 구조입니다."},
+{t:"부품 목록 — 연결과 등록",show:["f1","f2","f3","f4","f5"],on:["f4","f5"],
+ n:"④<b>Context/Registry</b>에 이름을 등록해야 <span class='fn'>getSystemService()</span>로 찾아지고, ⑤<b>SystemServer</b>에 기동 코드를 넣어야 부팅 때 태어납니다. 여기까지가 Java 세계."},
+{t:"부품 목록 — 보안과 빌드",show:["f1","f2","f3","f4","f5","f6","f7","f8","f9"],on:["f6","f7","f8","f9"],
+ n:"⑥⑦⑧<b>SELinux 3종</b>: 타입 선언 → service_contexts로 전용 라벨(default_* 금지!) → 호출 도메인 allow. ⑨<b>Android.bp/api</b>로 빌드에 포함. <b>어느 하나가 빠지면 각기 다른 증상</b>이 나는 것까지가 실습의 학습 포인트입니다."},
+{t:"부팅 — startOtherServices()에서 태어남",on:["bSS"],show:["f5"],arrows:["aB1"],
+ n:"부팅 시 SystemServer(①의 족보에서 Zygote의 첫 자식)가 <span class='fn'>startOtherServices()</span>에서 80여 개 서비스와 함께 우리의 <span class='fn'>DeviceInfoService</span>를 생성합니다. ⚠ 여기서 느린 작업을 하면 부팅 전체가 늦어집니다(워크숍 S3)."},
+{t:"공개 — publishBinderService",on:["bPub","bSM"],arrows:["aB2"],
+ n:"<span class='fn'>publishBinderService(\"device_info\", svc)</span> → 내부적으로 <span class='fn'>ServiceManager.addService()</span>. 이 순간 ServiceManager 장부(②의 전화번호부)에 이름이 오르고, 시스템 어디서든 찾을 수 있게 됩니다.",
+ c:"$ adb shell service list | grep device_info\n<span class='y'>device_info</span>: [com.android.server.deviceinfo.IDeviceInfoService]"},
+{t:"호출 — 앱에서 한 줄로",on:["bApp"],arrows:["aB3"],
+ n:"앱은 <span class='fn'>getSystemService(\"device_info\")</span> 한 줄 — 뒤에서 Manager→Proxy→Binder→Stub.onTransact()→구현이 돌아갑니다. Day 1 CalcService와 유일한 차이는 <b>system_server 안에 살고 SELinux 관문을 지난다</b>는 것."},
+{t:"6-5 검증 에필로그 — Pass/Fail 표",show:["tVerify","tCar"],on:["bSM","bApp"],
+ n:"빌드 산출물(framework.jar/services.jar)을 로컬 에뮬레이터에 적용(㉙) 후 4종 검증: <span class='fn'>service check</span> → <span class='fn'>dumpsys device_info</span> → 테스트앱 값 표시 → <b>avc denied 없음</b>(⑱). 부팅 루프에 빠지면 .orig 복원 또는 Cold Boot. — CarService(㉔)도 같은 문법으로 읽을 수 있게 됐습니다.",
+ c:"$ adb shell service check device_info\nService device_info: <span class='y'>found</span>\n$ adb shell dumpsys device_info\nDeviceInfoService: model=sdk_car_x86_64 uptime=00:12:41"}
+]});
+</script></body></html>

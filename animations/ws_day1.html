@@ -1,0 +1,47 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📝 Day 1 워크시트 — 아키텍처 & Binder 기초</title>
+<link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>📝 Day 1 디지털 워크시트 — 아키텍처 & Binder·AIDL 기초</h1><span class="tag">Ch 0 ~ Ch 3</span></header>
+<div id="ws"></div>
+<script src="assets/ws.js"></script>
+<script>
+initWS({chapters:[
+{title:"Ch 0. Android 아키텍처 & 부팅",short:"Ch0",sub:"전체 계층 구조와 Zygote — 모든 분석의 출발점",questions:[
+ {type:'order',q:"차량 앱에서 API를 호출했을 때 요청이 하드웨어까지 내려가는 계층 순서대로 클릭하세요.",
+  items:["Kernel / Vehicle HW","Android App","HAL","Framework API","SystemServer/System Service","Binder IPC"],ans:[1,3,5,4,2,0],
+  exp:"이 7계층(Native 포함) 사다리가 과정 전체의 지도입니다. 문제가 생기면 이 순서대로 <b>어느 계층인지부터</b> 좁힙니다."},
+ {type:'mc',q:"모든 앱 프로세스가 Zygote에서 fork되는 가장 큰 이유는?",anim:"anim06_startactivity.html",
+  opts:["앱마다 다른 JVM 버전을 쓰기 위해","미리 로딩된 Framework 클래스·리소스를 COW로 공유해 생성 비용을 줄이려고","보안 샌드박스를 만들기 위해","Binder 스레드를 상속하기 위해"],ans:1,
+  exp:"fork()의 <b>Copy-On-Write</b> 덕에 수천 개 클래스를 복사 없이 물려받아 수십 ms 만에 프로세스가 생깁니다. 쓰기가 발생한 페이지만 그때 복사됩니다."},
+],},
+{title:"Ch 1. Binder IPC 기초",short:"Ch1",sub:"프로세스 경계를 넘는 유일한 공식 통로",questions:[
+ {type:'blank',q:"Binder 한 번의 트랜잭션에서 데이터 복사는 총 ___회 일어난다. (숫자)",anim:"anim04_mmap_zerocopy.html",
+  ans:["1","한번","1회"],exp:"<code>copy_from_user()</code> 1회가 전부입니다. Socket은 2회(copy_from_user + copy_to_user) — 이 차이가 시스템 전체 IPC 성능을 좌우합니다."},
+ {type:'mc',q:"Binder 호출을 받은 서버가 '누가 불렀는지'를 신뢰할 수 있는 이유는?",
+  opts:["앱이 Parcel에 UID를 적어 보내므로","커널 Binder 드라이버가 호출자 PID/UID를 직접 주입하므로","ServiceManager가 서명을 검증하므로","SELinux가 UID를 만들어주므로"],ans:1,
+  exp:"UID/PID는 앱이 보내는 게 아니라 <b>커널이 주입</b> — 위조 불가. 그래서 <code>Binder.getCallingUid()</code> 기반 권한 검사가 성립합니다."},
+ {type:'match',q:"구성 요소와 역할을 연결하세요.",
+  pairs:[["ServiceManager",0],["BinderProxy(Client측)",2],["Stub(Server측)",1]],
+  opts:["이름→핸들 전화번호부 (service list)","onTransact()로 요청 수신·분기","transact()로 요청 송신"],
+  exp:"<code>adb shell service list</code>가 ServiceManager 장부를 보는 명령입니다. Proxy=보내는 쪽, Stub=받는 쪽."},
+],},
+{title:"Ch 2. AIDL과 코드 생성",short:"Ch2",sub:"CalcService 실습의 원리",questions:[
+ {type:'mc',q:"asInterface()가 하는 일로 옳은 것은?",
+  opts:["항상 새 Proxy를 만든다","같은 프로세스면 Stub 자신을, 다른 프로세스면 Proxy를 반환한다","서비스를 ServiceManager에 등록한다","Parcel을 생성한다"],ans:1,
+  exp:"같은 프로세스라면 IPC가 필요 없으니 <b>Stub 직접 반환</b> — 로컬 호출 최적화. 다른 프로세스일 때만 Proxy로 감쌉니다."},
+ {type:'mc',q:"Parcel에 writeString(name) → writeInt(age) 순서로 썼는데 읽을 때 readInt() → readString() 순서로 읽으면?",
+  opts:["컴파일 에러가 난다","즉시 크래시한다","크래시 없이 값이 뒤섞여 들어올 수 있다 (조용한 데이터 오염)","Binder가 순서를 자동 교정한다"],ans:2,
+  exp:"Parcel은 타입 정보 없는 <b>바이트 스트림</b> — 쓰기/읽기 순서 불일치는 종종 크래시 대신 <b>조용한 값 오염</b>으로 나타나 가장 잡기 어려운 버그가 됩니다. AIDL이 이 순서를 자동 생성해주는 게 존재 이유."},
+ {type:'blank',q:"서비스 내부에서 시스템 권한으로 작업하기 위해 호출자 신원을 잠시 내려놓는 메서드는 Binder.___() 이다.",
+  ans:["clearCallingIdentity"],exp:"<code>clearCallingIdentity()</code> 후 반드시 <b>finally에서 restoreCallingIdentity()</b> — 원복을 잊으면 이후 권한 검사가 전부 꼬입니다."},
+],},
+{title:"Ch 3. 콜백과 oneway",short:"Ch3",sub:"서버→클라이언트 역방향 통신",questions:[
+ {type:'mc',q:"oneway 메서드의 특징으로 옳은 것을 고르세요.",
+  opts:["reply를 기다리지 않고 즉시 리턴하며, 서버측 예외가 호출자에게 전달되지 않는다","리턴값을 가질 수 있다","호출 순서가 보장되지 않아 절대 쓰면 안 된다","Binder가 아닌 Socket으로 전송된다"],ans:0,
+  exp:"비동기·non-blocking이라 <b>시스템→앱 콜백의 표준</b>입니다. 리턴값/예외 전달 불가. 같은 대상에 대한 oneway 호출 순서는 유지됩니다."},
+ {type:'mc',q:"시스템 서비스가 앱 콜백을 호출할 때 oneway를 쓰는 결정적 이유는?",anim:"anim15_deadlock.html",
+  opts:["코드가 짧아져서","앱이 느리거나 멈춰도 시스템 스레드가 붙잡히지 않게 하려고","보안상 안전해서","Parcel 크기 제한이 없어서"],ans:1,
+  exp:"동기 콜백이라면 <b>느린 앱 하나가 system_server 스레드를 인질</b>로 잡습니다. Day 2의 데드락 시나리오가 정확히 이 지점에서 출발합니다."},
+],}
+]});
+</script></body></html>

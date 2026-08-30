@@ -1,0 +1,77 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑥ startActivity()의 여정 — 4개 프로세스, 3번의 Binder</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑥ startActivity()의 여정 — 4개 프로세스, 3번의 Binder</h1><span class="tag">Day 3 · Ch 7 · 슬라이드 #59</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: <span class="fn">startActivity()</span> 한 줄이 <b>Binder IPC 3회 + Zygote Unix Socket + fork()</b>를 거쳐 <span class="fn">onCreate()</span>에 도달하는 전체 체인을 프로세스 경계 중심으로 추적한다. (콜드 스타트가 느린 이유)</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- 4 lanes -->
+<rect id="zA" class="zone" x="12" y="15" width="220" height="530"/><text class="lbl" x="26" y="40">① 호출 앱</text><text class="sub" x="26" y="57">com.example.launcherX</text>
+<rect id="zS" class="zone" x="248" y="15" width="230" height="530"/><text class="lbl" x="262" y="40">② system_server</text><text class="sub" x="262" y="57">ATMS / AMS</text>
+<rect id="zZ" class="zone" x="494" y="15" width="210" height="530"/><text class="lbl" x="508" y="40">③ Zygote</text><text class="sub" x="508" y="57">모든 앱의 부모</text>
+<rect id="zN" class="zone" x="720" y="15" width="228" height="530"/><text class="lbl" x="734" y="40">④ 새 앱 프로세스</text><text class="sub" x="734" y="57">com.example.hvac</text>
+<!-- lane A -->
+<rect id="bSA" class="box" x="30" y="80" width="185" height="52"/><text class="lbl" x="42" y="102" style="font-size:12.5px">startActivity(intent)</text><text class="code" x="42" y="121">Instrumentation.execStart..</text>
+<rect id="bPx" class="box" x="30" y="150" width="185" height="52"/><text class="lbl" x="42" y="172" style="font-size:12.5px">IActivityTaskManager</text><text class="code" x="42" y="191">.Stub.Proxy.startActivity()</text>
+<!-- lane S -->
+<rect id="bATMS" class="box" x="266" y="105" width="195" height="52"/><text class="lbl" x="278" y="127" style="font-size:12.5px">ATMS.startActivity()</text><text class="code" x="278" y="146">ActivityStarter.execute()</text>
+<rect id="bSup" class="box" x="266" y="180" width="195" height="52"/><text class="lbl" x="278" y="202" style="font-size:12.5px">startSpecificActivity()</text><text class="code" x="278" y="221">프로세스 있나? → 없음!</text>
+<rect id="bPL" class="box" x="266" y="255" width="195" height="52"/><text class="lbl" x="278" y="277" style="font-size:12.5px">ProcessList</text><text class="code" x="278" y="296">ZygoteProcess.start()</text>
+<rect id="bAttach" class="box" x="266" y="390" width="195" height="52"/><text class="lbl" x="278" y="412" style="font-size:12.5px">attachApplicationLocked()</text><text class="code" x="278" y="431">realStartActivityLocked()</text>
+<!-- lane Z -->
+<rect id="bLoop" class="box" x="512" y="230" width="175" height="52"/><text class="lbl" x="524" y="252" style="font-size:12.5px">runSelectLoop()</text><text class="code" x="524" y="271">Socket 요청 수신</text>
+<rect id="bFork" class="box" x="512" y="305" width="175" height="52"/><text class="lbl" x="524" y="327" style="font-size:12.5px">forkAndSpecialize()</text><text class="code" x="524" y="346">fork() + COW</text>
+<!-- lane N -->
+<rect id="bMain" class="box" x="738" y="290" width="192" height="52"/><text class="lbl" x="750" y="312" style="font-size:12.5px">ActivityThread.main()</text><text class="code" x="750" y="331">Looper 준비 → attach()</text>
+<rect id="bLaunch" class="box" x="738" y="440" width="192" height="52"/><text class="lbl" x="750" y="462" style="font-size:12.5px">handleLaunchActivity()</text><text class="code" x="750" y="481">onCreate() → onResume()</text>
+<!-- arrows -->
+<line id="a1" class="arrow" x1="122" y1="132" x2="122" y2="148"/>
+<path id="a2" class="arrow" d="M215,176 C245,176 240,131 264,131"/>
+<line id="a3" class="arrow" x1="363" y1="157" x2="363" y2="178"/>
+<line id="a4" class="arrow" x1="363" y1="232" x2="363" y2="253"/>
+<path id="a5" class="arrow" d="M461,281 C495,281 490,256 510,256"/>
+<line id="a6" class="arrow" x1="599" y1="282" x2="599" y2="303"/>
+<path id="a7" class="arrow" d="M687,331 C715,331 712,316 736,316"/>
+<path id="a8" class="arrow" d="M738,316 C640,340 530,410 461,414"/>
+<path id="a9" class="arrow" d="M461,438 C620,470 680,466 736,466"/>
+<!-- motion paths -->
+<path id="m2" class="mpath" d="M215,176 C245,176 240,131 264,131"/>
+<path id="m5" class="mpath" d="M461,281 C495,281 490,256 510,256"/>
+<path id="m8" class="mpath" d="M738,316 C640,340 530,410 461,414"/>
+<path id="m9" class="mpath" d="M461,438 C620,470 680,466 736,466"/>
+<!-- legend -->
+<g><rect x="30" y="500" width="14" height="4" fill="#ff6b6b"/><text class="mini" x="50" y="506">Binder IPC</text>
+<rect x="130" y="500" width="14" height="4" fill="#7ee787"/><text class="mini" x="150" y="506">Unix Domain Socket</text></g>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"앱 프로세스 안에서의 출발",on:["zA","bSA","bPx"],arrows:["a1"],
+ n:"<span class='fn'>Activity.startActivity()</span> → <span class='fn'>startActivityForResult()</span> → <span class='fn'>Instrumentation.execStartActivity()</span>. 여기까지는 전부 <b>내 프로세스 안</b>의 평범한 메서드 호출입니다. 그리고 <span class='fn'>IActivityTaskManager.Stub.Proxy</span>를 만납니다 — Day 1에서 만든 CalcService의 Proxy와 완전히 같은 구조."},
+{t:"🔴 Binder IPC ① — 프로세스 경계를 넘다",on:["bPx","bATMS"],arrows:["a2:red"],pkts:[{path:"m2",cls:"red",dur:1200,loop:true,gap:700}],
+ n:"<span class='fn'>Proxy.startActivity()</span>가 Parcel을 싸서 <b>system_server</b>로 넘어갑니다. 첫 번째 Binder IPC. 수신측은 <span class='path'>frameworks/base/services/core/.../ActivityTaskManagerService.java</span>."},
+{t:"ActivityStarter — 정책 결정의 심장",on:["zS","bATMS","bSup"],arrows:["a3"],
+ n:"<span class='fn'>ActivityStarter.execute()</span> → <span class='fn'>startActivityInner()</span>가 launchMode·Task·권한을 판정하고, <span class='fn'>startSpecificActivity()</span>가 질문합니다: <b>\"대상 앱 프로세스가 살아있나?\"</b> — 살아있으면 바로 9단계로(웜 스타트). 오늘은 <b>없다</b>고 가정합니다(콜드 스타트)."},
+{t:"🟢 Zygote에게 부탁 — Binder가 아니라 Socket!",on:["bPL","bLoop"],arrows:["a4","a5:grn"],pkts:[{path:"m5",cls:"grn",dur:1100,loop:true,gap:700}],
+ n:"<span class='fn'>ZygoteProcess.start()</span>는 <b>Unix Domain Socket</b>(<span class='path'>/dev/socket/zygote</span>)으로 명령을 보냅니다. 왜 Binder가 아닐까요? — fork() 시점에 Binder 스레드 상태가 복제되면 위험하기 때문에, Zygote는 의도적으로 단순한 Socket을 씁니다. (퀴즈 단골)"},
+{t:"fork() — 0.01초 만에 태어나는 프로세스",on:["zZ","bLoop","bFork"],arrows:["a6"],
+ n:"<span class='fn'>Zygote.forkAndSpecialize()</span>가 <span class='fn'>fork()</span> 시스템 콜을 부릅니다. <b>COW</b> 덕분에 미리 로딩된 수천 개 Framework 클래스·리소스를 복사 없이 물려받아 수십 ms 만에 프로세스가 생깁니다. (Animation ①에서 본 그 장면)"},
+{t:"새 프로세스의 첫 호흡 — ActivityThread.main()",on:["zN","bFork","bMain"],arrows:["a7"],
+ n:"자식 프로세스에서 <span class='fn'>ActivityThread.main()</span>이 실행됩니다. main Looper를 준비하고 — 아직 이 프로세스는 자기가 <b>무엇을 실행해야 하는지 모릅니다.</b> system_server에게 신고하러 갑니다."},
+{t:"🔴 Binder IPC ② — attachApplication()",on:["bMain","bAttach"],arrows:["a8:red"],pkts:[{path:"m8",cls:"red",dur:1300,loop:true,gap:700}],
+ n:"<span class='fn'>IActivityManager.Stub.Proxy.attachApplication()</span> — 새 프로세스가 system_server에 \"저 준비됐어요\"라고 Binder로 신고. AMS는 대기 중이던 ActivityRecord를 찾아 매칭합니다."},
+{t:"🔴 Binder IPC ③ — 드디어 실행 명령",on:["bAttach","bLaunch"],arrows:["a9:red"],pkts:[{path:"m9",cls:"red",dur:1300,loop:true,gap:700}],
+ n:"<span class='fn'>realStartActivityLocked()</span>가 <b>scheduleLaunchActivity(Transaction)</b>을 앱으로 내려보냅니다(세 번째 Binder). 앱의 <span class='fn'>handleLaunchActivity()</span>가 <span class='fn'>onCreate() → onResume()</span>을 호출 — 드디어 화면이 뜹니다."},
+{t:"정리 + 관찰 실습 3-A",on:["bSA","bATMS","bFork","bLaunch"],
+ n:"<b>Binder 3회(빨강) + Socket 1회(초록) + fork 1회.</b> 프로세스 생성 구간(4~6단계)이 콜드 스타트 지연의 주범입니다. 로컬 에뮬레이터에서 콜드/웜 스타트의 Displayed 시간을 직접 비교하세요 — 차량 부팅 후 앱이 늦게 뜨는 '부팅 지연 분석'이 바로 이 체인 위의 병목 찾기입니다.",
+ c:"$ adb logcat -s ActivityTaskManager | grep Displayed\nActivityTaskManager: Displayed com.example.hvac/.MainActivity: <span class='y'>+847ms</span>  <span class='c'># cold</span>\nActivityTaskManager: Displayed com.example.hvac/.MainActivity: <span class='y'>+123ms</span>  <span class='c'># warm</span>"}
+]});
+</script></body></html>

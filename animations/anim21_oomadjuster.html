@@ -1,0 +1,51 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉑ OomAdjuster 생존 게임</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉑ OomAdjuster 생존 게임 — 메모리가 부족하면 누가 먼저 죽는가</h1><span class="tag">Day 3 · Ch 7 #62</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: oom_adj 점수로 프로세스 중요도가 매겨지고, 메모리 압박 시 큰 점수(캐시)부터 회수되는 원리와 관찰 방법을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<text class="lbl" x="30" y="40">oom_score_adj (낮을수록 생존)</text>
+<rect id="p1" class="box" x="30" y="60" width="420" height="44"/><text class="code" x="45" y="87">-900  system_server / persistent (CarService!)</text>
+<rect id="p2" class="box" x="30" y="112" width="420" height="44"/><text class="code" x="45" y="139">0     포그라운드: HVAC 앱 (화면에 보임)</text>
+<rect id="p3" class="box" x="30" y="164" width="420" height="44"/><text class="code" x="45" y="191">200   보이는/연결된: 음악 재생 서비스</text>
+<rect id="p4" class="box" x="30" y="216" width="420" height="44"/><text class="code" x="45" y="243">500   서비스: 백그라운드 동기화</text>
+<rect id="p5" class="box" x="30" y="268" width="420" height="44"/><text class="code" x="45" y="295">900+  캐시: 아까 쓰던 지도 앱, 브라우저…</text>
+<rect id="bGauge" class="box" x="540" y="60" width="390" height="120"/><text class="lbl" x="555" y="85">메모리 압박 게이지</text>
+<rect x="555" y="100" width="350" height="26" rx="6" fill="#141c30" stroke="#33415e"/>
+<rect id="gFill" x="555" y="100" width="60" height="26" rx="6" fill="#7ee787"/>
+<text id="gTxt" class="code" x="555" y="150">여유 — lmkd 대기</text>
+<rect id="bLmk" class="box" x="540" y="210" width="390" height="80"/><text class="lbl" x="555" y="235" style="font-size:12.5px">lmkd (userspace low-memory killer)</text><text class="code" x="555" y="257">PSI(압박 지표) 감시 → 임계 도달 시</text><text class="code" x="555" y="275">가장 높은 adj부터 SIGKILL</text>
+<text id="tNote" class="code hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#8fd18f">'백그라운드에서 내 서비스가 자꾸 죽어요' = 버그가 아니라 이 게임의 규칙 — Automotive persistent 설계가 답인 경우</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+const gF=document.getElementById('gFill'),gT=document.getElementById('gTxt');
+function gauge(p,txt,col){gF.setAttribute('width',350*p);gF.setAttribute('fill',col);gT.textContent=txt}
+initAnim({autoMs:4200,steps:[
+{t:"점수판 — AMS가 매기는 중요도",on:["p1","p2","p3","p4","p5"],
+ n:"<span class='fn'>OomAdjuster</span>(AMS 내부)가 화면 표시·서비스 연결·최근 사용 등을 근거로 각 프로세스에 <b>oom_score_adj</b>를 매깁니다. 상태가 바뀔 때마다(액티비티 전환 등) 실시간 재계산. [g:0.2|여유 — lmkd 대기|#7ee787]",
+ c:"$ adb shell cat /proc/$(pidof com.example.hvacsimulator)/oom_score_adj\n0   <span class='c'># 포그라운드"},
+{t:"압박 상승 — 지도 앱이 2GB를 먹었다",on:["bGauge"],
+ n:"큰 앱 실행으로 가용 메모리가 줄면 커널 <b>PSI</b>(pressure stall) 지표가 오르고, <b>lmkd</b>가 주시하기 시작합니다. [g:0.6|주의 — PSI 상승|#ffd166]"},
+{t:"💀 회수 — 캐시부터 퇴장",on:["p5","bLmk"],dead:true,
+ n:"임계 도달 — lmkd가 <b>adj 900+(캐시)</b>부터 SIGKILL. 사용자는 눈치 못 챕니다(어차피 안 보이는 프로세스). 그래도 부족하면 500 → 200 순으로 올라옵니다. [g:0.9|위험 — kill 진행|#ff6b6b]",
+ c:"$ adb logcat -s lmkd\nlmkd: Kill 'com.example.maps' (12345), adj <span class='y'>905</span>, to free 210MB"},
+{t:"불사신 — persistent의 특권",on:["p1"],
+ n:"system_server와 <b>persistent</b> 프로세스(CarService 포함)는 음수 adj — 사실상 죽지 않습니다. 차량 핵심 서비스가 메모리 게임에서 면제되는 이유. 단, 특권에는 대가가 — persistent가 메모리를 새면 시스템 전체가 고통받습니다. [g:0.9|위험 — kill 진행|#ff6b6b]"},
+{t:"현업 교훈",show:["tNote"],on:["p4","p5"],
+ n:"'백그라운드 서비스가 자꾸 죽는다'는 버그가 아니라 <b>규칙</b>입니다. 대응: foregroundService 승격, 재시작 견디는 설계(START_STICKY+상태 복원), Automotive라면 persistent 지정 검토. dumpsys meminfo·procstats로 내 프로세스의 등급 이력을 확인하세요. [g:0.3|회수 후 안정|#7ee787]",
+ c:"$ adb shell dumpsys activity oom | head -20\n<span class='c'># 전체 프로세스의 adj 순위표 실시간 확인</span>"}
+]});
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ const m=n.match(/\[g:([\d.]+)\|([^|]+)\|([^\]]+)\]/); if(m)gauge(+m[1],m[2],m[3]);
+const _el=document.getElementById('narr');if(/\[[a-z가-힣]+:[^\]]*\]/.test(_el.innerHTML))_el.innerHTML=_el.innerHTML.replace(/\s*\[[a-z가-힣]+:[^\]]*\]/g,'');}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>

@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑱ SELinux 문지기 — avc denied에서 neverallow까지</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑱ SELinux 문지기 — avc: denied에서 neverallow까지</h1><span class="tag">Day 2 · SELinux 실습 도입</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Binder 호출이 SELinux 정책에서 판정되는 과정과, <b>avc denied → audit2allow → neverallow 확인</b> 5단계 디버깅 절차를 실제 로그로 이해한다. (차량 서비스 연동 실패의 단골 원인)</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bSrc" class="box" x="30" y="60" width="250" height="80"/><text class="lbl" x="45" y="86">호출 프로세스</text><text class="code" x="45" y="106">source: u:r:untrusted_app:s0</text><text class="code" x="45" y="124">테스트 앱 → device_info 호출</text>
+<rect id="bGate" class="box" x="360" y="45" width="240" height="110" style="fill:#241a2e"/><text class="lbl" x="480" y="75" text-anchor="middle">🛡 SELinux (커널 LSM)</text><text class="code" x="480" y="97" text-anchor="middle">avc: access vector cache</text><text class="code" x="480" y="115" text-anchor="middle">class=binder perm=call</text><text class="code" x="480" y="133" text-anchor="middle">class=service_manager perm=find</text>
+<rect id="bTgt" class="box" x="680" y="60" width="250" height="80"/><text class="lbl" x="695" y="86">대상 서비스</text><text class="code" x="695" y="106">target: u:r:system_server:s0</text><text class="code" x="695" y="124">(device_info_service 라벨)</text>
+<path id="aReq" class="arrow" d="M280,100 L358,100"/><path id="mReq" class="mpath" d="M280,100 L358,100"/>
+<path id="aOk" class="arrow" d="M600,100 L678,100"/><path id="mOk" class="mpath" d="M600,100 L678,100"/>
+<rect id="bDeny" class="box hidden-ctl hid" x="330" y="185" width="300" height="60" style="stroke:#ff5252"/><text class="lbl" x="480" y="210" text-anchor="middle" style="fill:#ff7b72">⛔ DENIED</text><text class="code" x="480" y="230" text-anchor="middle">정책에 allow 규칙 없음 → 커널이 차단</text>
+<rect id="bLog" class="box hidden-ctl hid" x="30" y="275" width="900" height="58"/><text class="lbl" x="45" y="297" style="font-size:12px">① dmesg / logcat</text><text class="code" x="45" y="318">avc: denied { find } for service=device_info scontext=u:r:untrusted_app:s0 tcontext=u:object_r:default_android_service:s0 tclass=service_manager</text>
+<rect id="bA2A" class="box hidden-ctl hid" x="30" y="355" width="430" height="78"/><text class="lbl" x="45" y="377" style="font-size:12px">③ audit2allow (개발 전용!)</text><text class="code" x="45" y="398">allow untrusted_app device_info_service</text><text class="code" x="45" y="414">      :service_manager find;</text><text class="code" x="45" y="430" style="fill:#ffd166">→ .te 파일에 추가 후보</text>
+<rect id="bNever" class="box hidden-ctl hid" x="500" y="355" width="430" height="78" style="stroke:#b06a2a"/><text class="lbl" x="515" y="377" style="font-size:12px">④ neverallow 벽 검사</text><text class="code" x="515" y="398">system/sepolicy/public/*.te 의</text><text class="code" x="515" y="414">neverallow 와 충돌? → 빌드 자체 실패</text><text class="code" x="515" y="430" style="fill:#ff9a9a">충돌 시: 규칙 추가 불가, 아키텍처 재설계</text>
+<path id="aSplit1" class="arrow hidden-ctl hid" x1="245" y1="433" x2="245" y2="465"/>
+<text id="tOk2" class="code hidden-ctl hid" x="245" y="485" text-anchor="middle" style="fill:#7ee787">⑤ 충돌 없음 → .te 반영 → 빌드 → 재검증</text>
+<text id="tPass" class="lbl hidden-ctl hid" x="480" y="520" text-anchor="middle" style="fill:#7ee787;font-size:15px">✅ allow 규칙 존재 → 커널 통과 → onTransact() 도달</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4300,steps:[
+{t:"모든 Binder 호출은 문지기를 지난다",on:["bSrc","bGate","bTgt"],
+ n:"UID/권한 검사(Java 레벨)와 <b>별개로</b>, 커널 SELinux가 <b>source context → target context</b>의 접근을 정책으로 판정합니다. Binder는 <span class='fn'>binder:call</span>, ServiceManager 조회는 <span class='fn'>service_manager:find</span> 클래스. 라벨 확인: <span class='fn'>ps -AZ</span>."},
+{t:"우리의 커스텀 서비스 — 첫 호출",on:["bSrc"],arrows:["aReq"],pkts:[{path:"mReq",cls:"blu",dur:900,loop:true,gap:600}],
+ n:"Day 2에서 만든 <b>device_info</b> 서비스를 테스트 앱(untrusted_app)이 부릅니다. 그런데 실습 6-4에서 .te를 빠뜨렸다면…?"},
+{t:"⛔ DENIED — 소리 없는 차단",show:["bDeny"],on:["bGate"],dead:true,
+ n:"커널이 조용히 차단합니다. 앱에는 종종 애매한 예외(ServiceNotFound, null)만 보이고 <b>진짜 이유는 커널 로그에만</b> 있습니다. 이것이 '분명 코드는 맞는데 안 되는' 사건의 단골 범인 — 차량 서비스 연동 실패(워크숍 S6)의 시작점입니다."},
+{t:"① 로그 수집 — denied 한 줄 해부",show:["bDeny","bLog"],on:["bLog"],
+ n:"denied 로그의 4요소를 읽습니다: <b>{ 무슨 권한 }</b> · <b>scontext(누가)</b> · <b>tcontext(무엇에)</b> · <b>tclass(어떤 클래스)</b>. 이 한 줄이 이후 모든 단계의 입력값입니다.",
+ c:"$ adb shell dmesg | grep \"avc:.*denied\" | tail -3\n$ adb logcat -d | grep \"avc:.*denied\" | tail -3\n<span class='r'>avc: denied { find }</span> scontext=u:r:<span class='y'>untrusted_app</span>:s0 tcontext=u:object_r:<span class='y'>default_android_service</span>:s0 tclass=<span class='y'>service_manager</span>"},
+{t:"③ audit2allow — 규칙 초안 자동 생성",show:["bDeny","bLog","bA2A"],on:["bA2A"],
+ n:"수집한 denied를 <span class='fn'>audit2allow</span>에 넣으면 필요한 allow 규칙을 <b>기계적으로</b> 뽑아줍니다. ⚠️ 이것은 <b>개발 단계 도구</b> — 나온 규칙을 무비판적으로 넣으면 보안 구멍이 됩니다. tcontext가 default_*라면 먼저 service_contexts에 전용 라벨부터 부여해야 합니다(실습 6-4).",
+ c:"$ adb shell dmesg | grep denied > /tmp/avc.txt\n$ cat /tmp/avc.txt | audit2allow -p out/target/product/emulator_car64_x86_64/root/sepolicy\n<span class='y'>allow untrusted_app device_info_service:service_manager find;</span>"},
+{t:"④ neverallow — 넘을 수 없는 벽",show:["bDeny","bLog","bA2A","bNever"],on:["bNever"],
+ n:"AOSP의 <span class='path'>system/sepolicy/public</span>에는 <b>neverallow</b> 금지선이 있습니다. 생성된 규칙이 여기 걸리면 <b>빌드 자체가 실패</b> — '규칙을 추가할 수 없다'는 뜻이며, 설계를 바꾸라는 신호입니다(예: untrusted_app에 시스템 서비스를 직접 노출하지 말 것).",
+ c:"$ grep -rn \"neverallow\" system/sepolicy/public/ | grep service_manager | head -3"},
+{t:"⑤ 반영 → 빌드 → 재검증, 그리고 통과",show:["tOk2","tPass"],on:["bSrc","bTgt"],arrows:["aReq:grn","aOk:grn"],pkts:[{path:"mReq",cls:"grn",dur:800,loop:true,gap:500},{path:"mOk",cls:"grn",dur:800,delay:400,loop:true,gap:500}],
+ n:"충돌이 없으면 .te에 반영 → 서버에서 빌드 → 산출물을 로컬 에뮬레이터에 적용 → <b>denied 로그가 사라지고</b> 호출이 onTransact()에 도달합니다. 5단계 흐름(수집→분석→생성→neverallow 확인→검증)을 몸에 새기세요 — 실습 6-5 Pass/Fail 표의 마지막 줄이 바로 'avc 거부 없음'입니다."}
+]});
+</script></body></html>

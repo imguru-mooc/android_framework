@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑳ ANR lock 추적</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑳ ANR lock 추적 — traces.txt를 읽는 탐정의 눈</h1><span class="tag">Day 3 · Ch 7 퀴즈 Q2</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: ANR 발생 시 traces에서 main 스레드 → lock 소유자 → 그 소유자의 대기 대상으로 사슬을 따라가는 3단 독법을 익힌다.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bMain" class="box" x="30" y="50" width="430 " height="96"/><text class="lbl" x="45" y="75">"main" prio=5 tid=1 Blocked</text>
+<text class="code" x="45" y="98">- waiting to lock &lt;0x0d3a9f12&gt;</text>
+<text class="code" x="45" y="116">  held by thread <tspan fill="#ffd166">tid=15</tspan></text>
+<text class="code" x="45" y="134">at MainActivity.onResume(...)</text>
+<rect id="bT15" class="box hidden-ctl hid" x="30" y="200" width="430" height="96"/><text class="lbl" x="45" y="225">"DataSync" prio=5 <tspan fill="#ffd166">tid=15</tspan> Native</text>
+<text class="code" x="45" y="248">- locked &lt;0x0d3a9f12&gt;   ← 범인의 손에 자물쇠</text>
+<text class="code" x="45" y="266">at android.os.BinderProxy.transactNative</text>
+<text class="code" x="45" y="284">at ...CarPropertyManager.getProperty</text>
+<rect id="bWho" class="box hidden-ctl hid" x="560" y="200" width="370" height="96"/><text class="lbl" x="575" y="225" style="font-size:12.5px">사슬의 끝 — 원격</text>
+<text class="code" x="575" y="248">tid=15는 CarService 응답 대기 중</text>
+<text class="code" x="575" y="266">→ CarService가 느린 이유로 점프</text>
+<text class="code" x="575" y="284">(dumpsys car_service · S1/S2 기법)</text>
+<path id="a1" class="arrow hidden-ctl hid" d="M245,146 L245,198"/>
+<path id="a2" class="arrow hidden-ctl hid" d="M460,248 L558,248"/>
+<rect id="bRule" class="box hidden-ctl hid" x="30" y="350" width="900" height="120"/><text class="lbl" x="45" y="376">3단 독법</text>
+<text class="code" x="45" y="400">① main의 상태 확인: Blocked? Native(Binder대기)? Sleeping?  — 'waiting to lock &lt;주소&gt; held by tid=N'</text>
+<text class="code" x="45" y="422">② 그 tid의 스택으로 점프: 무엇을 하며 락을 쥐고 있나 (locked &lt;같은 주소&gt; 확인)</text>
+<text class="code" x="45" y="444" style="fill:#ffd166">③ 그 스레드도 대기 중이면 사슬을 계속 — Binder 대기라면 상대 프로세스로 조사를 확장</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"ANR의 순간 — traces가 찍힌다",on:["bMain"],
+ n:"입력 5초 무응답(또는 BR 10초 등)이면 시스템이 <b>ANR</b>을 선언하고 전 스레드 스택을 <span class='path'>/data/anr/</span>에 남깁니다. 다이얼로그보다 이 파일이 진실 — 첫 줄부터 읽지 말고 <b>\"main\"부터</b> 찾으세요.",
+ c:"$ adb bugreport  <span class='c'># 또는</span>\n$ adb pull /data/anr/ ./anr/"},
+{t:"① main의 진술 — 나는 자물쇠를 기다린다",on:["bMain"],
+ n:"main은 <b>Blocked</b>, <span class='code'>waiting to lock &lt;0x0d3a9f12&gt; held by tid=15</span>. 즉 main이 느린 게 아니라 <b>누군가 쥔 자물쇠를 기다리는 중</b>입니다. 용의자: tid=15."},
+{t:"② tid=15로 점프 — 락을 쥔 손",show:["bT15","a1"],on:["bT15"],arrows:["a1:red"],
+ n:"같은 파일에서 tid=15를 찾으면: <span class='code'>locked &lt;0x0d3a9f12&gt;</span>(같은 주소!) + 상태 <b>Native</b>, 스택 꼭대기는 <span class='fn'>transactNative</span> — <b>락을 쥔 채 동기 Binder 호출</b>을 하고 있었습니다. (메인과 공유하는 락 안에서 IPC — 안티패턴)"},
+{t:"③ 사슬의 끝 — 프로세스 경계 너머로",show:["bT15","bWho","a1","a2"],on:["bWho"],arrows:["a1:red","a2:red"],
+ n:"tid=15가 기다리는 상대는 CarService — 이제 조사는 <b>내 앱 밖으로</b> 확장됩니다: CarService는 왜 느렸나? (S1/S2 기법, dumpsys car_service). ANR 분석이 계층 탐정(㉚)으로 이어지는 순간."},
+{t:"3단 독법 정리",show:["bT15","bWho","bRule"],on:["bRule"],
+ n:"<b>main 상태 → held by tid → 그 tid의 스택 → (Binder면) 상대 프로세스로.</b> 해결은 원인에 따라: 락 안에서 IPC 제거, 락 분리, 비동기화. — ⑮(스레드 풀 관점)·⑲(system_server 관점)과 같은 기술의 3형제입니다."}
+]});
+</script></body></html>

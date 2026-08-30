@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉖ 멀티 디스플레이 — Cluster & Center</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉖ 멀티 디스플레이 — Cluster & Center, 두 개의 DisplayContent</h1><span class="tag">Day 4 · Ch 11 Automotive · SplitScreenDemo 연계</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 차량의 여러 화면이 각각 DisplayContent로 관리되고, 앱을 특정 디스플레이로 띄우는 방법과 OEM의 배치 정책 지점을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bWms" class="box" x="330" y="30" width="300" height="60"/><text class="lbl" x="480" y="55" text-anchor="middle">RootWindowContainer (㉕)</text><text class="code" x="480" y="76" text-anchor="middle">모든 디스플레이의 뿌리</text>
+<rect id="dc1" class="box" x="80" y="140" width="360 " height="66"/><text class="lbl" x="95" y="164" style="font-size:12.5px">DisplayContent #1 — Cluster</text><text class="code" x="95" y="185">FLAG_PRIVATE · 속도계/알림 전용</text>
+<rect id="dc0" class="box" x="520" y="140" width="360" height="66"/><text class="lbl" x="535" y="164" style="font-size:12.5px">DisplayContent #0 — Center (default)</text><text class="code" x="535" y="185">터치 가능 · 일반 앱의 무대</text>
+<line class="arrow" x1="400" y1="90" x2="280" y2="138"/>
+<line class="arrow" x1="560" y1="90" x2="680" y2="138"/>
+<!-- screens -->
+<rect id="scr1" x="80" y="240" width="360" height="150" rx="10" fill="#131c2f" stroke="#33415e" stroke-width="2"/>
+<text id="s1t" class="lbl" x="260" y="315" text-anchor="middle" style="fill:#5f6c8c">Cluster (계기판)</text>
+<rect id="scr0" x="520" y="240" width="360" height="150" rx="10" fill="#131c2f" stroke="#33415e" stroke-width="2"/>
+<text id="s0t" class="lbl" x="700" y="315" text-anchor="middle" style="fill:#5f6c8c">Center (센터 화면)</text>
+<rect id="w0" class="hidden-ctl hid" x="528" y="248" width="344" height="134" rx="8" fill="#1f3a5c"/>
+<text id="w0t" class="mini hidden-ctl hid" x="700" y="318" text-anchor="middle">HvacSimulator (displayId=0)</text>
+<rect id="w1" class="hidden-ctl hid" x="88" y="248" width="344" height="134" rx="8" fill="#20304a"/>
+<text id="w1t" class="mini hidden-ctl hid" x="260" y="318" text-anchor="middle">ClusterHome (displayId=1)</text>
+<rect id="bOpt" class="box hidden-ctl hid" x="80" y="420" width="800" height="72"/><text class="lbl" x="95" y="445" style="font-size:12.5px">특정 디스플레이로 띄우기</text><text class="code" x="95" y="467">ActivityOptions opts = ActivityOptions.makeBasic(); opts.setLaunchDisplayId(1);</text><text class="code" x="95" y="484">startActivity(intent, opts.toBundle());   // + 권한/정책 통과 필요</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"한 시스템, 여러 무대",on:["bWms","dc0","dc1"],
+ n:"차량의 센터·클러스터(·조수석·HUD)는 각각 <b>DisplayContent</b>로 같은 트리(㉕)에 매달립니다. 하나의 Android가 여러 화면을 동시에 지휘 — displayId가 각 무대의 번호표입니다.",
+ c:"$ adb shell dumpsys display | grep -E \"Display Id|Logical\"\nDisplay Id=0 ... (Center)\nDisplay Id=1 ... (Cluster)  <span class='c'># 에뮬레이터: config로 가상 클러스터 추가 가능</span>"},
+{t:"기본 무대 — Center(#0)",show:["w0","w0t"],on:["dc0"],
+ n:"보통의 <span class='fn'>startActivity()</span>(⑥)는 <b>default display(#0)</b>에 오릅니다. 터치 입력·IME·일반 앱 정책이 모두 여기에 기본 연결."},
+{t:"제한 무대 — Cluster(#1)",show:["w0","w0t","w1","w1t"],on:["dc1"],
+ n:"클러스터는 <b>FLAG_PRIVATE 등으로 보호</b>되는 무대 — 아무 앱이나 오르면 주행 안전 문제가 됩니다. 전용 ClusterHome/OEM 앱만 허용되고, 속도·알림 같은 정보는 CarService 경유로 공급되는 것이 일반형."},
+{t:"무대 지정 발령 — setLaunchDisplayId",show:["w0","w0t","w1","w1t","bOpt"],on:["bOpt"],
+ n:"<span class='fn'>ActivityOptions.setLaunchDisplayId(1)</span>로 특정 디스플레이 실행을 요청할 수 있습니다 — 단 <b>요청일 뿐</b>, 권한(INTERNAL_SYSTEM_WINDOW 계열/서명)과 정책 검사를 통과해야 합니다. SplitScreenDemo에서 이 옵션을 직접 실험합니다."},
+{t:"OEM의 손 — 배치 정책 지점",on:["bWms","dc0","dc1"],
+ n:"'어떤 앱을 어느 화면에 허락할까'는 <span class='fn'>CarLaunchParamsModifier</span>(packages/services/Car/…)류의 정책 코드가 결정합니다 — OEM 커스터마이징의 단골 지점. 디버깅 순서: dumpsys display(무대 존재?) → dumpsys window의 해당 DisplayContent 섹션(창이 그 무대에 붙었나?) → 정책 로그.",
+ c:"$ adb shell dumpsys window windows | grep -B2 \"displayId=1\"\n<span class='c'># 클러스터에 실제로 붙은 창 확인 — ㉕의 독법을 무대별로 반복</span>"}
+]});
+</script></body></html>

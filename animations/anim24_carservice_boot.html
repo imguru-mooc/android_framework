@@ -1,0 +1,53 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉔ CarService의 기동</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉔ CarService의 기동 — SystemServer에서 VHAL까지</h1><span class="tag">Day 3~4 · Car 아키텍처 (⑤의 Automotive편)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: CarService가 system_server가 아닌 별도 프로세스(com.android.car)로 기동되는 체인과, 내부 Car*Service들이 VHAL에 연결되는 순서를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zSS" class="zone" x="20" y="20" width="430" height="240"/><text class="lbl" x="36" y="46">system_server</text>
+<rect id="bHelper" class="box" x="45" y="70" width="380" height="76"/><text class="lbl" x="60" y="95" style="font-size:12.5px">CarServiceHelperService</text><text class="code" x="60" y="116">frameworks/opt/car-services/…</text><text class="code" x="60" y="133">SystemServer가 기동하는 '다리'</text>
+<rect id="bBind" class="box" x="45" y="165" width="380" height="66"/><text class="lbl" x="60" y="190" style="font-size:12.5px">bindService(ICar)</text><text class="code" x="60" y="211">com.android.car 프로세스 기동 요청</text>
+<rect id="zCar" class="zone" x="500" y="20" width="440" height="360"/><text class="lbl" x="516" y="46">com.android.car (별도 프로세스!)</text>
+<rect id="bICar" class="box" x="525" y="70" width="390" height="60"/><text class="lbl" x="540" y="94" style="font-size:12.5px">ICarImpl 생성</text><text class="code" x="540" y="113">packages/services/Car/service/</text>
+<rect id="bVhalC" class="box" x="525" y="150" width="390" height="66"/><text class="lbl" x="540" y="174" style="font-size:12.5px">VehicleStub → IVehicle 연결</text><text class="code" x="540" y="195">AIDL VHAL 데몬과 Binder 접속 (⑧㉓)</text>
+<rect id="bSubs" class="box" x="525" y="236" width="390" height="90"/><text class="lbl" x="540" y="260" style="font-size:12.5px">Car*Service 군단 init()</text><text class="code" x="540" y="281">CarPropertyService · CarPowerManagementService</text><text class="code" x="540" y="298">CarAudioService · CarInputService …</text><text class="code" x="540" y="315">각자 필요한 VHAL property 구독</text>
+<rect id="bReg" class="box hidden-ctl hid" x="45" y="290" width="380" height="60"/><text class="lbl" x="60" y="314" style="font-size:12.5px">ServiceManager 등록</text><text class="code" x="60" y="334">"car_service" 외 car_* 이름들</text>
+<rect id="bVhal" class="box" x="525" y="420" width="390" height="60" style="fill:#241a2e"/><text class="lbl" x="540" y="444" style="font-size:12.5px">VHAL 데몬 (vendor 프로세스)</text><text class="code" x="540" y="463">android.hardware.automotive.vehicle…</text>
+<line id="a1" class="arrow" x1="235" y1="146" x2="235" y2="163"/>
+<path id="a2" class="arrow" d="M425,198 C480,198 480,100 523,98"/>
+<line id="a3" class="arrow" x1="720" y1="130" x2="720" y2="148"/>
+<line id="a4" class="arrow" x1="720" y1="216" x2="720" y2="234"/>
+<path id="a5" class="arrow hidden-ctl hid" d="M525,290 C480,290 470,315 427,318"/>
+<line id="a6" class="arrow" x1="720" y1="326" x2="720" y2="418"/>
+<path id="m2" class="mpath" d="M425,198 C480,198 480,100 523,98"/>
+<path id="m6" class="mpath" d="M720,326 L720,418"/>
+<text id="tCrash" class="code hidden-ctl hid" x="480" y="515" text-anchor="middle" style="fill:#ff9a9a">별도 프로세스의 의미: CarService 크래시 ≠ system_server 사망 — 하지만 앱들엔 DeadObjectException 폭풍(S2, ㉘)</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"다리 — CarServiceHelperService",on:["bHelper"],
+ n:"부팅 중 SystemServer(⑤)가 Automotive 빌드에서만 <span class='fn'>CarServiceHelperService</span>를 띄웁니다. 이 서비스의 임무는 하나 — <b>진짜 CarService가 사는 별도 프로세스를 깨우고 연결을 유지</b>하는 것."},
+{t:"기동 — com.android.car 프로세스",on:["bBind","bICar"],arrows:["a1","a2:flow"],pkts:[{path:"m2",dur:1100,loop:true,gap:700}],
+ n:"<span class='fn'>bindService(ICar)</span>로 <b>com.android.car</b> 프로세스가 태어납니다(물론 Zygote fork, ①). system_server가 아닌 <b>별도 프로세스</b>인 이유: 차량 스택의 크래시·업데이트를 시스템 코어와 격리하기 위해서.",
+ c:"$ adb shell pidof system_server; adb shell pidof com.android.car\n1029\n2417   <span class='c'># 서로 다른 PID — 별도 프로세스 확인</span>"},
+{t:"혈관 연결 — VehicleStub → IVehicle",on:["bVhalC","bVhal"],arrows:["a3","a6:flow"],pkts:[{path:"m6",dur:1000,loop:true,gap:700}],
+ n:"<span class='fn'>ICarImpl</span>이 가장 먼저 하는 일은 <b>VHAL 접속</b> — AIDL <span class='fn'>IVehicle</span>을 Binder로 붙잡습니다(⑧㉓의 그 연결). VHAL이 안 떠 있으면? 여기서 재시도/대기 — '차가 없는 CarService'는 성립하지 않으므로."},
+{t:"군단 기동 — Car*Service init()",on:["bSubs"],arrows:["a4"],
+ n:"CarPropertyService·CarPowerManagementService·CarAudioService… 수십 개 서브서비스가 <b>순서대로 init()</b>되며 각자 필요한 VHAL property를 구독합니다(㉓). 기동 순서 의존성이 있어, 초기화 지연·순서 문제는 부팅 이슈의 단골."},
+{t:"명부 등록 — car_service",show:["bReg","a5"],on:["bReg"],arrows:["a5:grn"],
+ n:"준비가 끝나면 ServiceManager에 <span class='code'>car_service</span> 등 이름을 등록 — 이제 앱의 <span class='fn'>Car.createCar()</span>가 이 프로세스를 찾을 수 있습니다. ⑤의 publishBinderService와 같은 문법, 다른 프로세스.",
+ c:"$ adb shell service list | grep -c \"^.*car\"\n<span class='y'>15+</span>   <span class='c'># car_* 서비스 군단</span>\n$ adb shell dumpsys car_service --list | head"},
+{t:"격리의 양면 — S2의 무대",show:["bReg","tCrash"],on:["zCar"],
+ n:"별도 프로세스라서 CarService가 죽어도 system_server는 살지만, 바인딩된 앱들에겐 <b>DeadObjectException 폭풍</b>(S2)이 붑니다. Helper가 재기동을 시도하는 동안 앱은 ㉘(linkToDeath)로 버텨야 — 이 그림이 Day 4 워크숍 S2의 무대 배경입니다."}
+]});
+</script></body></html>

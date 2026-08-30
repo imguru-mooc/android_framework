@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑰ JNI 브릿지 — Java와 Native의 4가지 만남</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑰ JNI 브릿지 — Java와 Native의 4가지 만남 (JNI_test First~Fourth)</h1><span class="tag">Day 2 · JNI 실습 도입</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: JNI_test 4단계(정적 등록 → 역방향 객체 생성 → RegisterNatives → Invocation API)를 통해 <b>android_util_Binder.cpp가 쓰는 바로 그 기법</b>을 손으로 익힌다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zJ" class="zone" x="20" y="15" width="400" height="450"/><text class="lbl" x="36" y="42">☕ Java 세계 (JVM/ART)</text>
+<rect id="zN" class="zone kern" x="540" y="15" width="400" height="450"/><text class="lbl" x="556" y="42">⚙ Native 세계 (C/C++, .so)</text>
+<rect x="440" y="15" width="80" height="450" fill="#1a2135" stroke="#33415e" rx="8"/>
+<text class="lbl" x="480" y="240" text-anchor="middle" style="font-size:13px">JNI</text><text class="sub" x="480" y="258" text-anchor="middle">경계</text>
+<!-- First -->
+<g id="g1"><rect id="b1j" class="box" x="40" y="70" width="380" height="66"/><text class="lbl" x="54" y="92" style="font-size:12.5px">[First] Hello.java</text><text class="code" x="54" y="110">native void foo();</text><text class="code" x="54" y="126">System.loadLibrary("Hello")</text></g>
+<rect id="b1n" class="box" x="560" y="70" width="360" height="66"/><text class="lbl" x="574" y="92" style="font-size:12.5px">Hello.c</text><text class="code" x="574" y="110">JNIEXPORT void JNICALL</text><text class="code" x="574" y="126" style="fill:#ffd166">Java_Hello_foo(JNIEnv*, jobject)</text>
+<path id="a1" class="arrow" d="M420,103 L558,103"/><path id="m1" class="mpath" d="M420,103 L558,103"/>
+<!-- Second -->
+<rect id="b2j" class="box" x="40" y="160" width="380" height="66"/><text class="lbl" x="54" y="182" style="font-size:12.5px">[Second] JniTest 객체</text><text class="code" x="54" y="200">JniTest(int num) 생성자</text><text class="code" x="54" y="216">"JniTest.JniTest(), num=10"</text>
+<rect id="b2n" class="box" x="560" y="160" width="360" height="66"/><text class="lbl" x="574" y="182" style="font-size:12.5px">jnifunc.cpp — 역방향!</text><text class="code" x="574" y="200">FindClass("JniTest")</text><text class="code" x="574" y="216">GetMethodID("&lt;init&gt;") → NewObject</text>
+<path id="a2" class="arrow" d="M558,193 L422,193"/><path id="m2" class="mpath" d="M558,193 L422,193"/>
+<!-- Third -->
+<rect id="b3j" class="box" x="40" y="250" width="380" height="66"/><text class="lbl" x="54" y="272" style="font-size:12.5px">[Third] obj.foo() 호출</text><text class="code" x="54" y="290">이름 규칙 없이도 연결됨</text><text class="code" x="54" y="306">System.loadLibrary("jnimap")</text>
+<rect id="b3n" class="box" x="560" y="250" width="360" height="66"/><text class="lbl" x="574" y="272" style="font-size:12.5px">foo.cpp — JNI_OnLoad</text><text class="code" x="574" y="290">JNINativeMethod nm = {"foo","()V",foo}</text><text class="code" x="574" y="306" style="fill:#ffd166">env-&gt;RegisterNatives(clazz, nm, 1)</text>
+<path id="a3" class="arrow" d="M420,283 L558,283"/><path id="m3" class="mpath" d="M420,283 L558,283"/>
+<!-- Fourth -->
+<rect id="b4j" class="box" x="40" y="340" width="380" height="66"/><text class="lbl" x="54" y="362" style="font-size:12.5px">[Fourth] JniFuncMain.main()</text><text class="code" x="54" y="380">Java가 '호출당하는' 쪽</text><text class="code" x="54" y="396">args: "Hello from C++ ..."</text>
+<rect id="b4n" class="box" x="560" y="340" width="360" height="66"/><text class="lbl" x="574" y="362" style="font-size:12.5px">invocation.cpp — C++이 주인</text><text class="code" x="574" y="380" style="fill:#ffd166">JNI_CreateJavaVM(&amp;vm,&amp;env,..)</text><text class="code" x="574" y="396">CallStaticVoidMethod(cls, mid, args)</text>
+<path id="a4" class="arrow" d="M558,373 L422,373"/><path id="m4" class="mpath" d="M558,373 L422,373"/>
+<text id="tBinder" class="code hidden-ctl hid" x="480" y="440" text-anchor="middle" style="fill:#7ee787;font-size:13px">= frameworks/base/core/jni/android_util_Binder.cpp 가 매일 하는 일</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4500,steps:[
+{t:"큰 그림 — 경계를 넘는 4가지 방법",on:["zJ","zN"],
+ n:"JNI_test의 First~Fourth는 각각 다른 방향/방식으로 경계를 넘습니다: ①Java→Native(이름 규칙) ②Native→Java(객체 생성) ③동적 등록 ④<b>C++이 JVM을 소환</b>. 넷을 합치면 Binder JNI 브릿지의 재료가 전부 모입니다."},
+{t:"[First] 이름 규칙의 마법 — Java_클래스_메서드",on:["g1","b1n"],arrows:["a1"],pkts:[{path:"m1",dur:1000,loop:true,gap:700}],
+ n:"<span class='fn'>javac -h .</span> 가 만든 헤더의 함수명 <span class='fn'>Java_Hello_foo</span> — JVM은 <b>이름 규칙만으로</b> .so의 심볼을 찾아 연결합니다(정적 등록). 링커가 심볼을 못 찾으면 UnsatisfiedLinkError.",
+ c:"$ javac -h . Hello.java\n$ g++ -fPIC -c Hello.c -I$JAVA_HOME/include -I$JAVA_HOME/include/linux\n$ g++ Hello.o -shared -o libHello.so\n$ java -Djava.library.path=. Hello\nHello java\n<span class='y'>NATIVE : Java_Hello_foo()</span>"},
+{t:"[Second] 역방향 — Native가 Java 객체를 만든다",on:["b2j","b2n"],arrows:["a2:grn"],pkts:[{path:"m2",cls:"grn",dur:1000,loop:true,gap:700}],
+ n:"이번엔 화살표가 반대입니다. C++가 <span class='fn'>env->FindClass(\"JniTest\")</span> → <span class='fn'>GetMethodID(\"&lt;init&gt;\",\"(I)V\")</span> → <span class='fn'>NewObject()</span>로 <b>Java 생성자를 호출</b>합니다. JNIEnv*는 Java 세계로 통하는 만능 리모컨입니다."},
+{t:"[Third] RegisterNatives — 이름 규칙 탈출",on:["b3j","b3n"],arrows:["a3"],pkts:[{path:"m3",dur:1000,loop:true,gap:700}],
+ n:"라이브러리 로드 순간 <span class='fn'>JNI_OnLoad()</span>가 호출되고, 여기서 <span class='fn'>RegisterNatives()</span>로 {\"foo\", \"()V\", (void*)foo} 테이블을 직접 등록합니다. 함수명이 자유로워지고 심볼 숨김이 가능 — <b>Android Framework의 표준 방식</b>입니다. 시그니처 문자열 \"()V\"를 틀리면 NoSuchMethodError."},
+{t:"[Fourth] Invocation API — C++이 JVM을 소환",on:["b4j","b4n"],arrows:["a4:grn"],pkts:[{path:"m4",cls:"grn",dur:1000,loop:true,gap:700}],
+ n:"<span class='fn'>JNI_CreateJavaVM()</span> — 이번엔 <b>C++ main이 프로그램의 주인</b>이고 JVM이 손님입니다. Zygote가 ART를 품는 관계(<span class='path'>frameworks/base/cmds/app_process/</span>)가 정확히 이 구조입니다.",
+ c:"$ g++ invocation.cpp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux \\\n      -L$JAVA_HOME/lib/server -ljvm\n$ export LD_LIBRARY_PATH=$JAVA_HOME/lib/server\n$ ./a.out\nJVM created successfully.\nHello java  <span class='c'># ← C++이 호출한 Java main</span>"},
+{t:"이 4개가 곧 Binder 브릿지다",on:["b1n","b2n","b3n","b4n"],show:["tBinder"],
+ n:"<span class='path'>android_util_Binder.cpp</span>를 열면: <span class='fn'>RegisterNatives</span>로 <span class='fn'>BinderProxy.transactNative</span>를 등록하고(Third), Java Parcel↔C++ Parcel을 오가며(First/Second), 프로세스는 app_process가 JVM을 소환한 것(Fourth). <b>낯선 파일이 아니라, 방금 만든 것들의 조합</b>입니다. 이제 서버에서 4개를 직접 빌드하세요 — jni_build.txt 절차 그대로."}
+]});
+</script></body></html>

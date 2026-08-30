@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉙ 원격 실습 3단 워크플로</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉙ 원격 실습 3단 워크플로 — 서버 빌드 · WinSCP · 로컬 adb</h1><span class="tag">Day 0/1 오리엔테이션 (v2.2)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: <b>빌드=서버(PuTTY/tmux), 전송=WinSCP(SCP, 키 인증), 검증=로컬 Automotive Emulator(adb)</b>의 순환 루프를 몸에 익히고, tmux detach와 SSH 키 인증의 이유를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zW" class="zone" x="20" y="15" width="430" height="510"/><text class="lbl" x="36" y="42">🪟 Windows 11 (수강생 PC)</text>
+<rect id="zSv" class="zone kern" x="520" y="15" width="420" height="510"/><text class="lbl" x="536" y="42">🐧 빌드 서버 (Ubuntu, 1인 1계정)</text>
+<rect id="bKey" class="box" x="40" y="65" width="390" height="66"/><text class="lbl" x="55" y="88" style="font-size:12.5px">🔑 PuTTYgen 키 페어</text><text class="code" x="55" y="107">개인키 aosp_stu01.ppk (passphrase)</text><text class="code" x="55" y="123">공개키 → 서버 authorized_keys 등록</text>
+<rect id="bScp" class="box" x="40" y="150" width="390" height="60"/><text class="lbl" x="55" y="173" style="font-size:12.5px">WinSCP (SCP/SFTP)</text><text class="code" x="55" y="192">편집기 연동: 저장 = 자동 업로드</text>
+<rect id="bPutty" class="box" x="40" y="230" width="390" height="60"/><text class="lbl" x="55" y="253" style="font-size:12.5px">PuTTY 터미널</text><text class="code" x="55" y="272">keepalive 30s · UTF-8 · .ppk 인증</text>
+<rect id="bEmu" class="box" x="40" y="330" width="390" height="88"/><text class="lbl" x="55" y="354" style="font-size:12.5px">🚗 로컬 Automotive Emulator (API 36)</text><text class="code" x="55" y="373">emulator -writable-system</text><text class="code" x="55" y="389">adb root / remount / push / logcat</text><text class="code" x="55" y="405" style="fill:#7ee787">화면 확인도 여기서 직접!</text>
+<rect id="bAuth" class="box" x="540" y="65" width="380" height="52"/><text class="lbl" x="555" y="87" style="font-size:12.5px">~/.ssh/authorized_keys</text><text class="code" x="555" y="105">700 / 600 권한 · 비밀번호 없이 인증</text>
+<rect id="bSrc" class="box" x="540" y="140" width="380" height="56"/><text class="lbl" x="555" y="162" style="font-size:12.5px">~/aosp/... 소스</text><text class="code" x="555" y="182">frameworks/base/... · vendor/edu/...</text>
+<rect id="bTmux" class="box" x="540" y="220" width="380" height="70"/><text class="lbl" x="555" y="243" style="font-size:12.5px">tmux 세션 "build"</text><text class="code" x="555" y="262">m framework-minus-apex services -j8</text><text id="tBuild" class="code" x="555" y="280" style="fill:#ffd166">[대기]</text>
+<rect id="bOut" class="box" x="540" y="315" width="380" height="70"/><text class="lbl" x="555" y="338" style="font-size:12.5px">$OUT = out/target/product/emulator_car64_x86_64/</text><text class="code" x="555" y="357">system/framework/*.jar · system/bin/* ·</text><text class="code" x="555" y="373">system/apex/*.apex</text>
+<path id="aKey" class="arrow" d="M430,98 L538,92"/>
+<path id="aUp" class="arrow" d="M430,178 C490,178 495,168 538,168"/>
+<path id="aCmd" class="arrow" d="M430,258 C490,258 495,252 538,252"/>
+<path id="aDown" class="arrow" d="M540,352 C480,352 470,362 432,362"/>
+<path id="mUp" class="mpath" d="M430,178 C490,178 495,168 538,168"/>
+<path id="mDown" class="mpath" d="M540,352 C480,352 470,362 432,362"/>
+<path id="mPush" class="mpath" d="M235,418 L235,455 L120,455 L120,418"/>
+<text id="tCut" class="lbl hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#ff9a9a;font-size:14px">💥 네트워크 끊김! — 하지만 tmux 안의 빌드는 계속 돈다 → tmux attach -t build 로 복귀</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4300,steps:[
+{t:"0단계 — 열쇠부터 (SSH 키 인증)",on:["bKey","bAuth"],arrows:["aKey:grn"],
+ n:"PuTTYgen으로 <b>Ed25519</b> 키 페어를 만들고(passphrase 필수), 공개키 한 줄을 서버 <span class='path'>~/.ssh/authorized_keys</span>(700/600)에 등록합니다. 이후 PuTTY와 WinSCP 모두 같은 <b>.ppk</b>로 비밀번호 없이 접속 — 개인키는 절대 서버에 올리지 않습니다.",
+ c:"<span class='c'># 서버 (최초 1회, 비밀번호 로그인 상태)</span>\n$ mkdir -p ~/.ssh && chmod 700 ~/.ssh\n$ echo 'ssh-ed25519 AAAA... stu01' >> ~/.ssh/authorized_keys\n$ chmod 600 ~/.ssh/authorized_keys"},
+{t:"① 편집 — 저장이 곧 업로드",on:["bScp","bSrc"],arrows:["aUp"],pkts:[{path:"mUp",cls:"blu",dur:1000,loop:true,gap:700}],
+ n:"WinSCP 편집기 연동으로 서버의 <span class='path'>IDeviceInfoService.aidl</span>을 더블클릭 → 로컬 에디터에서 수정 → <b>저장하는 순간 SCP로 자동 업로드</b>. 반드시 북마크된 실습 경로에서만 편집하고, 덮어쓰기 전 <b>.orig 백업</b> 습관!"},
+{t:"② 빌드 — tmux 안에서 시작하고 detach",on:["bPutty","bTmux"],arrows:["aCmd:flow"],
+ n:"PuTTY로 접속해 <b>반드시 tmux 세션 안에서</b> 빌드를 시작합니다. 시작했으면 <span class='fn'>Ctrl+b, d</span>로 분리(detach) — 터미널을 닫아도 빌드는 서버에서 계속 돕니다. [빌드:진행]",
+ c:"$ tmux new -s build   <span class='c'># 또는 tmux attach -t build</span>\n$ cd ~/aosp && source build/envsetup.sh && lunch sdk_car_x86_64-userdebug\n$ m framework-minus-apex services -j8\n<span class='c'># Ctrl+b, d  ← detach</span>"},
+{t:"💥 끊겨도 괜찮은 이유",show:["tCut"],on:["bTmux"],
+ n:"강의장 Wi-Fi가 끊겨 PuTTY가 죽어도, <b>tmux 세션은 서버에서 살아있고 빌드는 계속</b>됩니다. 재접속 후 <span class='fn'>tmux attach -t build</span> 한 줄로 그 자리에 복귀 — 이 리허설을 Day 1에 전원이 합니다. tmux 없이 빌드하다 끊기면? 처음부터 다시. [빌드:진행]"},
+{t:"③ 산출물 회수 — $OUT에서 WinSCP로",on:["bOut","bScp"],arrows:["aDown:grn"],pkts:[{path:"mDown",cls:"grn",dur:1000,loop:true,gap:700}],
+ n:"빌드가 끝나면 <span class='path'>$OUT</span> 북마크에서 필요한 산출물만 다운로드: framework.jar/services.jar(실습 6-5) · native_hello(N-1) · surface1(N-2) · *.apex(Lab 4-3). <b>이미지 전체가 아니라 바뀐 파일만</b> — 수 MB면 충분합니다. [빌드:완료]"},
+{t:"④ 검증 — 로컬 에뮬레이터가 시험대",on:["bEmu"],pkts:[{path:"mPush",cls:"grn",dur:1300,loop:true,gap:800}],
+ n:"<span class='fn'>-writable-system</span>으로 띄운 <b>로컬 Automotive Emulator</b>에 adb push. 실행·service call·dumpsys·logcat·<b>화면 확인(붉은 Surface!)</b>까지 전부 내 PC에서 — 원격 화면 미러링이 필요 없습니다. <code>adb devices</code>에 emulator-5554만 보이면 정상.",
+ c:"$ adb root && adb remount\n$ adb push services.jar /system/framework/ && adb reboot\n<span class='c'># 또는</span>\n$ adb push native_hello /data/local/tmp/ && adb shell chmod +x /data/local/tmp/native_hello"},
+{t:"⑤ 루프 — 이것이 전장 개발자의 하루",on:["bScp","bTmux","bOut","bEmu"],arrows:["aUp","aCmd:flow","aDown:grn"],
+ n:"편집→빌드→회수→검증→(로그를 보고)다시 편집. 실제 현업의 타깃보드 개발 루프와 동일한 구조입니다 — 보드 대신 에뮬레이터일 뿐. 4일 내내 이 루프를 수십 번 돌게 되며, Day 4가 끝날 때는 눈 감고도 돌 수 있어야 합니다."}
+]});
+const tB=document.getElementById('tBuild');
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ if(n.includes('[빌드:진행]'))tB.textContent='[####......] 42%  building services...';
+ else if(n.includes('[빌드:완료]'))tB.textContent='#### build completed successfully (12:41) ####';
+ else if(n.includes('열쇠'))tB.textContent='[대기]';}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>

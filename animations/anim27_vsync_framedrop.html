@@ -1,0 +1,68 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉗ VSync와 Frame Drop — 16.6ms의 지휘자</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉗ VSync와 Frame Drop — 16.6ms의 지휘자 Choreographer</h1><span class="tag">Day 3 Ch10 / Day 4 워크숍 S4</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Choreographer가 VSync 박자에 맞춰 input→animation→measure/layout→draw→sync를 지휘하는 파이프라인과, 한 프레임이 16.6ms를 넘길 때 <b>jank</b>가 생기는 원리를 gfxinfo 지표와 함께 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- vsync timeline -->
+<text class="lbl" x="30" y="45">VSync (60Hz → 16.6ms 간격)</text>
+<line x1="30" y1="70" x2="930" y2="70" stroke="#33415e" stroke-width="2"/>
+<g id="ticks"></g>
+<!-- UI thread lane -->
+<text class="lbl" x="30" y="130">UI Thread (main)</text><text class="sub" x="200" y="130">input → anim → measure/layout → draw(RecordingCanvas)</text>
+<rect id="f1u" class="hidden-ctl hid" x="60"  y="145" width="90" height="34" rx="5" fill="#2f6b4f"/>
+<rect id="f2u" class="hidden-ctl hid" x="210" y="145" width="90" height="34" rx="5" fill="#2f6b4f"/>
+<rect id="f3u" class="hidden-ctl hid" x="360" y="145" width="230" height="34" rx="5" fill="#8a3d3d"/>
+<text id="f3ut" class="mini hidden-ctl hid" x="475" y="166" text-anchor="middle" style="fill:#ffc9c9">onDraw에서 Bitmap 디코딩 28ms!</text>
+<rect id="f4u" class="hidden-ctl hid" x="660" y="145" width="90" height="34" rx="5" fill="#2f6b4f"/>
+<!-- RenderThread lane -->
+<text class="lbl" x="30" y="230">RenderThread</text><text class="sub" x="200" y="230">DisplayList(RenderNode) → GPU 명령 제출</text>
+<rect id="f1r" class="hidden-ctl hid" x="120" y="245" width="70" height="30" rx="5" fill="#2a5b8a"/>
+<rect id="f2r" class="hidden-ctl hid" x="270" y="245" width="70" height="30" rx="5" fill="#2a5b8a"/>
+<rect id="f3r" class="hidden-ctl hid" x="600" y="245" width="70" height="30" rx="5" fill="#8a3d3d"/>
+<rect id="f4r" class="hidden-ctl hid" x="720" y="245" width="70" height="30" rx="5" fill="#2a5b8a"/>
+<!-- SurfaceFlinger lane -->
+<text class="lbl" x="30" y="325">SurfaceFlinger 합성 → 디스플레이</text>
+<g id="frames"></g>
+<!-- screen strip -->
+<g id="strip"></g>
+<text id="tJank" class="lbl hidden-ctl hid" x="480" y="430" text-anchor="middle" style="fill:#ff6b6b;font-size:16px">⚠ VSync #3을 놓침 → 프레임 #2가 두 박자 표시 = 화면이 '멈칫' (jank)</text>
+<rect id="bChg" class="box" x="640" y="380" width="290" height="70"/><text class="lbl" x="655" y="404" style="font-size:12.5px">Choreographer</text><text class="code" x="655" y="424">postFrameCallback / doFrame()</text><text class="code" x="655" y="440">Compose Recomposition도 이 박자</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+// vsync ticks
+const tk=document.getElementById('ticks');
+for(let i=0;i<6;i++){const x=60+i*150;
+ tk.innerHTML+=`<line x1="${x}" y1="58" x2="${x}" y2="82" stroke="#ffb454" stroke-width="2.5"/><text class="mini" x="${x}" y="98" text-anchor="middle">V${i} (${(i*16.6).toFixed(0)}ms)</text>`}
+// display frames row
+const fr=document.getElementById('frames');
+const disp=[['#7ee787','F1'],['#7ee787','F2'],['#ff6b6b','F2(반복)'],['#7ee787','F3'],['#7ee787','F4']];
+disp.forEach((d,i)=>{const x=60+i*150;
+ fr.innerHTML+=`<g id="d${i}" class="hidden-ctl hid"><rect x="${x}" y="340" width="120" height="34" rx="5" fill="${d[0]}" opacity="0.85"/><text x="${x+60}" y="362" text-anchor="middle" style="font-size:12px;font-weight:700" fill="#10131c">${d[1]}</text></g>`});
+initAnim({autoMs:4300,steps:[
+{t:"지휘자 등장 — Choreographer",on:["bChg"],
+ n:"디스플레이는 60Hz(차량 클러스터는 종종 60/90Hz)로 <b>VSync 신호</b>를 쏘고, <span class='fn'>Choreographer</span>는 이 박자에 맞춰 UI Thread의 한 프레임 작업(input→animation→measure/layout→draw)을 시작시킵니다. <b>허용 시간은 단 16.6ms.</b> Compose의 Recomposition도, View의 invalidate도 결국 이 박자표 위에서 연주됩니다."},
+{t:"정상 연주 — 프레임 1, 2",show:["f1u","f1r","f2u","f2r","d0","d1"],
+ n:"V0 박자: UI Thread가 초록 블록(≈8ms)으로 draw까지 끝내고, <b>RenderThread</b>가 DisplayList를 GPU에 제출 → V1에서 SurfaceFlinger가 합성해 F1 표시. 파이프라인이라 UI/Render/표시가 <b>한 박자씩 밀려 겹쳐</b> 돌아갑니다."},
+{t:"사고 발생 — 28ms짜리 프레임",show:["f1u","f1r","f2u","f2r","f3u","f3ut","d0","d1"],on:[],
+ n:"프레임 3에서 <span class='fn'>onDraw()</span> 중 Bitmap 디코딩(또는 과도한 Recomposition, 메인 스레드 I/O, 동기 Binder 호출)이 <b>28ms</b>를 먹었습니다. 빨간 블록이 V3 박자선을 넘어버립니다."},
+{t:"⚠ 박자를 놓치다 — jank",show:["f1u","f1r","f2u","f2r","f3u","f3ut","f3r","d0","d1","d2","tJank"],dead:true,
+ n:"V3 시점에 새 프레임이 준비되지 않아 SurfaceFlinger는 <b>직전 프레임(F2)을 한 번 더</b> 내보냅니다. 사용자 눈에는 화면이 '멈칫' — 이것이 jank입니다. HvacSimulator의 FAN HIGH 회전이 끊기는 증상(워크숍 S4)이 정확히 이 장면입니다."},
+{t:"회복 — 그러나 기록은 남는다",show:["f1u","f1r","f2u","f2r","f3u","f3r","f4u","f4r","d0","d1","d2","d3","d4"],
+ n:"다음 박자부터 정상 복귀하지만, 놓친 프레임은 <span class='fn'>gfxinfo</span> 통계에 남습니다. 90th/95th/99th percentile과 'Janky frames' 비율이 핵심 지표 — <b>평균이 아니라 꼬리(percentile)를 보세요.</b>",
+ c:"$ adb shell dumpsys gfxinfo com.example.hvacsimulator | head -20\nTotal frames rendered: 1284\n<span class='r'>Janky frames: 96 (7.48%)</span>\n90th percentile: 11ms   95th: 17ms   <span class='y'>99th: 34ms</span>"},
+{t:"범인 찾기 — 어느 구간이 뚱뚱한가",show:["f3u","f3ut"],on:["bChg"],
+ n:"jank의 원인 구간을 좁힙니다: <b>UI Thread</b>가 길면(measure/layout/draw) 앱 코드 문제 — 과도 Recomposition·중첩 레이아웃·메인스레드 디코딩. <b>RenderThread/GPU</b>가 길면 오버드로우·셰이더. <b>합성 이후</b>가 길면 SurfaceFlinger/디스플레이 — Perfetto로 레인별 시간을 봅니다. 60fps가 생명인 차량 클러스터/SystemUI에서 이 감각은 필수입니다.",
+ c:"<span class='c'># Perfetto: Choreographer#doFrame / DrawFrame / SurfaceFlinger 트랙 비교</span>\n$ adb shell dumpsys SurfaceFlinger --latency <레이어명>"}
+]});
+</script></body></html>

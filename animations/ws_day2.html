@@ -1,0 +1,54 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📝 Day 2 워크시트 — Binder 심화·커스텀 서비스·JNI·SELinux</title>
+<link rel="stylesheet" href="assets/player.css"><link rel="stylesheet" href="assets/ws.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>📝 Day 2 디지털 워크시트 — Binder 심화 · 커스텀 System Service · JNI · SELinux</h1><span class="tag">Ch 4 ~ Ch 6 + JNI/보안</span></header>
+<div id="ws"></div>
+<script src="assets/ws.js"></script>
+<script>
+initWS({chapters:[
+{title:"Ch 4. Binder 커널 동작",short:"Ch4",sub:"실습 4-1~4-3에서 관찰한 것들",questions:[
+ {type:'mc',q:"system_server의 /proc/&lt;pid&gt;/maps에서 /dev/binder 매핑의 권한이 r--p(읽기 전용)인 이유는?",anim:"anim04_mmap_zerocopy.html",
+  opts:["보안 버그다","서버는 이 창을 통해 커널이 넣어준 데이터를 '읽기만' 하면 되기 때문","쓰기는 root만 가능해서","mmap은 원래 전부 읽기 전용이라서"],ans:1,
+  exp:"데이터를 '넣는' 쪽은 커널(<code>copy_from_user</code>)이고 서버는 같은 물리 페이지를 <b>읽기만</b> 합니다. 쓰기 가능이면 앱이 커널 버퍼를 오염시킬 수 있습니다."},
+ {type:'blank',q:"커널이 확보한 물리 페이지를 서버 프로세스 페이지 테이블에 꽂아 넣는 커널 함수는? (힌트: vm_...)",anim:"anim04_mmap_zerocopy.html",
+  ans:["vm_insert_page","vminsertpage"],exp:"<code>vm_insert_page()</code> — 커널 PTE와 서버 PTE가 같은 프레임을 가리키게 만드는 zero-copy의 심장입니다."},
+ {type:'mc',q:"Binder 동기 트랜잭션 버퍼의 실질 한도와, 초과 시 발생하는 예외는?",
+  opts:["10MB / OutOfMemoryError","약 1MB(프로세스당 공유) / TransactionTooLargeException","64KB / ParcelFormatException","제한 없음 / 없음"],ans:1,
+  exp:"mmap 창 크기(≈1MB)를 <b>그 프로세스의 진행 중 트랜잭션 전체가 나눠</b> 씁니다. Bitmap 같은 대용량은 FD/공유메모리(ashmem)로 우회 — 실습 4-3에서 재현했습니다."},
+],},
+{title:"Ch 5. SystemServer와 스레드",short:"Ch5",sub:"서비스가 사는 집의 규칙",questions:[
+ {type:'mc',q:"Binder Thread Pool 데드락(실습 4-2)이 성립하는 조건은?",anim:"anim15_deadlock.html",
+  opts:["스레드가 16개를 넘을 때","A의 스레드 전원이 B의 응답을 동기 대기 중인데, B가 그 A를 다시 동기 호출할 때","oneway를 너무 많이 쓸 때","Parcel이 1MB를 넘을 때"],ans:1,
+  exp:"핵심은 <b>상호 동기 대기 + 풀 고갈</b>. traces에서 binder 스레드 15개가 전부 <code>transactNative</code>에 잠들어 있으면 이 그림을 떠올리세요. 해법의 대표가 oneway."},
+ {type:'mc',q:"Watchdog에 대한 설명으로 옳은 것은?",
+  opts:["앱 ANR을 감지해 다이얼로그를 띄운다","system_server 핵심 락/스레드가 약 60초 응답이 없으면 system_server를 죽여 재부팅시킨다","커널 패닉을 감지한다","Binder 버퍼를 감시한다"],ans:1,
+  exp:"내가 만든 서비스가 락을 쥐고 오래 블로킹하면 <b>기기 전체 재부팅</b>으로 이어질 수 있습니다 — 무거운 작업은 HandlerThread로 빼는 이유."},
+],},
+{title:"Ch 6. 커스텀 System Service (전원 필수 실습)",short:"Ch6",sub:"DeviceInfoService 6-1~6-5",questions:[
+ {type:'order',q:"DeviceInfoService를 시스템에 올리는 작업 순서대로 클릭하세요.",
+  items:["SELinux 정책(.te / service_contexts) 추가","SystemServer에 서비스 등록 코드 추가","IDeviceInfoService.aidl 작성","서버에서 빌드 → 산출물 로컬 적용","Service 구현(Stub 상속) + Manager 작성","service check / dumpsys로 검증"],
+  ans:[2,4,1,0,3,5],
+  exp:"AIDL → 구현/Manager → SystemServer 등록 → SELinux → 빌드/적용 → 검증. 어느 하나가 빠지면 어떤 증상이 나는지(특히 SELinux 누락 = 조용한 실패)까지가 실습 6-5의 학습 포인트."},
+ {type:'mc',q:"framework.jar/services.jar를 에뮬레이터에 push하기 전 반드시 해야 할 일은?",anim:"anim29_remote_workflow.html",
+  opts:["에뮬레이터 공장초기화","원본 .orig 백업 + -writable-system으로 부팅 후 adb root/remount","SELinux를 영구 disable","커널 재빌드"],ans:1,
+  exp:"부팅 루프에 빠지면 <b>.orig 복원 또는 Cold Boot</b>로 탈출합니다. 백업 없는 시스템 파일 교체는 금지 — v2.2 운영 수칙."},
+],},
+{title:"JNI (전원 필수)",short:"JNI",sub:"JNI_test First~Fourth",questions:[
+ {type:'blank',q:"클래스 Hello의 native 메서드 foo()를 정적 등록 방식으로 구현할 때 C 함수 이름은? (Java_로 시작)",anim:"anim17_jni_bridge.html",
+  ans:["Java_Hello_foo"],exp:"<code>JNIEXPORT void JNICALL Java_Hello_foo(JNIEnv*, jobject)</code> — JVM이 <b>이름 규칙만으로</b> .so 심볼을 찾습니다. 규칙 대신 테이블로 등록하는 것이 Third의 RegisterNatives."},
+ {type:'mc',q:"Fourth(Invocation API) 실습이 보여주는 관계로 옳은 것은?",anim:"anim17_jni_bridge.html",
+  opts:["Java가 C++ 라이브러리를 로드한다","C++ main이 JNI_CreateJavaVM으로 JVM을 만들어 Java를 호출한다 — Zygote/app_process 구조","JNI 없이 Java↔C++가 통신한다","C++이 Binder 드라이버를 직접 연다"],ans:1,
+  exp:"<b>C++이 주인, JVM이 손님</b> — app_process가 ART를 품는 구조가 바로 이것입니다. android_util_Binder.cpp는 First~Third 기법의 총합."},
+],},
+{title:"SELinux (전원 필수)",short:"SELinux",sub:"avc denied 5단계",questions:[
+ {type:'order',q:"SELinux 거부 문제 해결 5단계를 순서대로 클릭하세요.",anim:"anim18_selinux.html",
+  items:["neverallow 충돌 확인","avc: denied 로그 수집(dmesg/logcat)","정책 반영→빌드→재검증","audit2allow로 규칙 초안 생성","denied 4요소(perm/scontext/tcontext/tclass) 분석"],
+  ans:[1,4,3,0,2],
+  exp:"수집→분석→생성→<b>neverallow 확인</b>→반영/검증. neverallow에 걸리면 규칙 추가가 아니라 <b>아키텍처 재설계</b>가 답입니다."},
+ {type:'match',q:"avc: denied { find } for service=device_info scontext=u:r:untrusted_app:s0 tcontext=u:object_r:default_android_service:s0 tclass=service_manager — 각 요소의 의미를 연결하세요.",
+  pairs:[["scontext",1],["tcontext",2],["tclass=service_manager",0]],
+  opts:["ServiceManager 조회 행위에 대한 판정이라는 뜻","요청한 주체(테스트 앱)의 보안 라벨","접근 대상(서비스)의 보안 라벨 — default_*는 전용 라벨 미부여 신호"],
+  exp:"tcontext가 <code>default_android_service</code>라면 service_contexts에 <b>전용 라벨부터</b> 부여해야 합니다(실습 6-4). 'Java 권한은 OK인데 안 된다'면 avc부터 grep!"},
+],}
+]});
+</script></body></html>

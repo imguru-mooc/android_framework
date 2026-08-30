@@ -1,0 +1,51 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑪ AIDL 컴파일러의 마법</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑪ AIDL 컴파일러의 마법 — Stub·Proxy 자동 생성과 asInterface 분기</h1><span class="tag">Day 1 · Ch 2</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: .aidl 한 파일에서 인터페이스·Stub·Proxy가 생성되는 구조, transact code 매칭, asInterface()의 로컬/원격 분기를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bAidl" class="box" x="30" y="40" width="300" height="80"/><text class="lbl" x="45" y="65">ICalcService.aidl</text><text class="code" x="45" y="88">interface ICalcService {</text><text class="code" x="45" y="105">  int add(int a, int b); }</text>
+<rect id="bGen" class="box" x="420" y="30" width="510" height="200"/><text class="lbl" x="435" y="55">생성된 ICalcService.java (한 파일 안에)</text>
+<text id="g1" class="code" x="435" y="80">interface ICalcService extends IInterface { int add(...); }</text>
+<text id="g2" class="code" x="435" y="104">abstract class Stub extends Binder implements ICalcService {</text>
+<text id="g3" class="code" x="435" y="122">  static final int TRANSACTION_add = FIRST_CALL + 0;</text>
+<text id="g4" class="code" x="435" y="140">  onTransact(code, data, reply, flags) { switch(code)… }</text>
+<text id="g5" class="code" x="435" y="164">  static class Proxy implements ICalcService {</text>
+<text id="g6" class="code" x="435" y="182">    add(){ data.writeInt(a); mRemote.transact(TRANSACTION_add…) }</text>
+<text id="g7" class="code" x="435" y="200">  } // 순서·code를 양쪽 동일하게 '기계가' 보장</text>
+<path id="aGen" class="arrow" d="M330,80 L418,80"/><path id="mGen" class="mpath" d="M330,80 L418,80"/>
+<!-- asInterface branch -->
+<rect id="bAsk" class="box" x="30" y="290" width="330" height="70"/><text class="lbl" x="45" y="315" style="font-size:12.5px">Stub.asInterface(IBinder b)</text><text class="code" x="45" y="336">b.queryLocalInterface(DESCRIPTOR)?</text>
+<rect id="bLoc" class="box hidden-ctl hid" x="480" y="260" width="440" height="60" style="stroke:#2f7a52"/><text class="lbl" x="495" y="283" style="font-size:12.5px;fill:#7ee787">같은 프로세스 → Stub 자신 반환</text><text class="code" x="495" y="303">IPC 없음! 그냥 메서드 호출 (Parcel 비용 0)</text>
+<rect id="bRem" class="box hidden-ctl hid" x="480" y="340" width="440" height="60" style="stroke:#b06a2a"/><text class="lbl" x="495" y="363" style="font-size:12.5px;fill:#ffb454">다른 프로세스 → new Proxy(b) 반환</text><text class="code" x="495" y="383">transact → 커널 → 상대의 onTransact</text>
+<path id="aL" class="arrow hidden-ctl hid" d="M360,310 C420,300 430,288 478,288"/>
+<path id="aR" class="arrow hidden-ctl hid" d="M360,335 C420,345 430,368 478,368"/>
+<text id="tCode" class="code hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#8fd18f">code 번호가 양쪽에서 어긋나면? → 엉뚱한 메서드 실행 — 그래서 AIDL 파일 하나가 '단일 진실'이어야 한다</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:".aidl 한 장 → 세 부품",on:["bAidl","bGen"],arrows:["aGen:flow"],pkts:[{path:"mGen",dur:900,loop:true,gap:600}],
+ n:"aidl 컴파일러가 <b>인터페이스 + Stub(서버 뼈대) + Proxy(클라 대리인)</b>를 한 .java에 생성합니다. 빌드 후 <span class='path'>app/build/generated/aidl_source_output_dir/…</span>에서 직접 열어보는 것이 Ch 2 실습의 첫 걸음."},
+{t:"transact code — 메서드의 번호표",on:["g3","g4","g6"],
+ n:"add()는 <span class='code'>TRANSACTION_add</span>라는 <b>번호</b>로 불립니다. Proxy가 이 번호로 transact하면 Stub의 switch(code)가 같은 번호에서 받아 add 구현을 호출 — <b>이름이 아니라 번호</b>가 경계를 건넙니다. (service call 때 직접 쓰는 그 code)"},
+{t:"Parcel 규약도 기계가 보장",on:["g6","g4"],
+ n:"Proxy의 <span class='code'>writeInt(a); writeInt(b)</span>와 Stub의 <span class='code'>readInt(); readInt()</span> — <b>쓰는 순서=읽는 순서</b>를 컴파일러가 양쪽에 똑같이 박아 넣습니다. ⑫에서 이 규약이 어긋나면 무슨 일이 나는지 봅니다."},
+{t:"asInterface — 로컬이면 지름길",show:["bLoc","aL"],on:["bAsk","bLoc"],arrows:["aL:grn"],
+ n:"<span class='fn'>queryLocalInterface(DESCRIPTOR)</span>가 성공 = 같은 프로세스 → <b>Stub 자신을 그대로 반환</b>. Parcel도 커널도 없이 평범한 메서드 호출이 됩니다. bindService를 같은 앱 안에서 쓸 때 실제로 타는 길."},
+{t:"asInterface — 원격이면 Proxy",show:["bLoc","bRem","aL","aR"],on:["bRem"],arrows:["aR:flow"],
+ n:"로컬 인터페이스가 없으면(=IBinder가 BinderProxy) <b>new Proxy(b)</b>로 감쌉니다. 호출자는 어느 쪽인지 모른 채 같은 인터페이스를 씁니다 — <b>위치 투명성</b>. ⑥의 IActivityTaskManager도, ⑧의 ICarProperty도 전부 이 한 줄에서 갈립니다."},
+{t:"단일 진실의 원칙",show:["bLoc","bRem","tCode"],on:["bAidl"],
+ n:"클라와 서버가 <b>서로 다른 버전의 .aidl</b>로 빌드되면 code/Parcel 규약이 어긋나 엉뚱한 메서드가 실행되거나 값이 오염됩니다. 플랫폼-앱 간 AIDL을 함부로 바꾸면 안 되는 이유이고, VHAL AIDL이 버전 관리(V1, V2…)를 엄격히 하는 이유입니다.",
+ c:"$ find app/build/generated -name \"ICalcService.java\" | head -1\n<span class='c'># 생성 코드를 눈으로 확인 — Ch 2 관찰 과제</span>"}
+]});
+</script></body></html>

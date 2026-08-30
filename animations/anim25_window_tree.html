@@ -1,0 +1,52 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉕ Window 트리 줌인</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉕ Window 트리 줌인 — dumpsys window와 1:1로 읽기</h1><span class="tag">Day 4 · Ch 11 #91 · 관찰 4-A</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: WMS의 컨테이너 트리(Root→Display→Task→ActivityRecord→WindowState)를 실제 dumpsys 출력·화면 요소와 대응시켜 읽는다.</div>
+<svg id="stage" viewBox="0 0 960 540">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<!-- tree -->
+<rect id="n0" class="box" x="40" y="40" width="330" height="44"/><text class="code" x="55" y="67">RootWindowContainer (시스템 전체)</text>
+<rect id="n1" class="box" x="70" y="104" width="330" height="44"/><text class="code" x="85" y="131">DisplayContent #0 (센터 디스플레이)</text>
+<rect id="n2" class="box" x="100" y="168" width="330" height="44"/><text class="code" x="115" y="195">Task #47 (HvacSimulator 태스크)</text>
+<rect id="n3" class="box" x="130" y="232" width="330" height="44"/><text class="code" x="145" y="259">ActivityRecord MainActivity</text>
+<rect id="n4" class="box" x="160" y="296" width="330" height="44"/><text class="code" x="175" y="323">WindowState com.example…MainActivity</text>
+<rect id="n5" class="box" x="100" y="360" width="330" height="44"/><text class="code" x="115" y="387">WindowState StatusBar (SystemUI 소속)</text>
+<line class="arrow" x1="90" y1="84" x2="90" y2="102"/>
+<line class="arrow" x1="120" y1="148" x2="120" y2="166"/>
+<line class="arrow" x1="150" y1="212" x2="150" y2="230"/>
+<line class="arrow" x1="180" y1="276" x2="180" y2="294"/>
+<line class="arrow" x1="120" y1="148" x2="120" y2="358"/>
+<!-- screen -->
+<rect id="scr" x="600" y="60" width="300" height="360" rx="12" fill="#182238" stroke="#33415e" stroke-width="2"/>
+<rect id="sBar" x="608" y="68" width="284" height="30" fill="#2c3f68" rx="5"/><text class="mini" x="750" y="88" text-anchor="middle">StatusBar</text>
+<rect id="sApp" x="608" y="104" width="284" height="308" fill="#1f3a5c" rx="6"/><text class="mini" x="750" y="260" text-anchor="middle">HvacSimulator 화면</text>
+<path id="aM1" class="arrow hidden-ctl hid" d="M490,318 C540,318 560,270 606,260"/>
+<path id="aM2" class="arrow hidden-ctl hid" d="M430,382 C520,382 560,120 606,84"/>
+<text id="tSf" class="code hidden-ctl hid" x="480" y="500" text-anchor="middle" style="fill:#8fd18f">WindowState 1개 ≈ SurfaceFlinger Layer 1개(⑨) — dumpsys window와 dumpsys SurfaceFlinger는 같은 화면의 두 장부</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"트리의 뿌리 — RootWindowContainer",on:["n0"],
+ n:"WMS는 화면의 모든 것을 <b>하나의 트리</b>로 관리합니다. 뿌리는 <span class='fn'>RootWindowContainer</span> — dumpsys window의 최상단이 여기서 시작합니다.",
+ c:"$ adb shell dumpsys window windows | head -5\nWINDOW MANAGER WINDOWS (dumpsys window windows)\n  Window #0 Window{... StatusBar}..."},
+{t:"DisplayContent — 디스플레이당 하나",on:["n0","n1"],
+ n:"자식은 <b>DisplayContent</b>, 물리/가상 디스플레이당 1개. 스마트폰은 보통 1개지만 <b>차량은 센터·클러스터·조수석… 여러 개</b> — 그 세계는 ㉖에서. displayId=0이 기본 디스플레이입니다."},
+{t:"Task → ActivityRecord — AMS와의 접점",on:["n1","n2","n3"],
+ n:"<b>Task</b>는 백스택 묶음(최근 앱 목록의 단위), 그 안의 <b>ActivityRecord</b>는 ⑥에서 AMS가 만들던 바로 그 객체입니다 — AMS(생명주기)와 WMS(창)가 이 지점에서 만납니다."},
+{t:"WindowState — 실제 '창' 그리고 화면 대응",show:["aM1","aM2"],on:["n4","n5"],arrows:["aM1:grn","aM2:grn"],
+ n:"잎사귀 <b>WindowState</b>가 실제 창 1개 — 우측 화면과 대응해 보세요: 앱 창은 Task 아래에, <b>StatusBar는 Task 밖</b>(SystemUI 소속, 타입 다른 창)에 삽니다. z-order·포커스·애니메이션이 모두 이 노드 속성입니다."},
+{t:"두 개의 장부 — window와 SurfaceFlinger",show:["tSf","aM1","aM2"],on:["n4"],
+ n:"WindowState 하나가 대략 SF Layer 하나(⑨)로 이어집니다. <b>창이 안 보이면</b>: dumpsys window에서 존재·가시성·포커스 확인 → dumpsys SurfaceFlinger에서 Layer/버퍼 확인 — 관찰 4-A의 2단 점검법입니다.",
+ c:"$ adb shell dumpsys window windows | grep -E \"Window #|mHasSurface|isReadyForDisplay\"\n$ adb shell dumpsys window | grep mCurrentFocus\nmCurrentFocus=Window{... com.example.hvacsimulator/...MainActivity}"}
+]});
+</script></body></html>

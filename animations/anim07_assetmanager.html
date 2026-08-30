@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑦ AssetManager 리소스 탐색</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑦ AssetManager 리소스 탐색 — getString() 한 줄의 뒷면</h1><span class="tag">Day 3 · Ch 8 (㉒의 전편)</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 리소스 ID(0x7f…)의 구조와, AssetManager가 ApkAssets 목록·config qualifier로 최종 값을 고르는 과정을 이해한다. 오버레이 우선순위는 ㉒에서 이어진다.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bId" class="box" x="30" y="45" width="420" height="96"/><text class="lbl" x="45" y="70">R.string.hello_world = 0x7f14002a</text>
+<text class="code" x="45" y="94"><tspan fill="#ff9a9a">7f</tspan>=패키지(앱)  <tspan fill="#ffd166">14</tspan>=타입(string)  <tspan fill="#7ee787">002a</tspan>=엔트리</text>
+<text class="code" x="45" y="114">01=android(framework) 패키지</text>
+<text class="sub" x="45" y="132">aapt2가 컴파일 시 부여 — resources.arsc에 표로 존재</text>
+<rect id="bAM" class="box" x="540" y="45" width="390" height="120"/><text class="lbl" x="555" y="70">AssetManager (ResourcesImpl)</text>
+<text class="code" x="555" y="92">ApkAssets[0] framework-res.apk</text>
+<text id="tOv" class="code hidden-ctl hid" x="555" y="110" style="fill:#c792ff">ApkAssets[1] RRO overlay.apk (idmap)</text>
+<text class="code" x="555" y="128">ApkAssets[2] 내 앱 base.apk</text>
+<text class="sub" x="555" y="148">프로세스마다 자기 목록을 가짐</text>
+<rect id="bCfg" class="box" x="30" y="200" width="420" height="130"/><text class="lbl" x="45" y="225">config qualifier 후보들</text>
+<text id="c1" class="code" x="45" y="250">values/strings.xml          "Hello World"</text>
+<text id="c2" class="code" x="45" y="272">values-ko/strings.xml       "안녕하세요"</text>
+<text id="c3" class="code" x="45" y="294">values-night/colors.xml     (다크 모드)</text>
+<text id="c4" class="code" x="45" y="316">values-w1024dp/ (와이드 — 차량 센터 디스플레이!)</text>
+<rect id="bDev" class="box" x="540" y="210" width="390" height="70"/><text class="lbl" x="555" y="235" style="font-size:12.5px">현재 기기 Configuration</text><text class="code" x="555" y="255">locale=ko-KR · night=yes · sw=1024dp</text><text class="code" x="555" y="272">uiMode=car</text>
+<rect id="bRes" class="box hidden-ctl hid" x="300" y="380" width="380" height="60" style="stroke:#2f7a52"/><text class="lbl" x="490" y="405" text-anchor="middle" style="fill:#7ee787">최종 선택: values-ko → "안녕하세요"</text><text class="code" x="490" y="425" text-anchor="middle">가장 구체적으로 일치하는 후보 승리</text>
+<path id="aQ" class="arrow" d="M450,95 L538,95"/>
+<path id="aC" class="arrow" d="M540,245 C500,245 480,260 452,262"/>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"리소스 ID 해부 — 0x7f14002a",on:["bId"],
+ n:"R 상수는 <b>패키지(1B)·타입(1B)·엔트리(2B)</b>로 짜인 좌표입니다. <span class='code'>0x7f</span>=내 앱, <span class='code'>0x01</span>=framework(android.R). aapt2가 컴파일 때 부여하고 <span class='path'>resources.arsc</span>라는 표에 기록 — getString은 이 표를 찾는 조회입니다."},
+{t:"AssetManager — APK들의 사서",on:["bAM"],arrows:["aQ:flow"],
+ n:"<span class='fn'>getString(id)</span>은 Resources→ResourcesImpl→<b>AssetManager</b>로 내려갑니다. AssetManager는 <b>ApkAssets 목록</b>(framework-res.apk + 내 앱 + …)을 들고, id의 패키지 바이트로 어느 APK의 arsc를 볼지 정합니다."},
+{t:"기기 상태 — Configuration",on:["bCfg","bDev"],arrows:["aC"],
+ n:"같은 엔트리라도 후보가 여럿(<span class='code'>values/, values-ko/, values-night/…</span>)입니다. 어떤 후보를 고를지는 <b>현재 Configuration</b>(locale·다크·화면폭·uiMode=car…)과의 매칭으로 결정 — 차량 와이드 디스플레이용 <span class='code'>values-w1024dp</span>가 실무 포인트."},
+{t:"선택 — 가장 구체적인 일치가 이긴다",show:["bRes"],on:["bRes","c2"],
+ n:"locale=ko이므로 <span class='code'>values-ko</span>가 <span class='code'>values</span>를 이깁니다. 규칙은 'qualifier 우선순위 표에 따라 <b>가장 구체적으로 일치</b>하는 후보 승리'. 회전·다크 전환 때 Activity가 재생성되는 이유가 바로 이 재선택 때문입니다."},
+{t:"오버레이가 끼어들면? → ㉒",show:["bRes","tOv"],on:["tOv"],
+ n:"RRO가 활성화되면 ApkAssets 목록에 <b>overlay.apk가 idmap과 함께 추가</b>되어, 같은 id 조회가 오버레이 값으로 넘어갑니다(타겟 APK 무수정). 누가 누구를 이기는지의 5단 스택은 <b>㉒에서 계속</b> — 이 두 편이 RRO/SRO 실습의 이론 전부입니다.",
+ c:"$ adb shell dumpsys package com.example.rrotarget | grep -A3 overlay\n$ adb shell cmd overlay list --user 0 | head"}
+]});
+</script></body></html>

@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑩ APEX — staged 설치와 롤백</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑩ APEX — staged 설치·재부팅 활성화·자동 롤백</h1><span class="tag">Day 4 · Ch 12 · Lab 4-3</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 시스템 모듈이 staged 세션 → 재부팅 → /apex 마운트로 활성화되는 흐름과, 부팅 실패 시 checkpoint 롤백이 기기를 지키는 원리를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 520">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bPkg" class="box" x="30" y="45" width="270" height="80"/><text class="lbl" x="45" y="70">com.example.simple.apex</text><text class="code" x="45" y="92">apex_manifest.json (name/version)</text><text class="code" x="45" y="110">이미지 + 서명 (Android.bp: apex{})</text>
+<rect id="bStage" class="box" x="360" y="45" width="260" height="80"/><text class="lbl" x="375" y="70">apexd: staged 세션</text><text class="code" x="375" y="92">/data/apex/sessions/…</text><text class="code" x="375" y="110">서명·버전 검증만, 아직 비활성</text>
+<rect id="bBoot" class="box" x="680" y="45" width="250" height="80"/><text class="lbl" x="695" y="70">재부팅</text><text class="code" x="695" y="92">checkpoint 설정</text><text class="code" x="695" y="110">"이번 부팅은 시험 부팅"</text>
+<rect id="bOk" class="box hidden-ctl hid" x="360" y="200" width="260" height="86" style="stroke:#2f7a52"/><text class="lbl" x="375" y="226" style="fill:#7ee787">✅ 부팅 성공</text><text class="code" x="375" y="248">checkpoint commit</text><text class="code" x="375" y="266">/apex/com.example.simple/ 마운트</text><text class="code" x="375" y="282">구버전은 보관 후 정리</text>
+<rect id="bFail" class="box hidden-ctl hid" x="680" y="200" width="250" height="86" style="stroke:#ff5252"/><text class="lbl" x="695" y="226" style="fill:#ff7b72">❌ 부팅 실패/크래시 루프</text><text class="code" x="695" y="248">checkpoint rollback</text><text class="code" x="695" y="266">이전 버전으로 자동 복귀</text><text class="code" x="695" y="282">기기는 살아서 돌아온다</text>
+<rect id="bMnt" class="box hidden-ctl hid" x="30" y="330" width="590" height="96"/><text class="lbl" x="45" y="356">/apex 마운트 네임스페이스</text>
+<text class="code" x="45" y="380">/apex/com.example.simple/          ← 활성 버전 (마운트 지점)</text>
+<text class="code" x="45" y="398">/apex/com.example.simple@1/        ← 버전 명시 경로</text>
+<text class="code" x="45" y="416">/data/apex/active/…apex            ← 실제 파일</text>
+<path id="a1" class="arrow" d="M300,85 L358,85"/>
+<path id="a2" class="arrow" d="M620,85 L678,85"/>
+<path id="a3" class="arrow hidden-ctl hid" d="M760,125 C740,170 660,200 622,225"/>
+<path id="a4" class="arrow hidden-ctl hid" d="M805,125 L805,198"/>
+<path id="m1" class="mpath" d="M300,85 L358,85"/>
+<text id="tWhy" class="code hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#8fd18f">차량 OTA의 핵심: '업데이트하다 벽돌'을 막는 마지막 안전망 — mainline 모듈(ART·conscrypt…)이 전부 이 방식</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"APEX = 시스템 부품의 배송 상자",on:["bPkg"],
+ n:"APK가 '앱'의 상자라면 <b>APEX는 라이브러리·데몬 같은 시스템 부품</b>의 상자입니다. 내부는 파일시스템 이미지 + <span class='code'>apex_manifest.json</span> + 서명. Lab 4-3에서 <span class='code'>Android.bp</span>의 <span class='fn'>apex {}</span> 모듈로 직접 빌드했습니다."},
+{t:"staged — 설치하되 활성화하지 않는다",on:["bStage"],arrows:["a1:flow"],pkts:[{path:"m1",dur:900,loop:true,gap:600}],
+ n:"<span class='fn'>adb install --staged</span> 하면 <b>apexd</b>가 서명·버전만 검증하고 세션에 보관합니다. 실행 중 시스템의 발밑(라이브러리)을 갈아끼우는 건 위험하므로 <b>지금은 절대 활성화하지 않습니다.</b>",
+ c:"$ adb install --staged com.example.simple.apex\n$ adb shell pm get-stagedsessions\nsessionId=1088 state=<span class='y'>staged</span> ready=true"},
+{t:"재부팅 — 시험 부팅의 시작",on:["bBoot"],arrows:["a2:flow"],
+ n:"재부팅 시 apexd가 <b>checkpoint</b>를 걸고 새 버전을 마운트해 봅니다: '이번 부팅은 시험이다. 끝까지 성공하면 확정, 아니면 없던 일로.'"},
+{t:"✅ 성공 경로 — commit & 마운트",show:["bOk","a3","bMnt"],on:["bOk","bMnt"],arrows:["a3:grn"],
+ n:"부팅이 완주하면 checkpoint <b>commit</b> — 이제 <span class='path'>/apex/com.example.simple/</span>에 내용물이 마운트되어 시스템이 사용합니다. 이미지를 풀어 복사하는 게 아니라 <b>마운트 네임스페이스</b>로 제공한다는 것이 포인트.",
+ c:"$ adb shell ls /apex/ | grep simple\ncom.example.simple\ncom.example.simple@1\n$ adb shell cat /apex/com.example.simple/apex_manifest.pb | head -c 60"},
+{t:"❌ 실패 경로 — 자동 롤백",show:["bOk","bFail","a4","bMnt"],on:["bFail"],arrows:["a4:red"],dead:false,
+ n:"새 버전으로 부팅이 실패하거나 크래시 루프에 빠지면 checkpoint <b>rollback</b> — 이전 버전으로 자동 복귀해 기기가 살아 돌아옵니다. 사람이 개입하기 전에 시스템이 스스로 되돌리는 것이 APK와의 결정적 차이."},
+{t:"왜 차량에서 중요한가",show:["bOk","bFail","bMnt","tWhy"],on:["bPkg"],
+ n:"차량은 '벽돌'이 곧 안전 문제입니다. ART·미디어 코덱 등 mainline 모듈이 전부 APEX로 배포되는 이유이자, OEM이 자체 부품을 OTA할 때의 표준 그릇 — <b>staged→시험 부팅→commit/rollback</b> 3박자를 기억하세요. (심화: compressed APEX, 세션 다중화는 후속 과정)"}
+]});
+</script></body></html>

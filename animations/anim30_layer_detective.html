@@ -1,0 +1,128 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉚ 계층 탐정 — 문제는 어디에?</title><link rel="stylesheet" href="assets/player.css">
+<style>
+#game{max-width:1020px;margin:14px auto;padding:0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:12px}
+.card{background:var(--box);border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;transition:.15s}
+.card:hover{border-color:var(--on);transform:translateY(-2px)}
+.card h3{margin:0 0 6px;font-size:15px;color:var(--hot)}
+.card p{margin:0;font-size:13px;color:var(--dim);line-height:1.5}
+.card.done{opacity:.55}.card.done h3::after{content:" ✅"}
+#play{display:none}
+.lchain{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.lay{padding:8px 14px;border-radius:8px;background:#1b2437;border:1.5px solid #33415e;font-size:13.5px;color:var(--dim)}
+.lay.cur{border-color:var(--hot);color:var(--txt);box-shadow:0 0 8px rgba(255,180,84,.35)}
+.lay.clean{border-color:#2f7a52;color:#7ee787}
+.lay.guilty{border-color:#ff5252;color:#ff9a9a;box-shadow:0 0 10px rgba(255,60,60,.45)}
+#evid{background:#0a0e18;border:1px solid #23304e;border-radius:8px;padding:12px 14px;margin:10px 0}
+#evid .tool{color:var(--on);font-size:13px;margin-bottom:6px;font-weight:600}
+#evid pre{margin:0;color:#9fe8a0;font-size:12.5px;font-family:Consolas,monospace;line-height:1.55;white-space:pre-wrap}
+#evid pre .r{color:var(--bad)}#evid pre .y{color:#ffd166}#evid pre .c{color:#6e7fa5}
+.verd{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.verd button{font-size:14px;padding:10px 18px}
+.verd .g{border-color:#ff6b6b}.verd .n{border-color:#2f7a52}
+#msg{min-height:26px;margin-top:10px;font-size:14px}
+#msg.bad{color:var(--bad)} #msg.good{color:var(--ok)}
+#solved{display:none;background:#12271c;border:1px solid #2f7a52;border-radius:10px;padding:14px 16px;margin-top:12px;line-height:1.7;font-size:14px}
+.shake{animation:sh .35s}
+@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#score{font-size:13px;color:var(--dim)}
+</style></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉚ 계층 탐정 — 문제는 어디에? (인터랙티브)</h1><span class="tag">Day 4 · 종합 워크숍 오프닝 · HvacSimulator S1~S6</span></header>
+<div id="game">
+<div class="goal">플레이 방법: 증상 카드를 고르면 계층을 하나씩 내려가며 <b>실제 진단 명령과 출력(증거)</b>이 제시됩니다. 각 계층에서 <b>「이 계층이 범인」</b> 또는 <b>「정상 — 다음 계층」</b>을 판정하세요. 성급한 기소도, 지나친 통과도 감점입니다. 이것이 교육의 최종 목표 사고 흐름입니다.</div>
+<div id="pick"><h2 style="font-size:16px">🚗 사건 파일 선택 <span id="score"></span></h2><div class="cards" id="cards"></div></div>
+<div id="play">
+  <h2 id="ptitle" style="font-size:16px;color:var(--hot)"></h2>
+  <p id="pdesc" style="color:var(--dim);font-size:14px"></p>
+  <div class="lchain" id="chain"></div>
+  <div id="evid"><div class="tool" id="etool"></div><pre id="etext"></pre></div>
+  <div class="verd">
+    <button class="g" id="bGuilty">🚨 이 계층이 범인이다</button>
+    <button class="n" id="bNext">✅ 정상 — 다음 계층으로</button>
+    <button id="bBack">↩ 사건 목록</button>
+  </div>
+  <div id="msg"></div>
+  <div id="solved"></div>
+</div>
+</div>
+<script>
+const LAYERS=["App","Framework/UI","Binder","CarService","VHAL/Vendor","Kernel/HW"];
+const CASES=[
+{id:"S1",t:"S1 · 속성 반영 지연",d:"온도 ▲를 눌러도 표시가 1~2초 늦게 바뀐다.",guilty:1,
+ ev:[
+ ["App | adb logcat -s HvacSimulator + 코드 리뷰","onClick(){ setProperty(...); }  <span class='c'># 콜백 대기 방식, set 호출 자체는 즉시 리턴</span>\n<span class='y'>메인 스레드에서 무거운 작업 없음 → 앱 로직은 결백해 보임</span>"],
+ ["Framework/UI | adb shell dumpsys gfxinfo com.example.hvacsimulator","Janky frames: <span class='r'>41.2%</span>\n99th percentile: <span class='r'>210ms</span>\n<span class='c'># onChangeEvent 콜백 안에서 매번 전체 레이아웃 re-inflate 발견!</span>"],
+ ["Binder | Perfetto binder_transaction 지연","car_property setProperty 왕복: 3.1ms  <span class='c'># 정상 범위</span>"],
+ ["CarService | dumpsys car_service","HVAC_TEMPERATURE_SET dispatch queue: 0 pending  <span class='c'># 밀림 없음</span>"],
+ ["VHAL | dumpsys android.hardware.automotive.vehicle","set→event latency: 4ms  <span class='c'># 정상</span>"],
+ ["Kernel/HW | dmesg","<span class='c'>(에뮬레이터 가짜 ECU — 특이사항 없음)</span>"]],
+ sol:"<b>범인: Framework/UI 계층(앱의 렌더링 경로).</b> setProperty 왕복(3.1ms)과 CarService·VHAL은 결백 — 지연의 실체는 콜백마다 레이아웃을 통째로 다시 그려 프레임이 밀린 것. gfxinfo의 99th 210ms가 결정적 증거. 해결: 콜백에서 TextView만 갱신, ㉗(VSync) 원리 적용."},
+{id:"S2",t:"S2 · DeadObjectException",d:"주행 중 갑자기 모든 차량 속성 호출이 DeadObjectException을 던진다.",guilty:3,
+ ev:[
+ ["App | adb logcat -e DeadObject","android.os.<span class='r'>DeadObjectException</span> at CarPropertyManager.setProperty\n<span class='c'># 앱 코드는 예외를 '받은' 쪽 — 던진 쪽이 아님</span>"],
+ ["Framework/UI | 앱 프로세스 상태","앱 프로세스 정상 생존, UI 정상 렌더링  <span class='c'># 앱/UI 결백</span>"],
+ ["Binder | linkToDeath 등록 여부","binderDied() 콜백 수신 기록 있음 → <span class='y'>상대 프로세스가 죽었다는 뜻</span>\n<span class='c'># Binder 메커니즘 자체는 정상 동작 (사망을 정확히 통지)</span>"],
+ ["CarService | adb shell pidof com.android.car + logcat","pidof: <span class='r'>(응답 없음 → 재시작 중 PID 변경 확인)</span>\nlogcat: FATAL EXCEPTION in com.android.car — NPE in CarPropertyService\n<span class='y'>→ CarService 크래시 후 재기동!</span>"],
+ ["VHAL | 데몬 생존","VHAL 데몬 정상 — CarService만 죽었다 살아남"],
+ ["Kernel/HW | dmesg","특이사항 없음"]],
+ sol:"<b>범인: CarService 크래시.</b> DeadObjectException은 '상대가 죽었다'는 통지일 뿐 — 던진 예외의 발원지를 쫓아 pidof/logcat으로 <b>com.android.car의 사망·재기동</b>을 확인하는 것이 핵심. 대응: 앱은 linkToDeath+재바인딩 로직(Animation ㉘), 근본 원인은 CarService NPE 수정. Binder를 범인으로 지목했다면 — 전령을 쏜 것입니다."},
+{id:"S4",t:"S4 · FAN HIGH 애니메이션 끊김",d:"FAN을 HIGH로 올리면 회전 애니메이션이 뚝뚝 끊긴다.",guilty:0,
+ ev:[
+ ["App | 코드 리뷰 (MainActivity.java)","fanButton.setOnClickListener(v -> {\n  ...\n  <span class='r'>Bitmap b = BitmapFactory.decodeResource(...); // 클릭마다 메인스레드 디코딩!</span>\n  startFanAnimation(\"HIGH\");\n});"],
+ ["Framework/UI | dumpsys gfxinfo","Janky frames: 18.7% · 99th: <span class='r'>34ms</span>  <span class='c'># 16.6ms 초과 다수 — 증상은 여기 '나타남'</span>"],
+ ["Binder | Perfetto","binder 지연 정상  <span class='c'># IPC는 결백</span>"],
+ ["CarService | dumpsys car_service","FAN 속성 이벤트 정상 주기 도착"],
+ ["VHAL | -","정상"],
+ ["Kernel/HW | -","정상"]],
+ sol:"<b>범인: App 계층(메인 스레드 디코딩).</b> jank는 Framework 렌더링에서 '보이지만', 원인 코드는 앱의 onClick — <b>증상이 나타나는 계층 ≠ 원인 계층</b>이 이 사건의 교훈. gfxinfo(현상) → 코드 리뷰(원인) 순서. 해결: 리소스 사전 로딩/Worker 스레드. ㉗ 프레임 3의 빨간 블록이 바로 이것."},
+{id:"S5",t:"S5 · RRO 브랜딩 미적용",d:"cmd overlay enable을 했는데 HVAC 화면 색이 그대로다.",guilty:1,
+ ev:[
+ ["App | 앱 재시작 여부","<span class='y'>enable 후 앱을 재시작하지 않았음</span> — 우선 재시작 → 그래도 일부 색만 안 바뀜"],
+ ["Framework/UI(리소스) | cmd overlay 상태","$ cmd overlay list | grep hvac\n<span class='y'>[x] com.example.hvacoverlay</span>  <span class='c'># 활성화는 됨</span>\n$ cmd overlay dump com.example.hvacoverlay\n<span class='r'>background_color: MISSING from overlayable policy</span>\n<span class='c'># 타겟 overlayable.xml에 해당 리소스 미공개!</span>"],
+ ["Binder | -","OMS↔앱 통신 정상"],
+ ["CarService | -","무관 (리소스 사건)"],
+ ["VHAL | -","무관"],
+ ["Kernel/HW | -","무관"]],
+ sol:"<b>범인: 리소스 계층 — overlayable 미공개 + 앱 미재시작 콤보.</b> Animation ㉒의 규칙: 동적 RRO는 스택 맨 위지만 <b>overlayable.xml에 공개된 리소스만</b> 덮을 수 있음. 진단 순서: overlay list(활성?) → overlay dump(매핑?) → 타겟 overlayable 확인 → 앱 재시작. CarService까지 내려갔다면 과잉수사!"},
+{id:"S6",t:"S6 · SecurityException / avc denied",d:"새 진단 앱이 차량 속성을 읽자마자 예외. logcat에 avc 로그도 보인다.",guilty:4,
+ ev:[
+ ["App | Manifest 확인","&lt;uses-permission android:name=\"android.car.permission.CAR_SPEED\"/&gt;\n<span class='c'># 선언 OK, 권한 부여도 확인됨</span>"],
+ ["Framework/UI | -","무관"],
+ ["Binder | 예외 스택","SecurityException이 아니라 서비스 접근 자체가 null 리턴 — <span class='y'>더 아래를 보라는 신호</span>"],
+ ["CarService | CarPropertyService 권한 검사 로그","권한 검사 도달 기록 <span class='r'>없음</span> — 호출이 CarService에 도착하지도 못함!"],
+ ["VHAL/Vendor(정책) | adb logcat | grep avc","<span class='r'>avc: denied { find }</span> scontext=u:r:untrusted_app:s0\n tcontext=u:object_r:<span class='y'>vendor_diag_service</span>:s0 tclass=service_manager\n<span class='c'># OEM이 추가한 vendor 서비스의 SELinux 정책 누락</span>"],
+ ["Kernel/HW | -","SELinux는 커널 LSM이지만, 고칠 곳은 vendor 정책(.te)"]],
+ sol:"<b>범인: Vendor SELinux 정책 누락.</b> Java 권한(Manifest)은 통과했지만 <b>그 아래 커널 SELinux가 조용히 차단</b> — Animation ⑱의 5단계(denied 수집→분석→audit2allow→neverallow 확인→반영)를 그대로 실행. 'Java 권한 OK인데 안 된다'면 avc부터 grep — Day 2 실습이 실전이 되는 순간."},
+{id:"S3",t:"S3 · 부팅 후 앱 표시 지연",d:"차량 시동(부팅) 후 HVAC 앱이 한참 뒤에야 뜬다.",guilty:1,
+ ev:[
+ ["App | logcat Displayed","Displayed com.example.hvac: <span class='r'>+4,812ms</span>  <span class='c'># 콜드 스타트 치고도 과함</span>"],
+ ["Framework(부팅 체인) | logcat -b system 타임라인","SystemServer: StartServices took <span class='r'>+9.2s</span>\n<span class='y'>어떤 커스텀 서비스의 onStart()가 동기 네트워크 대기 7초!</span>\n<span class='c'># Day 2에서 배운 'Binder Thread에서 긴 작업' 안티패턴</span>"],
+ ["Binder | -","서비스 기동 후 IPC는 정상"],
+ ["CarService | car_service 기동 시각","SystemServer 지연에 밀려 늦게 시작 — 피해자이지 범인 아님"],
+ ["VHAL | -","정상"],
+ ["Kernel/HW | dmesg 커널 부팅 시간","kernel boot: 2.1s  <span class='c'># 정상</span>"]],
+ sol:"<b>범인: Framework — SystemServer 내 커스텀 서비스의 동기 블로킹.</b> Displayed(결과) → SystemServer 타임라인(원인)으로 거슬러 올라가는 것이 부팅 지연 분석의 정석. Animation ⑥의 체인에서 '어느 구간이 늦었나'를 시간표로 찍는 문제. 해결: onStart()의 무거운 작업을 HandlerThread로(Day 2 Ch5 패턴)."}
+];
+let cur=null,li=0,wrong=0,solvedSet=new Set();
+const $=id=>document.getElementById(id);
+function renderCards(){$('cards').innerHTML=CASES.map((c,i)=>`<div class="card ${solvedSet.has(c.id)?'done':''}" onclick="openCase(${i})"><h3>${c.t}</h3><p>${c.d}</p></div>`).join('');
+ $('score').textContent=` — 해결 ${solvedSet.size}/${CASES.length}`}
+function openCase(i){cur=CASES[i];li=0;wrong=0;$('pick').style.display='none';$('play').style.display='block';
+ $('ptitle').textContent='🔎 '+cur.t;$('pdesc').textContent='증상: '+cur.d;$('solved').style.display='none';draw()}
+function draw(){$('chain').innerHTML=LAYERS.map((l,i)=>{let cl='lay';if(i<li)cl+=' clean';if(i===li)cl+=' cur';return `<span class="${cl}">${i+1}. ${l}</span>`}).join('');
+ const e=cur.ev[li];$('etool').textContent='🧪 증거 ['+LAYERS[li]+'] — '+e[0].split('|')[1].trim();
+ $('etext').innerHTML=e[1];$('msg').textContent='';$('msg').className='';
+ $('bGuilty').style.display='';$('bNext').style.display=''}
+$('bGuilty').onclick=()=>{ if(li===cur.guilty){ // solved
+  $('chain').innerHTML=LAYERS.map((l,i)=>{let cl='lay';if(i<li)cl+=' clean';if(i===li)cl+=' guilty';return `<span class="${cl}">${i+1}. ${l}</span>`}).join('');
+  $('solved').style.display='block';$('solved').innerHTML='🎉 <b>사건 해결!</b> (오판 '+wrong+'회)<br>'+cur.sol;
+  $('bGuilty').style.display='none';$('bNext').style.display='none';solvedSet.add(cur.id);
+ } else { wrong++;$('msg').className='bad';$('play').classList.add('shake');setTimeout(()=>$('play').classList.remove('shake'),400);
+  $('msg').textContent= li<cur.guilty? '⚖ 성급한 기소! 증거를 다시 보세요 — 이 계층의 지표는 정상 범위이거나, 증상이 나타난 곳일 뿐 원인이 아닙니다.':'⚖ 이미 지나친 계층입니다.'}};
+$('bNext').onclick=()=>{ if(li===cur.guilty){wrong++;$('msg').className='bad';$('play').classList.add('shake');setTimeout(()=>$('play').classList.remove('shake'),400);
+  $('msg').textContent='⚠ 범인을 놓쳤습니다! 증거의 빨간 줄을 다시 읽어보세요 — 이 계층에 결정적 이상 징후가 있습니다.';return}
+ if(li<LAYERS.length-1){li++;draw()} };
+$('bBack').onclick=()=>{$('play').style.display='none';$('pick').style.display='block';renderCards()};
+window.openCase=openCase; renderCards();
+</script></body></html>

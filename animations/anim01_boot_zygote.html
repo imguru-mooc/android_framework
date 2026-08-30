@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>① Android Boot & Zygote — COW의 탄생</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>① Android Boot & Zygote fork(COW) — 모든 프로세스의 족보</h1><span class="tag">Day 1 · Ch 0</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: Kernel→init→Zygote→SystemServer→앱으로 이어지는 부팅 족보와, preload+fork(COW)가 앱 생성을 빠르게 만드는 원리(쓰기 순간 Page Fault 복사)를 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bKern" class="box" x="30" y="40" width="200" height="60"/><text class="lbl" x="45" y="65">Kernel 부팅</text><text class="code" x="45" y="84">PID 1 = init 실행</text>
+<rect id="bInit" class="box" x="30" y="140" width="200" height="60"/><text class="lbl" x="45" y="165">init (PID 1)</text><text class="code" x="45" y="184">init.rc 파싱 → 데몬 기동</text>
+<rect id="bZyg" class="box" x="330" y="140" width="270" height="86"/><text class="lbl" x="345" y="165">Zygote (app_process)</text><text class="code" x="345" y="184">JNI_CreateJavaVM → ART 기동</text><text class="code" x="345" y="200">preloadClasses() 수천 개</text><text class="code" x="345" y="216">preloadResources()</text>
+<rect id="bSS" class="box" x="700" y="60" width="230" height="60"/><text class="lbl" x="715" y="85">system_server</text><text class="code" x="715" y="104">forkSystemServer()</text>
+<rect id="bApp1" class="box" x="700" y="160" width="230" height="60"/><text class="lbl" x="715" y="185">앱 프로세스들</text><text class="code" x="715" y="204">Launcher · HVAC · Cluster…</text>
+<line id="a1" class="arrow" x1="130" y1="100" x2="130" y2="138"/>
+<path id="a2" class="arrow" d="M230,170 L328,175"/>
+<path id="a3" class="arrow" d="M600,165 C650,150 660,95 698,90"/>
+<path id="a4" class="arrow" d="M600,190 L698,190"/>
+<path id="m2" class="mpath" d="M230,170 L328,175"/>
+<path id="m3" class="mpath" d="M600,165 C650,150 660,95 698,90"/>
+<path id="m4" class="mpath" d="M600,190 L698,190"/>
+<!-- COW closeup -->
+<g id="gCow" class="hidden-ctl hid">
+<rect class="zone" x="30" y="280" width="900" height="255"/><text class="lbl" x="46" y="306">🔍 COW 클로즈업 — fork 직후의 메모리</text>
+<rect id="cowZ" class="box" x="60" y="330" width="250" height="70"/><text class="lbl" x="75" y="355" style="font-size:12.5px">Zygote 페이지 테이블</text><text class="code" x="75" y="374">String.class → PFN 0x1000 (RO)</text>
+<rect id="cowA" class="box" x="60" y="420" width="250" height="70"/><text class="lbl" x="75" y="445" style="font-size:12.5px">앱 페이지 테이블</text><text id="cowAt" class="code" x="75" y="464">String.class → PFN 0x1000 (RO)</text>
+<rect id="cowF" class="box" x="420" y="360" width="200" height="86" style="fill:#26203a"/><text class="lbl" x="520" y="392" text-anchor="middle" style="font-size:12.5px">물리 페이지</text><text class="code" x="520" y="412" text-anchor="middle">PFN 0x1000</text><text class="code" x="520" y="428" text-anchor="middle">preload된 클래스</text>
+<rect id="cowF2" class="box hidden-ctl hid" x="680" y="420" width="200" height="70" style="fill:#3a2320"/><text class="lbl" x="780" y="448" text-anchor="middle" style="font-size:12.5px">복사본 PFN 0x2000</text><text class="code" x="780" y="468" text-anchor="middle">쓰기 발생 페이지만!</text>
+<line id="cA1" class="arrow" x1="310" y1="365" x2="418" y2="390"/>
+<line id="cA2" class="arrow" x1="310" y1="452" x2="418" y2="420"/>
+<line id="cA3" class="arrow hidden-ctl hid" x1="310" y1="460" x2="678" y2="455"/>
+</g>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"Kernel → init (PID 1)",on:["bKern","bInit"],arrows:["a1"],
+ n:"커널 부팅이 끝나면 최초의 사용자 프로세스 <b>init(PID 1)</b>이 태어나 <span class='path'>init.rc</span>를 파싱하고 servicemanager·vold 같은 네이티브 데몬을 띄웁니다.",
+ c:"$ adb shell ps -A | head -3\nUSER  PID PPID ... NAME\nroot    1    0 ... <span class='y'>init</span>\nroot  512    1 ... zygote64"},
+{t:"Zygote 기동 — JVM을 품고 미리 로딩",on:["bZyg"],arrows:["a2:flow"],pkts:[{path:"m2",dur:1000,loop:true,gap:700}],
+ n:"init이 <span class='fn'>app_process</span>(=Zygote)를 실행합니다. Zygote는 <span class='fn'>JNI_CreateJavaVM</span>(⑰ Fourth!)으로 ART를 만들고, <span class='fn'>preloadClasses()</span>로 수천 개 Framework 클래스와 리소스를 <b>미리</b> 메모리에 올린 채 Socket을 열고 대기합니다."},
+{t:"첫 자식 — system_server",on:["bZyg","bSS"],arrows:["a3:flow"],pkts:[{path:"m3",dur:1100,loop:true,gap:700}],
+ n:"Zygote의 첫 fork는 <b>system_server</b> — AMS·WMS·PMS 등 80여 개 서비스의 집(⑤에서 상세). 이후 모든 앱도 같은 방식으로 fork되므로, <b>모든 앱의 PPID는 Zygote</b>입니다.",
+ c:"$ adb shell ps -A | grep -E \"zygote|system_server\"\nroot   512    1 ... zygote64\nsystem 1029 <span class='y'>512</span> ... system_server   <span class='c'># PPID=512(Zygote)</span>"},
+{t:"앱 fork — 0.01초의 비밀",on:["bZyg","bApp1"],arrows:["a4:flow"],pkts:[{path:"m4",dur:1000,loop:true,gap:700}],
+ n:"앱 실행 요청(⑥ 4단계)이 오면 Zygote가 <span class='fn'>fork()</span> — 새 프로세스는 preload된 모든 것을 <b>복사 없이</b> 물려받습니다. 어떻게? ↓ COW 클로즈업."},
+{t:"🔍 COW — 같은 물리 페이지를 함께 가리킨다",show:["gCow"],on:["cowZ","cowA","cowF"],arrows:["cA1","cA2"],
+ n:"fork 직후 Zygote와 앱의 페이지 테이블은 <b>같은 물리 페이지(PFN 0x1000)</b>를 가리키고, 커널은 양쪽 모두 <b>읽기 전용(RO)</b>으로 표시합니다. 복사 0바이트 — 그래서 fork가 순식간입니다. (④ Binder mmap과 같은 '페이지 테이블 마법'의 형제)"},
+{t:"🔍 쓰기 순간 — Page Fault가 복사를 일으킨다",show:["gCow","cowF2","cA3"],on:["cowA","cowF2"],arrows:["cA2","cA3:red"],
+ n:"앱이 그 페이지에 <b>쓰기</b>를 시도하면 RO 위반으로 <b>Page Fault</b> 발생 → 커널이 <b>그 페이지 하나만</b> 0x2000으로 복사하고 앱의 PTE를 바꿔줍니다. 안 건드린 수천 페이지는 영원히 공유 — 메모리 절약 + 속도의 원천. (퀴즈: '언제 복사되는가?' = 쓰기 순간)"},
+{t:"관찰 실습",on:["bZyg","bSS","bApp1"],
+ n:"에뮬레이터에서 족보를 직접 확인하세요. Zygote가 죽으면 어떻게 될까요? — 모든 앱의 부모가 사라지므로 시스템 재시작 수준의 사건이 됩니다.",
+ c:"$ adb shell ps -A -o USER,PID,PPID,NAME | grep -E \"zygote|system_server|hvac\"\n$ adb shell cat /proc/$(pidof com.example.hvacsimulator)/smaps_rollup | grep -i pss\n<span class='c'># Pss가 실제 '내 몫' 메모리 — 공유 페이지는 나눠 계산됨</span>"}
+]});
+</script></body></html>

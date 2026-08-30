@@ -1,0 +1,86 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⑧ 차량 온도 버튼 한 번의 여행 — App→VHAL 왕복</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>⑧ 차량 온도 버튼 한 번의 여행 — App → VHAL 왕복</h1><span class="tag">Day 3 · Car API 입문 ★핵심</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: <span class="fn">setProperty()</span> 한 번이 <b>CarService 권한 검사 → VHAL(AIDL) → CAN/ECU</b>를 거쳐, 변경 이벤트가 <b>콜백으로 되돌아오는 왕복 전체</b>를 실제 클래스·소스 경로와 함께 추적한다.</div>
+<svg id="stage" viewBox="0 0 960 560">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="zApp" class="zone" x="12" y="15" width="225" height="530"/><text class="lbl" x="26" y="40">HVAC 앱</text><text class="sub" x="26" y="57">HvacSimulator</text>
+<rect id="zCar" class="zone" x="252" y="15" width="235" height="530"/><text class="lbl" x="266" y="40">CarService</text><text class="sub" x="266" y="57">com.android.car 프로세스</text>
+<rect id="zHal" class="zone" x="502" y="15" width="225" height="530"/><text class="lbl" x="516" y="40">Vehicle HAL 데몬</text><text class="sub" x="516" y="57">android.hardware.automotive.vehicle</text>
+<rect id="zEcu" class="zone kern" x="742" y="15" width="206" height="530"/><text class="lbl" x="756" y="40">차량 (CAN/ECU)</text><text class="sub" x="756" y="57">HVAC ECU</text>
+<!-- app -->
+<rect id="bBtn" class="box" x="28" y="85" width="192" height="50"/><text class="lbl" x="40" y="106" style="font-size:12.5px">온도 ▲ 버튼 (22→23℃)</text><text class="code" x="40" y="124">onClick()</text>
+<rect id="bCPM" class="box" x="28" y="155" width="192" height="60"/><text class="lbl" x="40" y="177" style="font-size:12.5px">CarPropertyManager</text><text class="code" x="40" y="195">setProperty(HVAC_TEMPERATURE</text><text class="code" x="40" y="209">_SET, SEAT_ROW1_LEFT, 23f)</text>
+<rect id="bCb" class="box" x="28" y="420" width="192" height="60"/><text class="lbl" x="40" y="442" style="font-size:12.5px">CarPropertyEventCallback</text><text class="code" x="40" y="460">onChangeEvent(value=23.0)</text><text class="code" x="40" y="474">→ UI 갱신</text>
+<!-- car service -->
+<rect id="bCPS" class="box" x="268" y="120" width="203" height="60"/><text class="lbl" x="280" y="142" style="font-size:12.5px">CarPropertyService</text><text class="code" x="280" y="160">packages/services/Car/</text><text class="code" x="280" y="174">service/src/.../property/</text>
+<rect id="bPerm" class="box" x="268" y="200" width="203" height="55"/><text class="lbl" x="280" y="222" style="font-size:12.5px">권한 검사</text><text class="code" x="280" y="240">CONTROL_CAR_CLIMATE ?</text>
+<rect id="bPHS" class="box" x="268" y="275" width="203" height="55"/><text class="lbl" x="280" y="297" style="font-size:12.5px">PropertyHalService</text><text class="code" x="280" y="315">→ VehicleStub.set()</text>
+<rect id="bDisp" class="box" x="268" y="400" width="203" height="55"/><text class="lbl" x="280" y="422" style="font-size:12.5px">이벤트 디스패치</text><text class="code" x="280" y="440">등록된 리스너에게 (oneway)</text>
+<!-- hal -->
+<rect id="bIV" class="box" x="518" y="145" width="193" height="60"/><text class="lbl" x="530" y="167" style="font-size:12.5px">IVehicle (AIDL HAL)</text><text class="code" x="530" y="185">setValues(requests)</text><text class="code" x="530" y="199">hardware/interfaces/automotive/</text>
+<rect id="bVeh" class="box" x="518" y="230" width="193" height="55"/><text class="lbl" x="530" y="252" style="font-size:12.5px">Vendor 구현</text><text class="code" x="530" y="270">VehiclePropValue → CAN 변환</text>
+<rect id="bEvt" class="box" x="518" y="370" width="193" height="55"/><text class="lbl" x="530" y="392" style="font-size:12.5px">IVehicleCallback</text><text class="code" x="530" y="410">onPropertyEvent(23.0)</text>
+<!-- ecu -->
+<rect id="bCan" class="box" x="758" y="200" width="175" height="55"/><text class="lbl" x="770" y="222" style="font-size:12.5px">CAN 프레임 송신</text><text class="code" x="770" y="240">ID 0x2F1 [17 00 ..]</text>
+<rect id="bEcu" class="box" x="758" y="285" width="175" height="55"/><text class="lbl" x="770" y="307" style="font-size:12.5px">HVAC ECU 적용</text><text class="code" x="770" y="325">액추에이터 구동 → ACK</text>
+<!-- arrows fwd -->
+<line id="a1" class="arrow" x1="124" y1="135" x2="124" y2="153"/>
+<path id="a2" class="arrow" d="M220,185 C250,185 245,148 266,148"/>
+<line id="a3" class="arrow" x1="369" y1="180" x2="369" y2="198"/>
+<line id="a4" class="arrow" x1="369" y1="255" x2="369" y2="273"/>
+<path id="a5" class="arrow" d="M471,302 C500,302 498,177 516,175"/>
+<line id="a6" class="arrow" x1="614" y1="205" x2="614" y2="228"/>
+<path id="a7" class="arrow" d="M711,257 C735,257 738,227 756,227"/>
+<line id="a8" class="arrow" x1="845" y1="255" x2="845" y2="283"/>
+<!-- arrows back -->
+<path id="a9" class="arrow" d="M758,340 C700,380 680,395 713,397"/>
+<path id="a10" class="arrow" d="M518,397 C500,397 495,427 473,427"/>
+<path id="a11" class="arrow" d="M268,450 C250,450 245,450 222,450"/>
+<!-- motion paths -->
+<path id="m2" class="mpath" d="M220,185 C250,185 245,148 266,148"/>
+<path id="m5" class="mpath" d="M471,302 C500,302 498,177 516,175"/>
+<path id="m7" class="mpath" d="M711,257 C735,257 738,227 756,227"/>
+<path id="m9" class="mpath" d="M845,340 C780,395 740,397 713,397"/>
+<path id="m10" class="mpath" d="M518,397 C500,397 495,427 473,427"/>
+<path id="m11" class="mpath" d="M268,450 C250,450 245,450 222,450"/>
+<g><rect x="26" y="512" width="14" height="4" fill="#ff6b6b"/><text class="mini" x="46" y="518">Binder</text>
+<rect x="106" y="512" width="14" height="4" fill="#7ee787"/><text class="mini" x="126" y="518">콜백(oneway)</text>
+<rect x="216" y="512" width="14" height="4" fill="#ffb454"/><text class="mini" x="236" y="518">차량 버스</text></g>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"버튼 터치 — 앱 개발자가 보는 전부",on:["zApp","bBtn","bCPM"],arrows:["a1"],
+ n:"온도 ▲를 누르면 앱은 <span class='fn'>CarPropertyManager.setProperty(Float.class, HVAC_TEMPERATURE_SET, VehicleAreaSeat.ROW_1_LEFT, 23f)</span> 한 줄을 부릅니다. Property는 <b>ID + AreaId + 값</b> 3요소 — HVAC는 좌석별(area) 제어라 areaId가 필수입니다."},
+{t:"🔴 Binder — car_service로",on:["bCPM","bCPS"],arrows:["a2:red"],pkts:[{path:"m2",cls:"red",dur:1200,loop:true,gap:700}],
+ n:"CarPropertyManager는 Day 1에 만든 Manager와 동일한 구조 — 내부의 <span class='fn'>ICarProperty</span> Proxy가 Binder로 <b>com.android.car 프로세스</b>의 <span class='fn'>CarPropertyService</span>를 호출합니다. CarService는 system_server가 아니라 <b>별도 프로세스</b>임에 주의(❗트러블슈팅 시 pidof com.android.car).",
+ c:"$ adb shell service list | grep car_property\n<span class='y'>car_property</span>: [android.car.hardware.property.ICarProperty]\n$ adb shell pidof com.android.car\n2417"},
+{t:"권한 검사 — 커널이 보증한 UID로",on:["bCPS","bPerm"],arrows:["a3"],
+ n:"<span class='fn'>CarPropertyService</span>는 Binder가 커널에서 주입한 호출자 UID로 <span class='fn'>android.car.permission.CONTROL_CAR_CLIMATE</span>를 검사합니다. 실패 시 <b>SecurityException</b> — 워크숍 S6 시나리오의 출발점입니다. 속성마다 요구 권한이 다릅니다(속도=CAR_SPEED 읽기 권한 등)."},
+{t:"PropertyHalService — Framework의 끝",on:["bPerm","bPHS"],arrows:["a4"],
+ n:"검사를 통과하면 <span class='fn'>PropertyHalService</span>가 Manager의 propertyId를 HAL의 <span class='fn'>VehiclePropValue</span>로 변환합니다. 여기까지가 <span class='path'>packages/services/Car/</span> — Framework의 마지막 층입니다."},
+{t:"🔴 Binder — VHAL(AIDL HAL) 호출",on:["bPHS","bIV"],arrows:["a5:red"],pkts:[{path:"m5",cls:"red",dur:1200,loop:true,gap:700}],
+ n:"Android 16의 VHAL은 <b>AIDL HAL</b> — CarService와 완전히 같은 Binder로 <span class='fn'>IVehicle.setValues()</span>를 부릅니다(HIDL의 hwservicemanager 아님). 인터페이스 정의: <span class='path'>hardware/interfaces/automotive/vehicle/aidl/</span>. Day 4의 N-1(native 서비스)이 바로 이런 데몬의 뼈대입니다."},
+{t:"Vendor 구현 → 🟠 CAN 버스",on:["bVeh","bCan","zEcu"],arrows:["a6","a7"],pkts:[{path:"m7",cls:"",dur:1000,loop:true,gap:600}],
+ n:"OEM Vendor 구현이 VehiclePropValue를 <b>CAN 프레임</b>(또는 SOME/IP 등)으로 번역해 차량 버스로 쏩니다. 여기부터는 Android 밖 — 전장 개발자 여러분의 영역과 만나는 지점입니다."},
+{t:"ECU 적용 — 그리고 진실의 원천",on:["bCan","bEcu"],arrows:["a8"],
+ n:"HVAC ECU가 액추에이터를 구동하고 실제 상태를 확정합니다. <b>중요:</b> 앱이 setProperty를 불렀다고 값이 바뀐 게 아닙니다 — <b>ECU가 확정한 값이 이벤트로 돌아와야 진짜</b>입니다. 그래서 잘 만든 HVAC 앱은 set 직후 UI를 바꾸지 않고 콜백을 기다립니다."},
+{t:"🟢 되돌아오는 길 ① — onPropertyEvent",on:["bEcu","bEvt","bDisp"],arrows:["a9:grn","a10:grn"],pkts:[{path:"m9",cls:"grn",dur:1000,loop:true,gap:800},{path:"m10",cls:"grn",dur:900,delay:400,loop:true,gap:900}],
+ n:"ECU 상태 변화가 VHAL로 올라오면 VHAL이 <span class='fn'>IVehicleCallback.onPropertyEvent()</span>(oneway)로 CarService에 통지 → CarService가 해당 property를 구독한 리스너 목록을 찾습니다."},
+{t:"🟢 되돌아오는 길 ② — 앱 콜백, 왕복 완성",on:["bDisp","bCb"],arrows:["a11:grn"],pkts:[{path:"m11",cls:"grn",dur:900,loop:true,gap:800}],
+ n:"<span class='fn'>CarPropertyEventCallback.onChangeEvent(value=23.0)</span> — Day 1에서 배운 <b>oneway 콜백 패턴</b> 그대로 앱에 도착, 이제 UI를 23℃로 갱신합니다. 총 왕복: Binder 2회(전진) + oneway 2회(복귀) + CAN 왕복."},
+{t:"직접 확인 — dumpsys car_service",on:["bCPS","bPHS","bDisp"],
+ n:"로컬 Automotive Emulator에서 이 경로의 실체를 확인하세요. <b>워크숍 S1(속성 반영 지연)</b>은 이 왕복 중 어느 구간이 느린지 좁히는 문제입니다 — 앱? Binder? CarService 디스패치? VHAL? 에뮬레이터의 가짜 ECU?",
+ c:"$ adb shell dumpsys car_service | grep -A3 HVAC_TEMPERATURE_SET\n  Property: <span class='y'>HVAC_TEMPERATURE_SET</span> (0x15600503)\n    areaId 0x1 (ROW_1_LEFT): value=23.0  <span class='c'># ← 방금의 여행 결과</span>\n$ adb shell dumpsys car_service --services CarPropertyService | head"}
+]});
+</script></body></html>

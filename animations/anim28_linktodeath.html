@@ -1,0 +1,55 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>㉘ linkToDeath — 죽음의 알림</title><link rel="stylesheet" href="assets/player.css"></head><body>
+<header><a href="index.html">◀ 목록</a><h1>㉘ linkToDeath — 죽음의 알림과 DeadObjectException</h1><span class="tag">Day 4 · 워크숍 S2 사전 지식</span></header>
+<div id="wrap">
+<div class="goal">학습 목표: 서비스 프로세스 사망 시 커널이 뿌리는 사망 통지의 두 얼굴(binderDied 콜백 vs DeadObjectException)과 재연결 패턴을 이해한다.</div>
+<svg id="stage" viewBox="0 0 960 500">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#3d4a68"/></marker>
+<marker id="ahO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ffb454"/></marker>
+<marker id="ahR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#ff6b6b"/></marker>
+<marker id="ahG" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#7ee787"/></marker>
+</defs>
+<rect id="bSvc" class="box" x="380" y="40" width="220" height="80"/><text id="tSvc" class="lbl" x="490" y="72" text-anchor="middle">CarService</text><text class="code" x="490" y="96" text-anchor="middle">com.android.car</text>
+<rect id="bK" class="box" x="355" y="170" width="270" height="66" style="fill:#241a2e"/><text class="lbl" x="490" y="196" text-anchor="middle" style="font-size:12.5px">커널 Binder 드라이버</text><text class="code" x="490" y="216" text-anchor="middle">참조 장부 + 사망 통지 명단</text>
+<rect id="bA" class="box" x="40" y="300" width="400" height="120"/><text class="lbl" x="55" y="325" style="font-size:12.5px">앱 A — linkToDeath 등록함 🛡</text>
+<text class="code" x="55" y="348">binder.linkToDeath(recipient, 0);</text>
+<text id="tA" class="code" x="55" y="372">상태: 정상 서비스 이용</text>
+<text class="code" x="55" y="396">binderDied(){ 재바인딩 예약 + UI 안전화 }</text>
+<rect id="bB" class="box" x="520" y="300" width="400" height="120"/><text class="lbl" x="535" y="325" style="font-size:12.5px">앱 B — 등록 안 함 😴</text>
+<text class="code" x="535" y="348">(그냥 Proxy만 들고 있음)</text>
+<text id="tB" class="code" x="535" y="372">상태: 정상 서비스 이용</text>
+<text class="code" x="535" y="396">다음 호출에서야 비극을 알게 됨</text>
+<path id="aD1" class="arrow hidden-ctl hid" d="M420,236 C350,260 280,280 240,298"/>
+<path id="aD2" class="arrow hidden-ctl hid" d="M560,236 C630,260 690,280 720,298"/>
+<path id="mD1" class="mpath" d="M420,236 C350,260 280,280 240,298"/>
+<line id="aDie" class="arrow" x1="490" y1="120" x2="490" y2="168"/>
+<text id="tHint" class="code hidden-ctl hid" x="480" y="470" text-anchor="middle" style="fill:#8fd18f">RemoteCallbackList(③)가 내부에서 자동으로 해주는 일이 바로 이 linkToDeath 관리다</text>
+</svg>
+<div id="panel"><div id="narr"></div><div id="term"></div>
+<div id="ctrl"><button id="prev">◀ 이전</button><span id="steplbl"></span><button id="next">다음 ▶</button><button id="auto">▶▶ 자동재생</button><div class="dots"></div></div></div>
+</div>
+<script src="assets/player.js"></script>
+<script>
+initAnim({autoMs:4200,steps:[
+{t:"보험 가입 — linkToDeath",on:["bA","bK"],
+ n:"앱 A는 서비스 IBinder에 <span class='fn'>linkToDeath(DeathRecipient)</span>를 걸어 커널의 <b>사망 통지 명단</b>에 이름을 올립니다. 앱 B는 아무것도 하지 않습니다. [svc:ok]"},
+{t:"💀 사망 — 프로세스가 사라지는 순간",on:["bSvc"],arrows:["aDie:red"],dead:true,
+ n:"CarService가 크래시(S2: NPE)로 사라집니다. 커널은 그 프로세스가 가진 <b>모든 Binder 노드의 소멸을 즉시 인지</b>합니다 — 참조 장부(②)를 커널이 들고 있기에 가능한 일. [svc:dead]"},
+{t:"🛡 통지 — binderDied 즉시 호출",show:["aD1"],on:["bA","bK"],arrows:["aD1:red"],pkts:[{path:"mD1",cls:"red",dur:1000,loop:true,gap:700}],
+ n:"명단에 있던 앱 A에게 커널이 <b>즉시</b> 통지 → <span class='fn'>binderDied()</span> 콜백(별도 스레드!). A는 그 자리에서 UI를 안전 상태로 바꾸고 <b>재바인딩을 예약</b>합니다 — 사용자는 잠깐의 '재연결 중…'만 봅니다. [svc:dead][a:died]"},
+{t:"😴 무방비 — 다음 호출의 기습",show:["aD1","aD2"],on:["bB"],arrows:["aD2:red"],
+ n:"앱 B는 아무 통지도 못 받습니다. 한참 뒤 <span class='fn'>setProperty()</span>를 부르는 순간 — <b>DeadObjectException</b>. 죽은 Proxy는 되살아나지 않으므로 <b>새 IBinder를 다시 받아야</b> 합니다(재바인딩). 예외를 잡고 재시도만 반복하면 영원히 실패합니다. [svc:dead][b:exc]",
+ c:"E App: android.os.<span class='r'>DeadObjectException</span>\n   at android.os.BinderProxy.transactNative(Native Method)\n<span class='c'># 이 예외 = '상대 프로세스가 죽었(었)다'는 커널의 전언</span>"},
+{t:"패턴 정리 — S2의 모범 답안",show:["tHint"],on:["bA"],
+ n:"<b>수신자 관점</b>: linkToDeath + binderDied에서 재바인딩. <b>제공자 관점</b>: 콜백 목록은 RemoteCallbackList(③)로 — 죽은 앱 콜백을 자동 정리. CarService가 재기동(㉔)되면 A는 매끄럽게 복귀, B는 크래시 리포트 — 워크숍 S2에서 두 앱의 운명을 비교합니다. [svc:ok][a:ok2]"}
+]});
+const tS=document.getElementById('tSvc'),tA=document.getElementById('tA'),tB=document.getElementById('tB');
+new MutationObserver(()=>{const n=document.getElementById('narr').textContent;
+ if(n.includes('[svc:ok]')){tS.textContent='CarService';tS.style.fill='#dbe4f3'}
+ if(n.includes('[svc:dead]')){tS.textContent='CarService 💀';tS.style.fill='#ff7b72'}
+ if(n.includes('[a:died]'))tA.textContent='상태: binderDied 수신 → 재바인딩 예약';
+ if(n.includes('[a:ok2]'))tA.textContent='상태: 재연결 완료 — 무사';
+ if(n.includes('[b:exc]'))tB.textContent='상태: DeadObjectException 💥';
+const _el=document.getElementById('narr');if(/\[[a-z가-힣]+:[^\]]*\]/.test(_el.innerHTML))_el.innerHTML=_el.innerHTML.replace(/\s*\[[a-z가-힣]+:[^\]]*\]/g,'');}).observe(document.getElementById('narr'),{childList:true});
+</script></body></html>
