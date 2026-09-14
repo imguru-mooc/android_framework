@@ -3,7 +3,7 @@
 **과정:** Android Framework 16 심화 교육 (4일 / 32시간)
 **환경:** Windows 11 (Android Studio, Emulator API 36) + Ubuntu 24 빌드 서버 (AOSP `aosp_car_x86_64`, GKI 6.12)
 **범위:** 환경 설정 + Chapter 0~3 (Architecture, Binder, AIDL, IPC Service) + Kernel Module 빌드 데모
-**총 소요시간:** 8시간 (환경 설정 실습 1h 40m / 강의 2h 20m / 실습 3h 25m / 데모·Worksheet 35m)
+**총 소요시간:** 8시간 (환경 설정 실습 1h 40m / 강의 2h 10m / 실습 3h 35m / 데모·Worksheet 35m)
 **실습 번호:** Part 0 환경 설정부터 실습 1 ~ 13 으로 순번 부여
 
 ---
@@ -140,9 +140,9 @@ chmod 600 ~/.ssh/authorized_keys
 
 ---
 
-## Part 1. 강의 (총 140분)
+## Part 1. 강의 (총 130분)
 
-### Chapter 0. Android Architecture & Boot — 50분
+### Chapter 0. Android Architecture & Boot — 40분
 
 | 주제 | 핵심 내용 |
 |---|---|
@@ -187,12 +187,12 @@ chmod 600 ~/.ssh/authorized_keys
 
 ---
 
-## Part 2. 실습 (총 205분)
+## Part 2. 실습 (총 215분)
 
 | # | 실습명 | 난이도 | 소요시간 | 챕터 |
 |---|---|---|---|---|
 | 5 | 시스템 탐험가 — adb로 Android 내부 들여다보기 | ★☆☆ | 20분 | Ch 0 |
-| 6 | Binder 탐정 — System Service 추적하기 | ★☆☆ | 20분 | Ch 1 |
+| 6 | Binder 탐정 — System Service 추적 + 직접 만든 Binder Server/Client trace | ★★☆ | 30분 | Ch 1 |
 | 7 | AIDL 계산기 — 기본 IPC Service 구현 | ★★☆ | 45분 | Ch 2 |
 | 8 | Binder 생존 게임 — DeathRecipient & 복구 | ★★☆ | 30분 | Ch 2 |
 | 9 | 비동기 주식 시세 Service — oneway + Callback | ★★★ | 40분 | Ch 2 |
@@ -209,10 +209,11 @@ chmod 600 ~/.ssh/authorized_keys
 - **확인 포인트:** Zygote PPID = 1, system_server PPID = Zygote PID, 모든 App PPID = Zygote
 - **결과물:** PID 기록, System Service 총 개수, Binder Transaction 상위 Service 추정
 
-### 실습 6. Binder 탐정 — 20분
+### 실습 6. Binder 탐정 — 30분
 - `service call clipboard 1`, `dumpsys display`, `dumpsys battery`
 - ftrace: `events/binder/binder_transaction/enable` → `trace_pipe` 실시간 관찰
 - Settings 앱 PID의 `binder_logs/proc/<PID>`에서 Binder Thread 수 확인
+- `hello_server`(BBinder 직접 구현, addService) 를 `mm` 으로 빌드해 띄우고 `hello_client` 가 transact → ftrace `dest_proc` 필터로 요청/응답 3줄 확인
 - **결과물:** Settings 앱 실행 시 발생하는 Transaction 수, 호출된 Service 추정
 
 ### 실습 7. AIDL 계산기 — 45분

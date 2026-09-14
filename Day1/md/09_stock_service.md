@@ -64,7 +64,6 @@ interface IStockService {
 }
 ```
 
-**Build → Make Project** → `IStockService.Stub` 자동완성 확인.
 
 ## Step 4. Service 구현
 

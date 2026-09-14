@@ -58,7 +58,6 @@ interface ICalculatorService {
 }
 ```
 
-**Build → Make Project** → `ICalculatorService.Stub` 자동완성이 되면 성공.
 
 ## Step 4. Service 구현
 
@@ -381,6 +380,6 @@ adb logcat -s CalcService CalcClient
 
 | 증상 | 해결 |
 |---|---|
-| `cannot find symbol ICalculatorService` | `buildFeatures.aidl = true` 확인 후 Rebuild |
+| `cannot find symbol ICalculatorService` | `buildFeatures.aidl = true` 확인 후 Sync Now |
 | `bindService` 가 false 반환 | `intent.setPackage()` 누락 또는 Manifest action 불일치 |
 | Service 연결 후 바로 끊김 | Logcat 에서 `calc_remote` Process 크래시 확인 |
