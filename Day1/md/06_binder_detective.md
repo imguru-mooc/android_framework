@@ -229,22 +229,42 @@ adb shell
 ```bash
 service list | grep hello
 # 123  hello.binder: []              ← descriptor 없음 = AIDL 없이 만든 raw Binder
+```
 
+이제 **서버가 받은 것과 보낸 것만** 남기는 커널 필터를 건다. 아래를 순서대로 실행한다.
+
+```bash
+# 0. 서버 PID
 SPID=$(pidof hello_server)
+[ -z "$SPID" ] && SPID=$(pgrep -f hello_server)
 echo "server pid = $SPID"
 
-# server 의 Binder Thread 확인
-cat /dev/binderfs/binder_logs/proc/$SPID | grep -E "thread|node" | head
+# 1. 서버 스레드 tid 목록 → 발신자 조건 (common_pid 는 tid 기준)
+TIDS=$(ls /proc/$SPID/task | sed 's/^/common_pid == /' | paste -sd'|' | sed 's/|/ || /g')
 
-# ftrace 준비: 우리 server 로 가는 Transaction 만 필터
+# 2. trace 초기화
 echo 0 > /sys/kernel/tracing/tracing_on
 echo > /sys/kernel/tracing/trace
+echo 0 > /sys/kernel/tracing/events/binder/binder_transaction_received/enable   # 필드가 debug_id 뿐 → 사용 안 함
+
+# 3. 필터: 서버로 들어오는 것 || 서버 스레드가 보내는 것
+echo "to_proc == $SPID || $TIDS" > /sys/kernel/tracing/events/binder/binder_transaction/filter
+cat /sys/kernel/tracing/events/binder/binder_transaction/filter     # parse_error 없이 조건이 보여야 함
+
+# 4. 시작
 echo 1 > /sys/kernel/tracing/events/binder/binder_transaction/enable
-echo 1 > /sys/kernel/tracing/events/binder/binder_transaction_received/enable
-echo "dest_proc == $SPID" > /sys/kernel/tracing/events/binder/binder_transaction/filter
 echo 1 > /sys/kernel/tracing/tracing_on
 cat /sys/kernel/tracing/trace_pipe
 ```
+
+**필드 이름 주의** — trace 출력에는 `dest_proc`, `dest_thread` 로 찍히지만 필터에 쓰는 실제 필드명은 `to_proc`, `to_thread` 다. `cat /sys/kernel/tracing/events/binder/binder_transaction/format` 의 `print fmt` 줄에서 대응 관계를 확인할 수 있다.
+
+```text
+field:int to_proc;   field:int to_thread;   field:int target_node;   field:int reply;   field:unsigned int code;
+print fmt: "... dest_proc=%d dest_thread=%d ...", REC->to_proc, REC->to_thread, ...
+```
+
+> **왜 `binder_transaction_received` 는 끄는가** — 이 이벤트는 필드가 `debug_id` 하나뿐이라 `to_proc` 조건을 걸 수 없고, 필터 없이 켜면 Emulator 가 가만히 있어도 Automotive 서비스 간 oneway 콜백(`binder:668_5`, `com.android.car` 등)이 초당 수십 건 잡힌다. 응답 줄의 task 이름(`binder:<SPID>_N`)으로 어느 스레드가 받았는지 이미 알 수 있으므로 필요 없다. 굳이 보려면 `echo "$TIDS" > …/binder_transaction_received/filter` 후 enable 한다.
 
 ### 4-5. Client 접속 — 터미널 ③
 
@@ -267,16 +287,14 @@ adb shell /data/hello_client 40 2
 **터미널 ②** (trace) 에는:
 
 ```text
- hello_client-5210  [000] ....  binder_transaction: transaction=48213 dest_node=17 dest_proc=5123 dest_thread=0 reply=0 flags=0x10 code=0x1
- hello_server-5125  [001] ....  binder_transaction_received: transaction=48213
- hello_server-5125  [001] ....  binder_transaction: transaction=48214 dest_node=0 dest_proc=5210 dest_thread=5210 reply=1 flags=0x0 code=0x0
+ hello_client-5210   [000] ....  binder_transaction: transaction=48213 dest_node=17 dest_proc=5123 dest_thread=0 reply=0 flags=0x10 code=0x1
+ binder:5123_1-5125  [001] ....  binder_transaction: transaction=48214 dest_node=0 dest_proc=5210 dest_thread=5210 reply=1 flags=0x0 code=0x0
 ```
 
 | 줄 | 의미 |
 |---|---|
 | 1 | Client(5210) → Server(5123) 로 **code=0x1** 요청. `dest_thread=0` = Driver 가 대기 Thread 중 하나를 고른다 |
-| 2 | Server 의 Binder Thread **5125** 가 Transaction 을 받음 (server tid 와 일치) |
-| 3 | Server → Client **reply=1** 응답. `dest_thread=5210` = 기다리던 바로 그 Client Thread 로 |
+| 2 | Server 의 Binder Thread **binder:5123_1 (tid 5125)** 가 처리 후 **reply=1** 응답. `dest_thread=5210` = 기다리던 바로 그 Client Thread 로. task 이름이 server 로그의 `server tid` 와 일치 |
 
 ### 4-6. 변형 실험
 
@@ -286,7 +304,9 @@ service call hello.binder 1 i32 100 i32 23
 # Result: Parcel(00000000 0000007b '........')   ← 0x7b = 123
 
 # ② 여러 Client 동시 호출 → server tid 가 달라지는지 관찰 (Thread Pool)
+#    Driver 가 새 Binder Thread 를 만들면 그 tid 는 필터에 없어 reply 가 빠질 수 있다 → 아래 한 줄로 필터 갱신 후 다시 실행
 for i in 1 2 3; do /data/hello_client $i 1 & done; wait
+TIDS=$(ls /proc/$SPID/task | sed 's/^/common_pid == /' | paste -sd'|' | sed 's/|/ || /g'); echo "to_proc == $SPID || $TIDS" > /sys/kernel/tracing/events/binder/binder_transaction/filter
 
 # ③ server 를 죽이고 client 실행 → checkService 가 nullptr
 kill $SPID
@@ -300,13 +320,12 @@ kill $SPID
 echo 0 > /sys/kernel/tracing/tracing_on
 echo 0 > /sys/kernel/tracing/events/binder/binder_transaction/filter
 echo 0 > /sys/kernel/tracing/events/binder/binder_transaction/enable
-echo 0 > /sys/kernel/tracing/events/binder/binder_transaction_received/enable
 ```
 
 **✅ 확인 포인트**
 
 - `service list` 에 `hello.binder` 가 나타난다
-- trace 의 `dest_proc` = server PID, `code=0x1` = 우리가 정한 Transaction code
+- trace 요청 줄의 `dest_proc` = server PID, `code=0x1` = 우리가 정한 Transaction code
 - 응답 줄은 `reply=1`, `dest_thread` = Client PID
 - server 로그의 `from pid` = client PID, `uid=0` (adb root)
 - 동시 호출 시 server tid 가 바뀐다 → Binder Thread Pool
@@ -317,7 +336,7 @@ echo 0 > /sys/kernel/tracing/events/binder/binder_transaction_received/enable
 
 - Settings 앱을 열 때 발생하는 Binder Transaction 수
 - `dest_proc` 을 PID로 역추적해 어떤 Service가 호출되는지 추정
-- **hello_client → hello_server 요청/응답 trace 3줄 캡처와 각 필드 해석**
+- **hello_client → hello_server 요청/응답 trace 2줄 캡처와 각 필드 해석**
 
 ## 핵심 정리
 
@@ -332,5 +351,7 @@ echo 0 > /sys/kernel/tracing/events/binder/binder_transaction_received/enable
 |---|---|
 | `addService = -1` (PERMISSION_DENIED) | `setenforce 0` 후 재실행, 또는 `adb root` 확인 |
 | `hello.binder not found` | server 창이 종료됨 — 터미널 ① 을 다시 확인 |
-| trace 에 아무것도 안 찍힘 | `filter` 의 PID 가 현재 server PID 인지, `tracing_on` 이 1 인지 확인 |
+| trace 에 아무것도 안 찍힘 | `tracing_on` 이 1 인지, `SPID` 가 비어 있지 않은지 (`echo $SPID`) 확인. `pidof` 가 빈 값이면 `pgrep -f hello_server` |
+| 다른 Process 의 Transaction 까지 전부 나옴 | `cat …/binder_transaction/filter` 확인 — `none` 이면 `SPID` 가 비어 echo 실패, `parse_error: Field not found` 면 필드명 오류 (`dest_proc` ✕ → `to_proc` ○). `binder_transaction_received` 가 켜져 있으면 끈다 |
+| reply 줄이 안 나옴 | 서버에 새 Binder Thread 가 생겨 tid 가 필터에 없음 → 4-6 ② 의 필터 갱신 한 줄 실행 |
 | `hello_server: not found` | `chmod 755` 누락 또는 `adb push` 경로 확인 |

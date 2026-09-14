@@ -1866,23 +1866,40 @@ adb shell chmod 755 /data/hello_server /data/hello_client
 
 <div class="codehilite"><pre><span></span><code>service<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>hello
 <span class="c1"># 123  hello.binder: []              ← descriptor 없음 = AIDL 없이 만든 raw Binder</span>
+</code></pre></div>
 
+<p>이제 <strong>서버가 받은 것과 보낸 것만</strong> 남기는 커널 필터를 건다. 아래를 순서대로 실행한다.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 0. 서버 PID</span>
 <span class="nv">SPID</span><span class="o">=</span><span class="k">$(</span>pidof<span class="w"> </span>hello_server<span class="k">)</span>
+<span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SPID</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nv">SPID</span><span class="o">=</span><span class="k">$(</span>pgrep<span class="w"> </span>-f<span class="w"> </span>hello_server<span class="k">)</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;server pid = </span><span class="nv">$SPID</span><span class="s2">&quot;</span>
 
-<span class="c1"># server 의 Binder Thread 확인</span>
-cat<span class="w"> </span>/dev/binderfs/binder_logs/proc/<span class="nv">$SPID</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;thread|node&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+<span class="c1"># 1. 서버 스레드 tid 목록 → 발신자 조건 (common_pid 는 tid 기준)</span>
+<span class="nv">TIDS</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>/proc/<span class="nv">$SPID</span>/task<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/^/common_pid == /&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>paste<span class="w"> </span>-sd<span class="s1">&#39;|&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/|/ || /g&#39;</span><span class="k">)</span>
 
-<span class="c1"># ftrace 준비: 우리 server 로 가는 Transaction 만 필터</span>
+<span class="c1"># 2. trace 초기화</span>
 <span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/tracing_on
 <span class="nb">echo</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/trace
+<span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction_received/enable<span class="w">   </span><span class="c1"># 필드가 debug_id 뿐 → 사용 안 함</span>
+
+<span class="c1"># 3. 필터: 서버로 들어오는 것 || 서버 스레드가 보내는 것</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;to_proc == </span><span class="nv">$SPID</span><span class="s2"> || </span><span class="nv">$TIDS</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/filter
+cat<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/filter<span class="w">     </span><span class="c1"># parse_error 없이 조건이 보여야 함</span>
+
+<span class="c1"># 4. 시작</span>
 <span class="nb">echo</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/enable
-<span class="nb">echo</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction_received/enable
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;dest_proc == </span><span class="nv">$SPID</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/filter
 <span class="nb">echo</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/tracing_on
 cat<span class="w"> </span>/sys/kernel/tracing/trace_pipe
 </code></pre></div>
 
+<p><strong>필드 이름 주의</strong> — trace 출력에는 <code>dest_proc</code>, <code>dest_thread</code> 로 찍히지만 필터에 쓰는 실제 필드명은 <code>to_proc</code>, <code>to_thread</code> 다. <code>cat /sys/kernel/tracing/events/binder/binder_transaction/format</code> 의 <code>print fmt</code> 줄에서 대응 관계를 확인할 수 있다.</p>
+<div class="codehilite"><pre><span></span><code>field:int to_proc;   field:int to_thread;   field:int target_node;   field:int reply;   field:unsigned int code;
+print fmt: &quot;... dest_proc=%d dest_thread=%d ...&quot;, REC-&gt;to_proc, REC-&gt;to_thread, ...
+</code></pre></div>
+
+<blockquote>
+<p><strong>왜 <code>binder_transaction_received</code> 는 끄는가</strong> — 이 이벤트는 필드가 <code>debug_id</code> 하나뿐이라 <code>to_proc</code> 조건을 걸 수 없고, 필터 없이 켜면 Emulator 가 가만히 있어도 Automotive 서비스 간 oneway 콜백(<code>binder:668_5</code>, <code>com.android.car</code> 등)이 초당 수십 건 잡힌다. 응답 줄의 task 이름(<code>binder:&lt;SPID&gt;_N</code>)으로 어느 스레드가 받았는지 이미 알 수 있으므로 필요 없다. 굳이 보려면 <code>echo "$TIDS" &gt; …/binder_transaction_received/filter</code> 후 enable 한다.  </p>
+</blockquote>
 <h3>4-5. Client 접속 — 터미널 ③</h3>
 <div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/hello_client<span class="w"> </span><span class="m">40</span><span class="w"> </span><span class="m">2</span>
 </code></pre></div>
@@ -1897,9 +1914,8 @@ cat<span class="w"> </span>/sys/kernel/tracing/trace_pipe
 </code></pre></div>
 
 <p><strong>터미널 ②</strong> (trace) 에는:</p>
-<div class="codehilite"><pre><span></span><code> hello_client-5210  [000] ....  binder_transaction: transaction=48213 dest_node=17 dest_proc=5123 dest_thread=0 reply=0 flags=0x10 code=0x1
- hello_server-5125  [001] ....  binder_transaction_received: transaction=48213
- hello_server-5125  [001] ....  binder_transaction: transaction=48214 dest_node=0 dest_proc=5210 dest_thread=5210 reply=1 flags=0x0 code=0x0
+<div class="codehilite"><pre><span></span><code> hello_client-5210   [000] ....  binder_transaction: transaction=48213 dest_node=17 dest_proc=5123 dest_thread=0 reply=0 flags=0x10 code=0x1
+ binder:5123_1-5125  [001] ....  binder_transaction: transaction=48214 dest_node=0 dest_proc=5210 dest_thread=5210 reply=1 flags=0x0 code=0x0
 </code></pre></div>
 
 <table>
@@ -1916,11 +1932,7 @@ cat<span class="w"> </span>/sys/kernel/tracing/trace_pipe
 </tr>
 <tr>
 <td>2</td>
-<td>Server 의 Binder Thread <strong>5125</strong> 가 Transaction 을 받음 (server tid 와 일치)</td>
-</tr>
-<tr>
-<td>3</td>
-<td>Server → Client <strong>reply=1</strong> 응답. <code>dest_thread=5210</code> = 기다리던 바로 그 Client Thread 로</td>
+<td>Server 의 Binder Thread <strong>binder:5123_1 (tid 5125)</strong> 가 처리 후 <strong>reply=1</strong> 응답. <code>dest_thread=5210</code> = 기다리던 바로 그 Client Thread 로. task 이름이 server 로그의 <code>server tid</code> 와 일치</td>
 </tr>
 </tbody>
 </table>
@@ -1930,7 +1942,9 @@ service<span class="w"> </span>call<span class="w"> </span>hello.binder<span cla
 <span class="c1"># Result: Parcel(00000000 0000007b &#39;........&#39;)   ← 0x7b = 123</span>
 
 <span class="c1"># ② 여러 Client 동시 호출 → server tid 가 달라지는지 관찰 (Thread Pool)</span>
+<span class="c1">#    Driver 가 새 Binder Thread 를 만들면 그 tid 는 필터에 없어 reply 가 빠질 수 있다 → 아래 한 줄로 필터 갱신 후 다시 실행</span>
 <span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>/data/hello_client<span class="w"> </span><span class="nv">$i</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="k">done</span><span class="p">;</span><span class="w"> </span><span class="nb">wait</span>
+<span class="nv">TIDS</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>/proc/<span class="nv">$SPID</span>/task<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/^/common_pid == /&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>paste<span class="w"> </span>-sd<span class="s1">&#39;|&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/|/ || /g&#39;</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;to_proc == </span><span class="nv">$SPID</span><span class="s2"> || </span><span class="nv">$TIDS</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/filter
 
 <span class="c1"># ③ server 를 죽이고 client 실행 → checkService 가 nullptr</span>
 <span class="nb">kill</span><span class="w"> </span><span class="nv">$SPID</span>
@@ -1942,13 +1956,12 @@ service<span class="w"> </span>call<span class="w"> </span>hello.binder<span cla
 <div class="codehilite"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/tracing_on
 <span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/filter
 <span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction/enable
-<span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/kernel/tracing/events/binder/binder_transaction_received/enable
 </code></pre></div>
 
 <p><strong>✅ 확인 포인트</strong></p>
 <ul>
 <li><code>service list</code> 에 <code>hello.binder</code> 가 나타난다</li>
-<li>trace 의 <code>dest_proc</code> = server PID, <code>code=0x1</code> = 우리가 정한 Transaction code</li>
+<li>trace 요청 줄의 <code>dest_proc</code> = server PID, <code>code=0x1</code> = 우리가 정한 Transaction code</li>
 <li>응답 줄은 <code>reply=1</code>, <code>dest_thread</code> = Client PID</li>
 <li>server 로그의 <code>from pid</code> = client PID, <code>uid=0</code> (adb root)</li>
 <li>동시 호출 시 server tid 가 바뀐다 → Binder Thread Pool</li>
@@ -1958,7 +1971,7 @@ service<span class="w"> </span>call<span class="w"> </span>hello.binder<span cla
 <ul>
 <li>Settings 앱을 열 때 발생하는 Binder Transaction 수</li>
 <li><code>dest_proc</code> 을 PID로 역추적해 어떤 Service가 호출되는지 추정</li>
-<li><strong>hello_client → hello_server 요청/응답 trace 3줄 캡처와 각 필드 해석</strong></li>
+<li><strong>hello_client → hello_server 요청/응답 trace 2줄 캡처와 각 필드 해석</strong></li>
 </ul>
 <h2>핵심 정리</h2>
 <ul>
@@ -1986,7 +1999,15 @@ service<span class="w"> </span>call<span class="w"> </span>hello.binder<span cla
 </tr>
 <tr>
 <td>trace 에 아무것도 안 찍힘</td>
-<td><code>filter</code> 의 PID 가 현재 server PID 인지, <code>tracing_on</code> 이 1 인지 확인</td>
+<td><code>tracing_on</code> 이 1 인지, <code>SPID</code> 가 비어 있지 않은지 (<code>echo $SPID</code>) 확인. <code>pidof</code> 가 빈 값이면 <code>pgrep -f hello_server</code></td>
+</tr>
+<tr>
+<td>다른 Process 의 Transaction 까지 전부 나옴</td>
+<td><code>cat …/binder_transaction/filter</code> 확인 — <code>none</code> 이면 <code>SPID</code> 가 비어 echo 실패, <code>parse_error: Field not found</code> 면 필드명 오류 (<code>dest_proc</code> ✕ → <code>to_proc</code> ○). <code>binder_transaction_received</code> 가 켜져 있으면 끈다</td>
+</tr>
+<tr>
+<td>reply 줄이 안 나옴</td>
+<td>서버에 새 Binder Thread 가 생겨 tid 가 필터에 없음 → 4-6 ② 의 필터 갱신 한 줄 실행</td>
 </tr>
 <tr>
 <td><code>hello_server: not found</code></td>
