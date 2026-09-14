@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Android Framework 16 심화 — Day 1 애니메이션</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2b;--line:#22304a;--ink:#dbe4f0;--muted:#8a9bb5;--amber:#f5b942;--teal:#2dd4bf;--blue:#60a5fa;--green:#34d399;--red:#f87171;--violet:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:1.05rem;color:var(--amber);font-weight:600}
+header span{color:var(--muted);font-size:.85rem}
+.tabs{display:flex;gap:6px;padding:12px 24px 0;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.9rem}
+.tab.on{color:var(--amber);border-bottom-color:var(--panel);background:#15203a}
+main{padding:0 24px 24px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px;min-height:520px}
+.scene{display:none}.scene.on{display:block}
+svg{width:100%;height:auto;display:block}
+.svgtext{font-family:inherit;font-size:14px;fill:var(--ink)}
+.mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;font-size:12px;fill:var(--muted)}
+.box{fill:#0f1728;stroke:var(--line);stroke-width:1.5;rx:8}
+.hid{opacity:0;transition:opacity .45s}
+.vis{opacity:1}
+.glow{transition:stroke .3s,fill .3s}
+.pkt{transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .3s}
+.controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{background:#15203a;border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:.88rem}
+button:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#062a26;border-color:var(--teal);font-weight:600}
+.step{color:var(--muted);font-size:.85rem;margin-left:auto}
+.caption{margin-top:12px;padding:12px 16px;background:#0f1728;border-left:3px solid var(--amber);border-radius:0 6px 6px 0;min-height:56px;font-size:.95rem}
+.caption b{color:var(--amber)}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.78rem;color:var(--muted)}
+.pill.teal{color:var(--teal);border-color:var(--teal)}.pill.amber{color:var(--amber);border-color:var(--amber)}.pill.blue{color:var(--blue);border-color:var(--blue)}.pill.green{color:var(--green);border-color:var(--green)}.pill.red{color:var(--red);border-color:var(--red)}
+.bar{transition:width .6s linear}
+@media (prefers-reduced-motion:reduce){.hid,.pkt,.bar,.glow{transition:none}}
+</style>
+</head>
+<body>
+<header><h1>Android Framework 16 심화 · Day 1 애니메이션</h1><span>Boot · Binder · AIDL · DeathRecipient · Stub/Proxy · Thread Pool · Buffer · Build</span></header>
+<div class="tabs" id="tabs"></div>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs></svg>
+<main>
+<div class="stage">
+
+<!-- ===== Scene 1: Boot ===== -->
+<div class="scene" id="s1">
+<svg viewBox="0 0 960 480">
+  <!-- timeline row -->
+  <g id="b_boot" class="hid"><rect class="box" x="20" y="30" width="130" height="50"/><text class="svgtext" x="85" y="60" text-anchor="middle">Bootloader</text></g>
+  <g id="b_kernel" class="hid"><line x1="150" y1="55" x2="180" y2="55" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box" x="185" y="30" width="130" height="50"/><text class="svgtext" x="250" y="52" text-anchor="middle">Linux Kernel</text><text class="mono" x="250" y="70" text-anchor="middle">GKI 6.12 · Binder Driver</text></g>
+  <g id="b_init" class="hid"><line x1="315" y1="55" x2="345" y2="55" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="b_init_box" x="350" y="30" width="130" height="50"/><text class="svgtext" x="415" y="52" text-anchor="middle">init</text><text class="mono" x="415" y="70" text-anchor="middle">PID 1 · init.rc</text></g>
+  <g id="b_zyg" class="hid"><line x1="480" y1="55" x2="510" y2="55" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="b_zyg_box" x="515" y="30" width="150" height="50"/><text class="svgtext" x="590" y="52" text-anchor="middle">Zygote</text><text class="mono" x="590" y="70" text-anchor="middle">app_process64 · preload</text></g>
+  <g id="b_ss" class="hid"><line x1="665" y1="55" x2="695" y2="55" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="b_ss_box" x="700" y="30" width="150" height="50"/><text class="svgtext" x="775" y="52" text-anchor="middle">system_server</text><text class="mono" x="775" y="70" text-anchor="middle">AMS · WMS · PMS …</text></g>
+  <!-- process tree -->
+  <text class="svgtext" x="20" y="130" fill="#f5b942">Process Tree (ps -A -o pid,ppid,name)</text>
+  <g id="t_init" class="hid"><rect class="box" x="20" y="150" width="200" height="40"/><text class="mono" x="30" y="175" fill="#2dd4bf">PID 1    PPID 0    init</text></g>
+  <g id="t_zyg" class="hid"><line x1="60" y1="190" x2="60" y2="230" stroke="#8a9bb5"/><line x1="60" y1="230" x2="80" y2="230" stroke="#8a9bb5"/><rect class="box" x="80" y="210" width="240" height="40"/><text class="mono" x="90" y="235" fill="#f5b942">PID 1234 PPID 1    zygote64</text></g>
+  <g id="t_ss" class="hid"><line x1="120" y1="250" x2="120" y2="290" stroke="#8a9bb5"/><line x1="120" y1="290" x2="140" y2="290" stroke="#8a9bb5"/><rect class="box" x="140" y="270" width="280" height="40"/><text class="mono" x="150" y="295" fill="#60a5fa">PID 1300 PPID 1234 system_server</text></g>
+  <g id="t_app1" class="hid"><line x1="120" y1="290" x2="120" y2="350" stroke="#8a9bb5"/><line x1="120" y1="350" x2="140" y2="350" stroke="#8a9bb5"/><rect class="box" x="140" y="330" width="280" height="40"/><text class="mono" x="150" y="355" fill="#34d399">PID 2210 PPID 1234 com.android.car</text></g>
+  <g id="t_app2" class="hid"><line x1="120" y1="350" x2="120" y2="410" stroke="#8a9bb5"/><line x1="120" y1="410" x2="140" y2="410" stroke="#8a9bb5"/><rect class="box" x="140" y="390" width="280" height="40"/><text class="mono" x="150" y="415" fill="#34d399">PID 2345 PPID 1234 com.example.binderlab</text></g>
+  <!-- side notes -->
+  <g id="n_initrc" class="hid"><rect class="box" x="500" y="150" width="440" height="90"/><text class="mono" x="512" y="172" fill="#dbe4f0">service zygote /system/bin/app_process64 -Xzygote</text><text class="mono" x="512" y="190" fill="#dbe4f0">    /system/bin --zygote --start-system-server</text><text class="mono" x="512" y="208">    class main   user root   socket zygote stream 660</text><text class="mono" x="512" y="228" fill="#f5b942">init.zygote64_32.rc</text></g>
+  <g id="n_preload" class="hid"><rect class="box" x="500" y="260" width="440" height="70"/><text class="svgtext" x="512" y="285">Zygote preload: Framework class · Resource · ART 초기화</text><text class="svgtext" x="512" y="310" fill="#8a9bb5">한 번만 로드 → fork 된 모든 App 이 공유 (COW)</text></g>
+  <g id="n_fork" class="hid"><rect class="box" x="500" y="350" width="440" height="80"/><text class="svgtext" x="512" y="375">App 실행 요청 → AMS → Zygote socket → <tspan fill="#34d399">fork()</tspan></text><text class="svgtext" x="512" y="400" fill="#8a9bb5">모든 App Process 의 PPID = Zygote PID</text><text class="svgtext" x="512" y="420" fill="#8a9bb5">system_server 도 Zygote 의 자식</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 2: Binder IPC ===== -->
+<div class="scene" id="s2">
+<svg viewBox="0 0 960 480">
+  <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs>
+  <!-- Client process -->
+  <rect x="20" y="30" width="280" height="300" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="160" y="55" text-anchor="middle" fill="#2dd4bf">Client App Process (PID 2345)</text>
+  <rect class="box glow" id="c_act" x="45" y="80" width="230" height="50"/><text class="svgtext" x="160" y="110" text-anchor="middle">MainActivity · Main Thread</text>
+  <rect class="box glow" id="c_proxy" x="45" y="150" width="230" height="60"/><text class="svgtext" x="160" y="174" text-anchor="middle">Proxy (Bp)</text><text class="mono" x="160" y="194" text-anchor="middle">ICalculatorService.Stub.Proxy</text>
+  <rect class="box glow" id="c_parcel" x="45" y="230" width="230" height="60"/><text class="svgtext" x="160" y="254" text-anchor="middle">Parcel 직렬화</text><text class="mono" x="160" y="274" text-anchor="middle">code=1, a=42, b=7 → transact()</text>
+  <!-- Kernel -->
+  <rect x="330" y="30" width="300" height="300" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">Linux Kernel</text>
+  <rect class="box glow" id="k_drv" x="355" y="90" width="250" height="90"/><text class="svgtext" x="480" y="118" text-anchor="middle">Binder Driver</text><text class="mono" x="480" y="140" text-anchor="middle">/dev/binder · ioctl()</text><text class="mono" x="480" y="160" text-anchor="middle">1-copy: mmap Buffer 직접 복사</text>
+  <rect class="box glow" id="k_buf" x="355" y="200" width="250" height="90"/><text class="svgtext" x="480" y="228" text-anchor="middle">Transaction Buffer</text><text class="mono" x="480" y="250" text-anchor="middle">Process 당 1 MB 공유</text><text class="mono" x="480" y="270" text-anchor="middle" fill="#f87171">초과 시 TransactionTooLarge</text>
+  <!-- Server process -->
+  <rect x="660" y="30" width="280" height="300" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#60a5fa">Service Process (:calc_remote)</text>
+  <rect class="box glow" id="s_pool" x="685" y="80" width="230" height="60"/><text class="svgtext" x="800" y="104" text-anchor="middle">Binder Thread Pool</text><text class="mono" x="800" y="124" text-anchor="middle">Binder:2346_1 … 최대 16</text>
+  <rect class="box glow" id="s_stub" x="685" y="160" width="230" height="60"/><text class="svgtext" x="800" y="184" text-anchor="middle">Stub (Bn) · onTransact()</text><text class="mono" x="800" y="204" text-anchor="middle">code 1 → add(a, b)</text>
+  <rect class="box glow" id="s_impl" x="685" y="240" width="230" height="50"/><text class="svgtext" x="800" y="270" text-anchor="middle">CalculatorService.add() = 49</text>
+  <!-- packet -->
+  <g id="pkt" class="pkt" style="opacity:0"><rect x="-38" y="-14" width="76" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt_t">add(42,7)</text></g>
+  <!-- bottom notes -->
+  <g id="bn1" class="hid"><rect class="box" x="20" y="350" width="450" height="110"/><text class="svgtext" x="32" y="375" fill="#f5b942">Client 관점</text><text class="svgtext" x="32" y="398">service.add(42, 7) — 그냥 Method 호출처럼 보인다</text><text class="svgtext" x="32" y="420" fill="#8a9bb5">Proxy 가 Parcel 로 포장 → transact() → Driver 로 전달</text><text class="svgtext" x="32" y="442" fill="#8a9bb5">reply 가 올 때까지 호출 Thread 는 블로킹 (동기)</text></g>
+  <g id="bn2" class="hid"><rect class="box" x="490" y="350" width="450" height="110"/><text class="svgtext" x="502" y="375" fill="#60a5fa">Server 관점</text><text class="svgtext" x="502" y="398">Driver 가 대기 중인 Binder Thread 를 깨운다</text><text class="svgtext" x="502" y="420" fill="#8a9bb5">Stub.onTransact() 가 code 로 Method 를 찾아 실행</text><text class="svgtext" x="502" y="442" fill="#8a9bb5">getCallingUid()/Pid() 로 호출자 확인 가능</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 3: Sync vs oneway ===== -->
+<div class="scene" id="s3">
+<svg viewBox="0 0 960 480">
+  <text class="svgtext" x="20" y="35" fill="#f5b942">동기 호출 — getPrice("AAPL")</text>
+  <text class="mono" x="20" y="60">Client Main Thread</text>
+  <rect x="180" y="45" width="740" height="22" rx="4" fill="#0f1728" stroke="#22304a"/>
+  <rect id="sy_block" class="bar" x="180" y="45" width="0" height="22" rx="4" fill="#f87171" opacity=".85"/>
+  <text id="sy_lbl" class="mono hid" x="550" y="61" text-anchor="middle" fill="#0b1220">Main Thread 블로킹 2000 ms — UI 정지</text>
+  <text class="mono" x="20" y="100">Service Binder Thread</text>
+  <rect x="180" y="85" width="740" height="22" rx="4" fill="#0f1728" stroke="#22304a"/>
+  <rect id="sy_srv" class="bar" x="180" y="85" width="0" height="22" rx="4" fill="#60a5fa" opacity=".85"/>
+  <text id="sy_ret" class="mono hid" x="900" y="130" text-anchor="end" fill="#34d399">← reply $185.50 · 소요 2000 ms</text>
+  <line x1="180" y1="140" x2="920" y2="140" stroke="#22304a" stroke-dasharray="4 4"/>
+  <text class="mono" x="180" y="158">0 ms</text><text class="mono" x="550" y="158" text-anchor="middle">1000 ms</text><text class="mono" x="920" y="158" text-anchor="end">2000 ms</text>
+
+  <text class="svgtext" x="20" y="215" fill="#f5b942">비동기 호출 — subscribe("AAPL", callback) · oneway</text>
+  <text class="mono" x="20" y="240">Client Main Thread</text>
+  <rect x="180" y="225" width="740" height="22" rx="4" fill="#0f1728" stroke="#22304a"/>
+  <rect id="ow_block" class="bar" x="180" y="225" width="0" height="22" rx="4" fill="#34d399" opacity=".9"/>
+  <text id="ow_lbl" class="mono hid" x="200" y="241" fill="#34d399">0 ms 즉시 반환 → UI 계속 동작</text>
+  <text class="mono" x="20" y="280">Service Binder Thread</text>
+  <rect x="180" y="265" width="740" height="22" rx="4" fill="#0f1728" stroke="#22304a"/>
+  <rect id="ow_srv" class="bar" x="180" y="265" width="0" height="22" rx="4" fill="#60a5fa" opacity=".85"/>
+  <text class="mono" x="20" y="320">Client Binder Thread</text>
+  <rect x="180" y="305" width="740" height="22" rx="4" fill="#0f1728" stroke="#22304a"/>
+  <g id="cb1" class="hid"><rect x="420" y="305" width="60" height="22" rx="4" fill="#a78bfa"/><text class="mono" x="450" y="321" text-anchor="middle" fill="#0b1220">cb</text></g>
+  <g id="cb2" class="hid"><rect x="640" y="305" width="60" height="22" rx="4" fill="#a78bfa"/><text class="mono" x="670" y="321" text-anchor="middle" fill="#0b1220">cb</text></g>
+  <g id="cb3" class="hid"><rect x="860" y="305" width="60" height="22" rx="4" fill="#a78bfa"/><text class="mono" x="890" y="321" text-anchor="middle" fill="#0b1220">cb</text></g>
+  <text id="cb_lbl" class="mono hid" x="420" y="350" fill="#a78bfa">onPriceUpdate() — Binder Thread 에서 호출 → runOnUiThread() 필수</text>
+  <line x1="180" y1="365" x2="920" y2="365" stroke="#22304a" stroke-dasharray="4 4"/>
+  <text class="mono" x="180" y="383">0 ms</text><text class="mono" x="550" y="383" text-anchor="middle">1000 ms</text><text class="mono" x="920" y="383" text-anchor="end">2000 ms</text>
+  <g id="ow_note" class="hid"><rect class="box" x="20" y="400" width="920" height="60"/><text class="svgtext" x="32" y="425"><tspan fill="#f87171">동기</tspan>: reply 를 기다린다 → 호출 Thread 블로킹 &nbsp;&nbsp; <tspan fill="#34d399">oneway</tspan>: Driver 에 넣자마자 반환, reply 없음 → 결과는 Callback 인터페이스로 역방향 IPC</text><text class="svgtext" x="32" y="448" fill="#8a9bb5">RemoteCallbackList 가 Client 사망 시 콜백을 자동 제거한다</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 4: DeathRecipient ===== -->
+<div class="scene" id="s4">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="300" height="250" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="170" y="55" text-anchor="middle" fill="#2dd4bf">Client App (PID 2345)</text>
+  <rect class="box glow" id="d_main" x="45" y="75" width="250" height="50"/><text class="svgtext" x="170" y="105" text-anchor="middle">Main Thread · UI</text>
+  <rect class="box glow" id="d_bt" x="45" y="140" width="250" height="60"/><text class="svgtext" x="170" y="164" text-anchor="middle">Binder Thread</text><text class="mono" x="170" y="184" text-anchor="middle">DeathRecipient.binderDied()</text>
+  <rect class="box" x="45" y="215" width="250" height="50"/><text class="mono" x="170" y="245" text-anchor="middle">binder.linkToDeath(recipient, 0)</text>
+
+  <rect x="340" y="30" width="280" height="250" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">Binder Driver</text>
+  <rect class="box glow" id="d_ref" x="365" y="75" width="230" height="70"/><text class="svgtext" x="480" y="100" text-anchor="middle">Node 참조 테이블</text><text class="mono" x="480" y="122" text-anchor="middle">calc_remote ↔ client 참조 추적</text>
+  <rect class="box glow" id="d_death" x="365" y="165" width="230" height="60"/><text class="svgtext" x="480" y="190" text-anchor="middle">BR_DEAD_BINDER</text><text class="mono" x="480" y="210" text-anchor="middle">Process 종료 감지 즉시 통지</text>
+
+  <rect id="d_srvbox" class="glow" x="640" y="30" width="300" height="250" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" id="d_srvttl" x="790" y="55" text-anchor="middle" fill="#60a5fa">Service (:calc_remote) PID 2346</text>
+  <rect class="box glow" id="d_stub" x="665" y="75" width="250" height="60"/><text class="svgtext" x="790" y="110" text-anchor="middle">CalculatorService · Stub</text>
+  <g id="d_kill" class="hid"><rect x="665" y="150" width="250" height="50" rx="8" fill="#3b1220" stroke="#f87171"/><text class="mono" x="790" y="181" text-anchor="middle" fill="#f87171">$ kill -9 2346</text></g>
+  <g id="d_new" class="hid"><rect x="665" y="215" width="250" height="50" rx="8" fill="#0f2a22" stroke="#34d399"/><text class="mono" x="790" y="246" text-anchor="middle" fill="#34d399">BIND_AUTO_CREATE → 새 PID 2410</text></g>
+  <g id="d_x" class="hid"><line x1="660" y1="40" x2="930" y2="270" stroke="#f87171" stroke-width="3" opacity=".6"/><line x1="930" y1="40" x2="660" y2="270" stroke="#f87171" stroke-width="3" opacity=".6"/></g>
+
+  <!-- log timeline -->
+  <text class="svgtext" x="20" y="315" fill="#f5b942">Logcat 순서</text>
+  <g id="l1" class="hid"><rect class="box" x="20" y="330" width="920" height="30"/><text class="mono" x="32" y="350" fill="#f87171">1  E/CalcClient: ☠ Service process died!  thread=Binder:2345_2</text></g>
+  <g id="l2" class="hid"><rect class="box" x="20" y="368" width="920" height="30"/><text class="mono" x="32" y="388" fill="#f5b942">2  W/CalcClient: onServiceDisconnected — thread=main   (AMS 경유, 조금 늦게)</text></g>
+  <g id="l3" class="hid"><rect class="box" x="20" y="406" width="920" height="30"/><text class="mono" x="32" y="426" fill="#34d399">3  D/CalcClient: Service connected!  Service PID: 2410  Same process: NO</text></g>
+  <g id="l4" class="hid"><text class="svgtext" x="20" y="465" fill="#8a9bb5">binderDied() 는 Binder Thread → UI 갱신은 runOnUiThread() · 새 Process 이므로 history 등 Service 내부 상태는 초기화</text></g>
+</svg>
+</div>
+
+
+<!-- ===== Scene 5: AIDL → Stub/Proxy ===== -->
+<div class="scene" id="s5">
+<svg viewBox="0 0 960 480">
+  <defs><marker id="arr5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs>
+  <!-- aidl file -->
+  <g id="a_file"><rect class="box glow" id="a_file_box" x="20" y="40" width="235" height="150"/><text class="svgtext" x="32" y="62" fill="#f5b942">ICalculatorService.aidl</text>
+    <text class="mono" x="32" y="88" fill="#dbe4f0">interface ICalculatorService {</text>
+    <text class="mono" x="32" y="108" fill="#dbe4f0">  int add(int a, int b);</text>
+    <text class="mono" x="32" y="128" fill="#dbe4f0">  int subtract(int a, int b);</text>
+    <text class="mono" x="32" y="148" fill="#dbe4f0">  String getCallerInfo();</text>
+    <text class="mono" x="32" y="168" fill="#dbe4f0">}</text></g>
+  <g id="a_arrow" class="hid"><line x1="258" y1="115" x2="325" y2="115" stroke="#8a9bb5" marker-end="url(#arr5)"/><text class="mono" x="137" y="215" text-anchor="middle" fill="#f5b942">Build → Make Project 시 aidl 컴파일러 실행 →</text></g>
+  <!-- generated -->
+  <g id="a_gen" class="hid"><rect class="box" x="330" y="40" width="300" height="400"/><text class="svgtext" x="342" y="62" fill="#2dd4bf">ICalculatorService.java (자동 생성)</text>
+    <text class="mono" x="342" y="86" fill="#dbe4f0">ICalculatorService extends IInterface</text></g>
+  <g id="a_code" class="hid"><rect class="box" x="345" y="100" width="270" height="50"/><text class="mono" x="355" y="120" fill="#f5b942">static final int TRANSACTION_add = 1;</text><text class="mono" x="355" y="140" fill="#f5b942">TRANSACTION_subtract = 2; …</text></g>
+  <g id="a_stub" class="hid"><rect class="box glow" id="a_stub_box" x="345" y="165" width="270" height="110"/><text class="svgtext" x="355" y="187" fill="#60a5fa">abstract class Stub extends Binder</text>
+    <text class="mono" x="355" y="208" fill="#dbe4f0">onTransact(code, data, reply) {</text>
+    <text class="mono" x="355" y="226" fill="#dbe4f0">  case TRANSACTION_add:</text>
+    <text class="mono" x="355" y="244" fill="#dbe4f0">    reply.writeInt(this.add(a, b));</text>
+    <text class="mono" x="355" y="262" fill="#8a9bb5">→ Server 가 상속해서 구현</text></g>
+  <g id="a_proxy" class="hid"><rect class="box glow" id="a_proxy_box" x="345" y="290" width="270" height="110"/><text class="svgtext" x="355" y="312" fill="#2dd4bf">class Stub.Proxy (인터페이스 구현)</text>
+    <text class="mono" x="355" y="333" fill="#dbe4f0">int add(a, b) {</text>
+    <text class="mono" x="355" y="351" fill="#dbe4f0">  data.writeInt(a); data.writeInt(b);</text>
+    <text class="mono" x="355" y="369" fill="#dbe4f0">  mRemote.transact(TRANSACTION_add, …);</text>
+    <text class="mono" x="355" y="387" fill="#8a9bb5">→ Client 가 쓰는 대리 객체</text></g>
+  <g id="a_asif" class="hid"><rect class="box" x="345" y="410" width="270" height="24"/><text class="mono" x="355" y="427" fill="#a78bfa">static asInterface(IBinder) → 아래 분기</text></g>
+  <!-- asInterface branch -->
+  <g id="a_br" class="hid"><rect class="box" x="660" y="40" width="280" height="50"/><text class="svgtext" x="800" y="62" text-anchor="middle" fill="#a78bfa">Stub.asInterface(binder)</text><text class="mono" x="800" y="80" text-anchor="middle">binder.queryLocalInterface(DESCRIPTOR)</text></g>
+  <g id="a_same" class="hid"><line x1="740" y1="90" x2="740" y2="130" stroke="#8a9bb5" marker-end="url(#arr5)"/><text class="mono" x="700" y="115" fill="#34d399">같은 Process</text>
+    <rect class="box glow" id="a_same_box" x="660" y="135" width="130" height="110"/><text class="svgtext" x="725" y="160" text-anchor="middle" fill="#34d399">Stub 자체</text><text class="mono" x="725" y="182" text-anchor="middle">Binder 안 거침</text><text class="mono" x="725" y="200" text-anchor="middle">직접 Method 호출</text><text class="mono" x="725" y="225" text-anchor="middle" fill="#34d399">Same process: YES</text></g>
+  <g id="a_diff" class="hid"><line x1="860" y1="90" x2="860" y2="130" stroke="#8a9bb5" marker-end="url(#arr5)"/><text class="mono" x="830" y="115" fill="#2dd4bf">다른 Process</text>
+    <rect class="box glow" id="a_diff_box" x="810" y="135" width="130" height="110"/><text class="svgtext" x="875" y="160" text-anchor="middle" fill="#2dd4bf">new Proxy(binder)</text><text class="mono" x="875" y="182" text-anchor="middle">transact() 로</text><text class="mono" x="875" y="200" text-anchor="middle">Driver 경유 IPC</text><text class="mono" x="875" y="225" text-anchor="middle" fill="#2dd4bf">Same process: NO</text></g>
+  <g id="a_note" class="hid"><rect class="box" x="660" y="270" width="280" height="170"/><text class="svgtext" x="672" y="295" fill="#f5b942">실습 7 에서 확인</text>
+    <text class="svgtext" x="672" y="320">android:process=":calc_remote"</text><text class="svgtext" x="672" y="342" fill="#8a9bb5">→ Proxy 경로 → Same process: NO</text>
+    <text class="svgtext" x="672" y="372">android:process 제거</text><text class="svgtext" x="672" y="394" fill="#8a9bb5">→ Stub 직접 → Same process: YES</text>
+    <text class="svgtext" x="672" y="424" fill="#8a9bb5">Client 코드는 두 경우 모두 동일</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 6: Binder Thread Pool ===== -->
+<div class="scene" id="s6">
+<svg viewBox="0 0 960 480">
+  <!-- clients -->
+  <g id="p_c1"><rect class="box glow" id="p_c1b" x="20" y="60" width="150" height="50"/><text class="svgtext" x="95" y="82" text-anchor="middle" fill="#2dd4bf">Client A</text><text class="mono" x="95" y="100" text-anchor="middle">add(1,2)</text></g>
+  <g id="p_c2"><rect class="box glow" id="p_c2b" x="20" y="130" width="150" height="50"/><text class="svgtext" x="95" y="152" text-anchor="middle" fill="#2dd4bf">Client B</text><text class="mono" x="95" y="170" text-anchor="middle">getHistory()</text></g>
+  <g id="p_c3"><rect class="box glow" id="p_c3b" x="20" y="200" width="150" height="50"/><text class="svgtext" x="95" y="222" text-anchor="middle" fill="#2dd4bf">Client C</text><text class="mono" x="95" y="240" text-anchor="middle">multiply(3,4)</text></g>
+  <!-- driver -->
+  <rect class="box" x="210" y="60" width="90" height="190"/><text class="svgtext" x="255" y="150" text-anchor="middle" fill="#f5b942">Binder</text><text class="svgtext" x="255" y="170" text-anchor="middle" fill="#f5b942">Driver</text>
+  <!-- service process -->
+  <rect x="340" y="30" width="600" height="300" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="640" y="52" text-anchor="middle" fill="#60a5fa">Service Process (:calc_remote)</text>
+  <g><rect class="box glow" id="p_main" x="360" y="70" width="240" height="40"/><text class="svgtext" x="480" y="95" text-anchor="middle">Main Thread (UI · Looper)</text></g>
+  <g id="p_t1"><rect class="box glow" id="p_t1b" x="360" y="125" width="240" height="36"/><text class="mono" x="370" y="148" fill="#dbe4f0">Binder:2346_1</text><text id="p_t1w" class="mono hid" x="590" y="148" text-anchor="end" fill="#34d399">add(1,2)</text></g>
+  <g id="p_t2"><rect class="box glow" id="p_t2b" x="360" y="170" width="240" height="36"/><text class="mono" x="370" y="193" fill="#dbe4f0">Binder:2346_2</text><text id="p_t2w" class="mono hid" x="590" y="193" text-anchor="end" fill="#34d399">getHistory()</text></g>
+  <g id="p_t3"><rect class="box glow" id="p_t3b" x="360" y="215" width="240" height="36"/><text class="mono" x="370" y="238" fill="#dbe4f0">Binder:2346_3</text><text id="p_t3w" class="mono hid" x="590" y="238" text-anchor="end" fill="#34d399">multiply(3,4)</text></g>
+  <g><rect class="box" x="360" y="260" width="240" height="36"/><text class="mono" x="370" y="283" fill="#8a9bb5">Binder:2346_4 … 최대 16 (대기)</text></g>
+  <!-- shared state -->
+  <g id="p_shared"><rect class="box glow" id="p_sharedb" x="640" y="125" width="280" height="80"/><text class="svgtext" x="780" y="150" text-anchor="middle">공유 상태 List&lt;String&gt; history</text><text id="p_lock" class="mono hid" x="780" y="172" text-anchor="middle" fill="#f5b942">synchronized(lock) 필수</text><text id="p_race" class="mono hid" x="780" y="192" text-anchor="middle" fill="#f87171">동시 접근 → ConcurrentModificationException</text></g>
+  <g id="p_ui" class="hid"><rect x="640" y="225" width="280" height="70" rx="8" fill="#3b1220" stroke="#f87171"/><text class="svgtext" x="780" y="250" text-anchor="middle" fill="#f87171">Binder Thread 에서 View 접근</text><text class="mono" x="780" y="272" text-anchor="middle" fill="#f87171">CalledFromWrongThreadException</text><text class="mono" x="780" y="288" text-anchor="middle">→ runOnUiThread() / Handler.post()</text></g>
+  <!-- arrows -->
+  <g id="p_a1" class="hid"><line x1="170" y1="85" x2="205" y2="85" stroke="#2dd4bf" marker-end="url(#arr)"/><line x1="300" y1="143" x2="355" y2="143" stroke="#2dd4bf" marker-end="url(#arr)"/></g>
+  <g id="p_a2" class="hid"><line x1="170" y1="155" x2="205" y2="155" stroke="#2dd4bf" marker-end="url(#arr)"/><line x1="300" y1="188" x2="355" y2="188" stroke="#2dd4bf" marker-end="url(#arr)"/></g>
+  <g id="p_a3" class="hid"><line x1="170" y1="225" x2="205" y2="225" stroke="#2dd4bf" marker-end="url(#arr)"/><line x1="300" y1="233" x2="355" y2="233" stroke="#2dd4bf" marker-end="url(#arr)"/></g>
+  <!-- bottom summary -->
+  <g id="p_sum" class="hid"><rect class="box" x="20" y="350" width="920" height="110"/><text class="svgtext" x="32" y="375" fill="#f5b942">정리</text>
+    <text class="svgtext" x="32" y="400">Stub 의 Method 는 <tspan fill="#34d399">Binder Thread 여러 개에서 동시에</tspan> 실행된다 → 공유 데이터는 lock 으로 보호</text>
+    <text class="svgtext" x="32" y="424">Callback, DeathRecipient, ContentObserver(Handler 미지정) 도 <tspan fill="#f87171">Binder Thread</tspan> 에서 호출 → UI 는 runOnUiThread()</text>
+    <text class="svgtext" x="32" y="448" fill="#8a9bb5">Messenger 는 Handler 큐로 한 Thread 에서 순차 처리 — 그래서 lock 이 필요 없다 (실습 10)</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 7: Transaction Buffer ===== -->
+<div class="scene" id="s7">
+<svg viewBox="0 0 960 480">
+  <text class="svgtext" x="20" y="35" fill="#f5b942">Binder 직접 전달 — byte[] getDataDirect(size)</text>
+  <text class="mono" x="20" y="62">Process 당 Transaction Buffer (1 MB, 모든 진행 중 Transaction 이 공유)</text>
+  <rect x="20" y="75" width="920" height="40" rx="6" fill="#0f1728" stroke="#22304a"/>
+  <rect id="tb_other" class="bar" x="20" y="75" width="0" height="40" rx="6" fill="#8a9bb5" opacity=".5"/>
+  <rect id="tb_fill" class="bar" x="20" y="75" width="0" height="40" fill="#2dd4bf" opacity=".85"/>
+  <text id="tb_otherlbl" class="mono hid" x="30" y="100" fill="#0b1220">다른 Transaction (AMS 콜백 등)</text>
+  <text id="tb_lbl" class="mono" x="930" y="100" text-anchor="end" fill="#dbe4f0"></text>
+  <line x1="20" y1="120" x2="20" y2="128" stroke="#8a9bb5"/><text class="mono" x="20" y="142">0</text>
+  <line x1="480" y1="120" x2="480" y2="128" stroke="#8a9bb5"/><text class="mono" x="480" y="142" text-anchor="middle">512 KB</text>
+  <line x1="940" y1="120" x2="940" y2="128" stroke="#8a9bb5"/><text class="mono" x="940" y="142" text-anchor="end">1 MB</text>
+  <!-- log -->
+  <g id="tb_log"><rect class="box" x="20" y="160" width="440" height="140"/>
+    <text id="tb_l1" class="mono hid" x="32" y="185" fill="#34d399">✅   10 KB: 성공</text>
+    <text id="tb_l2" class="mono hid" x="32" y="205" fill="#34d399">✅   80 KB: 성공</text>
+    <text id="tb_l3" class="mono hid" x="32" y="225" fill="#34d399">✅  320 KB: 성공</text>
+    <text id="tb_l4" class="mono hid" x="32" y="245" fill="#f87171">❌  640 KB: TransactionTooLargeException</text>
+    <text id="tb_l5" class="mono hid" x="32" y="265" fill="#f87171">   data parcel size 655360 bytes</text>
+    <text id="tb_l6" class="mono hid" x="32" y="285" fill="#8a9bb5">   (남은 공간 &lt; 요청 크기 → Driver 가 거부)</text></g>
+  <g id="tb_why" class="hid"><rect class="box" x="480" y="160" width="460" height="140"/><text class="svgtext" x="492" y="185" fill="#f5b942">같은 제한을 받는 것들</text>
+    <text class="svgtext" x="492" y="210">Intent extras · Bundle · savedInstanceState</text><text class="svgtext" x="492" y="232">startActivity() 에 큰 Bitmap → 앱 크래시의 단골 원인</text>
+    <text class="svgtext" x="492" y="262" fill="#8a9bb5">실무 한계는 1 MB 의 절반 정도 — 다른 Transaction 이</text><text class="svgtext" x="492" y="284" fill="#8a9bb5">이미 Buffer 를 쓰고 있기 때문</text></g>
+  <!-- pipe -->
+  <text id="pp_ttl" class="svgtext hid" x="20" y="335" fill="#f5b942">Pipe / FD 전달 — ParcelFileDescriptor getDataViaPipe(size)</text>
+  <g id="pp_parcel" class="hid"><rect class="box" x="20" y="350" width="200" height="50"/><text class="svgtext" x="120" y="372" text-anchor="middle">Parcel 에는</text><text class="mono" x="120" y="392" text-anchor="middle" fill="#34d399">FD 하나 (4 byte)</text></g>
+  <g id="pp_drv" class="hid"><line x1="220" y1="375" x2="260" y2="375" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box" x="265" y="350" width="150" height="50"/><text class="svgtext" x="340" y="380" text-anchor="middle" fill="#f5b942">Binder Driver</text><text class="mono" x="340" y="420" text-anchor="middle">FD 를 수신 Process 에 복제</text></g>
+  <g id="pp_lane" class="hid"><rect x="20" y="430" width="920" height="26" rx="13" fill="#0f1728" stroke="#22304a"/><rect id="pp_flow" class="bar" x="20" y="430" width="0" height="26" rx="13" fill="#a78bfa" opacity=".85"/><text class="mono" x="480" y="448" text-anchor="middle" fill="#0b1220" id="pp_flowlbl">Pipe — 4 MB 스트리밍 (64 KB chunk 반복)</text></g>
+  <g id="pp_client" class="hid"><line x1="415" y1="375" x2="455" y2="375" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box" x="460" y="350" width="200" height="50"/><text class="svgtext" x="560" y="372" text-anchor="middle">Client</text><text class="mono" x="560" y="392" text-anchor="middle">FileInputStream(fd).read()</text></g>
+  <g id="pp_srv" class="hid"><rect class="box" x="720" y="350" width="220" height="50"/><text class="svgtext" x="830" y="372" text-anchor="middle">Service PipeWriter Thread</text><text class="mono" x="830" y="392" text-anchor="middle">write() → Binder Thread 안 막음</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 8: Build pipeline ===== -->
+<div class="scene" id="s8">
+<svg viewBox="0 0 960 480">
+  <!-- server -->
+  <rect x="20" y="30" width="440" height="330" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="240" y="52" text-anchor="middle" fill="#f5b942">Ubuntu 빌드 서버 (PuTTY)</text>
+  <rect x="35" y="65" width="410" height="200" rx="6" fill="#050a14" stroke="#22304a"/>
+  <text id="bp_t1" class="mono hid" x="45" y="88" fill="#dbe4f0">$ cd ~/aosp</text>
+  <text id="bp_t2" class="mono hid" x="45" y="108" fill="#dbe4f0">$ source build/envsetup.sh</text>
+  <text id="bp_t3" class="mono hid" x="45" y="128" fill="#dbe4f0">$ lunch sdk_car_x86_64-aosp_current-userdebug</text>
+  <text id="bp_t4" class="mono hid" x="45" y="148" fill="#dbe4f0">$ m -j$(nproc) &amp;&amp; m emu_img_zip</text>
+  <text id="bp_t4b" class="mono hid" x="45" y="168" fill="#34d399">#### build completed successfully ####</text>
+  <text id="bp_t5" class="mono hid" x="45" y="188" fill="#dbe4f0">$ cd sp_test &amp;&amp; mm -j$(nproc)</text>
+  <text id="bp_t6" class="mono hid" x="45" y="208" fill="#dbe4f0">$ ls $OUT/system/bin/my_sp</text>
+  <text id="bp_t6b" class="mono hid" x="45" y="228" fill="#34d399">…/emulator_car64_x86_64/system/bin/my_sp</text>
+  <g id="bp_out" class="hid"><rect class="box" x="35" y="280" width="410" height="65"/><text class="svgtext" x="47" y="302" fill="#2dd4bf">$OUT = out/target/product/emulator_car64_x86_64/</text><text class="mono" x="47" y="322" fill="#dbe4f0">sdk-repo-linux-system-images.zip   ← 전체 이미지</text><text class="mono" x="47" y="338" fill="#dbe4f0">system/bin/my_sp                   ← 모듈 결과물</text></g>
+  <!-- transfer -->
+  <g id="bp_scp" class="hid"><rect x="470" y="150" width="100" height="60" rx="8" fill="#15203a" stroke="#a78bfa"/><text class="svgtext" x="520" y="175" text-anchor="middle" fill="#a78bfa">WinSCP</text><text class="mono" x="520" y="195" text-anchor="middle">SFTP 다운로드</text><line x1="460" y1="180" x2="468" y2="180" stroke="#a78bfa"/><line x1="570" y1="180" x2="595" y2="180" stroke="#a78bfa" marker-end="url(#arr)"/></g>
+  <g id="bp_file" class="pkt" style="opacity:0"><rect x="-30" y="-12" width="60" height="24" rx="6" fill="#2dd4bf"/><text class="mono" x="0" y="4" text-anchor="middle" fill="#062a26">my_sp</text></g>
+  <!-- windows -->
+  <rect x="600" y="30" width="340" height="150" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="770" y="52" text-anchor="middle" fill="#2dd4bf">Windows 11 (cmd)</text>
+  <rect x="615" y="65" width="310" height="100" rx="6" fill="#050a14" stroke="#22304a"/>
+  <text id="bp_w1" class="mono hid" x="625" y="88" fill="#dbe4f0">C:\&gt; adb root</text>
+  <text id="bp_w2" class="mono hid" x="625" y="108" fill="#dbe4f0">C:\&gt; adb push my_sp /data</text>
+  <text id="bp_w3" class="mono hid" x="625" y="128" fill="#dbe4f0">C:\&gt; adb shell chmod 755 /data/my_sp</text>
+  <text id="bp_w4" class="mono hid" x="625" y="148" fill="#dbe4f0">C:\&gt; adb shell /data/my_sp</text>
+  <!-- emulator -->
+  <g id="bp_emu" class="hid"><line x1="770" y1="180" x2="770" y2="205" stroke="#8a9bb5" marker-end="url(#arr)"/><text class="mono" x="790" y="198" fill="#8a9bb5">adb (5037 → adbd)</text></g>
+  <rect x="600" y="210" width="340" height="150" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="770" y="232" text-anchor="middle" fill="#60a5fa">Emulator (커스텀 이미지 · userdebug)</text>
+  <rect x="615" y="245" width="310" height="100" rx="6" fill="#050a14" stroke="#22304a"/>
+  <text id="bp_e1" class="mono hid" x="625" y="268" fill="#dbe4f0">/data/my_sp  (rwxr-xr-x)</text>
+  <text id="bp_e2" class="mono hid" x="625" y="290" fill="#34d399">Hello AOSP! pid=4321 uid=0</text>
+  <text id="bp_e3" class="mono hid" x="625" y="318" fill="#8a9bb5">system.img: -sysdir C:\aosp16\x86_64</text>
+  <!-- summary -->
+  <g id="bp_sum" class="hid"><rect class="box" x="20" y="380" width="920" height="80"/><text class="svgtext" x="32" y="405" fill="#f5b942">Day 2~4 Native 실습 공통 절차</text><text class="svgtext" x="32" y="430"><tspan fill="#f5b942">서버</tspan> lunch → mm → $OUT  ▶  <tspan fill="#a78bfa">WinSCP</tspan> 다운로드  ▶  <tspan fill="#2dd4bf">adb push</tspan> → chmod 755  ▶  <tspan fill="#60a5fa">Emulator</tspan> 에서 실행 · logcat 확인</text><text class="svgtext" x="32" y="452" fill="#8a9bb5">lunch 는 터미널 세션마다 · 전체 이미지 변경(커널, APEX, RRO) 은 m emu_img_zip 후 Emulator 재시작</text></g>
+</svg>
+</div>
+
+</div>
+<div class="controls">
+  <button id="btnPlay" class="primary">▶ 재생</button>
+  <button id="btnPrev">◀ 이전</button>
+  <button id="btnNext">다음 ▶</button>
+  <button id="btnReset">↺ 처음</button>
+  <span class="step" id="stepTxt"></span>
+</div>
+<div class="caption" id="caption"></div>
+<div class="pills" id="pills"></div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=(...ids)=>ids.forEach(i=>$(i).classList.add('vis'));
+const hide=(...ids)=>ids.forEach(i=>$(i).classList.remove('vis'));
+const lit=(id,c)=>{$(id).style.stroke=c;$(id).style.strokeWidth='2.5';};
+const unlit=id=>{$(id).style.stroke='';$(id).style.strokeWidth='';};
+const W=(id,w)=>$(id).setAttribute('width',w);
+
+const SCENES=[
+{ id:'s1', title:'1. Boot Sequence', pills:[['init','teal'],['Zygote','amber'],['system_server','blue'],['fork','green']],
+  reset(){['b_boot','b_kernel','b_init','b_zyg','b_ss','t_init','t_zyg','t_ss','t_app1','t_app2','n_initrc','n_preload','n_fork'].forEach(i=>hide(i));['b_init_box','b_zyg_box','b_ss_box'].forEach(unlit);},
+  steps:[
+   ['<b>Bootloader</b> — 전원 인가 후 Kernel 이미지를 메모리에 올린다.',()=>show('b_boot')],
+   ['<b>Linux Kernel</b> 부팅 — GKI 6.12 커널, Binder Driver 와 각종 모듈(.ko)이 올라온다.',()=>show('b_kernel')],
+   ['<b>init (PID 1)</b> — 커널이 실행하는 첫 User Process. init.rc 를 해석해 Service 들을 순서대로 띄운다.',()=>{show('b_init','t_init');lit('b_init_box','#2dd4bf');}],
+   ['init.rc 의 <b>service zygote</b> 정의 — --start-system-server 옵션이 있다.',()=>show('n_initrc')],
+   ['<b>Zygote</b> 시작 — Framework 클래스와 리소스를 한 번만 preload 하고 대기한다.',()=>{show('b_zyg','t_zyg','n_preload');lit('b_zyg_box','#f5b942');}],
+   ['Zygote 가 <b>fork()</b> 로 system_server 를 만든다 — AMS, WMS, PMS 등 System Service 가 여기서 실행된다.',()=>{show('b_ss','t_ss');lit('b_ss_box','#60a5fa');}],
+   ['App 실행 — AMS 가 Zygote socket 으로 요청 → Zygote 가 <b>fork()</b> → 새 App Process.',()=>{show('t_app1','n_fork');}],
+   ['모든 App 의 PPID 는 Zygote — 실습 5 에서 <code>ps -A -o pid,ppid,name</code> 으로 직접 확인한다.',()=>show('t_app2')],
+  ]},
+{ id:'s2', title:'2. Binder IPC 흐름', pills:[['Proxy','teal'],['Driver 1-copy','amber'],['Binder Thread','blue'],['Stub','green']],
+  reset(){hide('bn1','bn2');['c_act','c_proxy','c_parcel','k_drv','k_buf','s_pool','s_stub','s_impl'].forEach(unlit);const p=$('pkt');p.style.opacity=0;p.style.transform='translate(255px,130px)';$('pkt_t').textContent='add(42,7)';},
+  steps:[
+   ['Main Thread 에서 <b>service.add(42, 7)</b> 호출 — Client 코드에는 그냥 Method 호출로 보인다.',()=>{lit('c_act','#2dd4bf');const p=$('pkt');p.style.transform='translate(255px,130px)';p.style.opacity=1;}],
+   ['<b>Proxy (Bp)</b> 가 인자를 <b>Parcel</b> 에 직렬화하고 transaction code 와 함께 <b>transact()</b> 호출.',()=>{lit('c_proxy','#2dd4bf');lit('c_parcel','#2dd4bf');$('pkt').style.transform='translate(255px,290px)';show('bn1');}],
+   ['<b>Binder Driver</b> — ioctl 로 진입. 수신 Process 의 mmap 된 Buffer 에 <b>한 번만 복사(1-copy)</b>.',()=>{lit('k_drv','#f5b942');$('pkt').style.transform='translate(575px,180px)';}],
+   ['<b>Transaction Buffer</b> — Process 당 1 MB 를 모든 Transaction 이 공유. 초과하면 TransactionTooLargeException (실습 11).',()=>{lit('k_buf','#f5b942');$('pkt').style.transform='translate(575px,290px)';}],
+   ['Driver 가 Service Process 의 대기 중인 <b>Binder Thread</b> 를 깨운다 — Main Thread 가 아니다.',()=>{lit('s_pool','#60a5fa');$('pkt').style.transform='translate(895px,140px)';show('bn2');}],
+   ['<b>Stub.onTransact()</b> 가 code 1 → add() 로 분기. getCallingUid()/Pid() 는 여기서 유효.',()=>{lit('s_stub','#60a5fa');$('pkt').style.transform='translate(895px,220px)';}],
+   ['실제 <b>CalculatorService.add()</b> 실행 → 결과 49.',()=>{lit('s_impl','#34d399');$('pkt').style.transform='translate(895px,290px)';$('pkt_t').textContent='= 49';$('pkt').firstElementChild.setAttribute('fill','#34d399');}],
+   ['<b>reply</b> Parcel 이 같은 경로로 되돌아간다 — Client Main Thread 는 이 순간까지 블로킹되어 있었다 (동기 호출).',()=>{$('pkt').style.transform='translate(255px,130px)';}],
+  ]},
+{ id:'s3', title:'3. 동기 vs oneway + Callback', pills:[['동기 블로킹','red'],['oneway 0 ms','green'],['Callback','blue'],['Binder Thread','amber']],
+  reset(){['sy_block','sy_srv','ow_block','ow_srv'].forEach(i=>W(i,0));hide('sy_lbl','sy_ret','ow_lbl','cb1','cb2','cb3','cb_lbl','ow_note');},
+  steps:[
+   ['<b>동기 호출</b> getPrice("AAPL") — Service 가 2초 동안 처리한다고 하자.',()=>{W('sy_srv',740);}],
+   ['reply 가 올 때까지 <b>Client Main Thread 가 블로킹</b> — 화면이 2초간 멈춘다 (실습 9 에서 직접 체험).',()=>{W('sy_block',740);show('sy_lbl');}],
+   ['2000 ms 후 <b>$185.50</b> 반환. 실무에서 Main Thread 동기 IPC 는 ANR 의 원인.',()=>show('sy_ret')],
+   ['<b>oneway</b> subscribe() — Driver 에 Transaction 을 넣자마자 <b>0 ms 에 반환</b>. reply 가 없다.',()=>{W('ow_block',18);show('ow_lbl');}],
+   ['Service 는 Binder Thread 에서 독립적으로 작업을 계속한다. Client UI 는 정상 동작.',()=>W('ow_srv',740)],
+   ['결과는 <b>Callback 인터페이스</b>(IStockCallback) 로 Service → Client 역방향 IPC. Client 의 <b>Binder Thread</b> 에서 도착한다.',()=>{show('cb1','cb_lbl');}],
+   ['1초마다 onPriceUpdate() 콜백 — UI 갱신은 반드시 <b>runOnUiThread()</b>.',()=>show('cb2','cb3')],
+   ['정리 — 동기는 단순하지만 블로킹, oneway + Callback 은 비동기. RemoteCallbackList 로 죽은 Client 를 자동 정리.',()=>show('ow_note')],
+  ]},
+{ id:'s4', title:'4. DeathRecipient & 복구', pills:[['linkToDeath','teal'],['BR_DEAD_BINDER','amber'],['binderDied','red'],['BIND_AUTO_CREATE','green']],
+  reset(){hide('d_kill','d_new','d_x','l1','l2','l3','l4');['d_main','d_bt','d_ref','d_death','d_stub'].forEach(unlit);$('d_srvbox').style.stroke='#60a5fa';$('d_srvttl').textContent='Service (:calc_remote) PID 2346';},
+  steps:[
+   ['onServiceConnected() 에서 <b>binder.linkToDeath(recipient, 0)</b> — Driver 의 Node 참조 테이블에 "죽으면 알려 달라" 등록.',()=>{lit('d_ref','#2dd4bf');lit('d_stub','#60a5fa');}],
+   ['<b>kill -9 2346</b> — Service Process 강제 종료 (실습 8).',()=>{show('d_kill','d_x');$('d_srvbox').style.stroke='#f87171';}],
+   ['Driver 가 Process 종료를 즉시 감지 → 참조를 가진 Client 에 <b>BR_DEAD_BINDER</b> 전달.',()=>{lit('d_death','#f5b942');}],
+   ['Client 의 <b>Binder Thread</b> 에서 <b>binderDied()</b> 호출 — Main Thread 가 아니므로 UI 갱신은 runOnUiThread().',()=>{lit('d_bt','#f87171');show('l1');}],
+   ['조금 뒤 AMS 경유로 <b>onServiceDisconnected()</b> 가 Main Thread 에 도착 — binderDied 가 항상 먼저다.',()=>{lit('d_main','#f5b942');show('l2');}],
+   ['binderDied() 안에서 unbind → bindService(<b>BIND_AUTO_CREATE</b>) — 시스템이 Service Process 를 새로 만든다.',()=>{show('d_new');hide('d_x');$('d_srvbox').style.stroke='#34d399';$('d_srvttl').textContent='Service (:calc_remote) PID 2410 (새 Process)';}],
+   ['onServiceConnected() 재호출 — <b>PID 가 바뀌고</b> Service 내부 상태(history)는 초기화. 새 Proxy 로 교체해야 DeadObjectException 을 피한다.',()=>{show('l3','l4');lit('d_stub','#34d399');}],
+  ]},
+{ id:'s5', title:'5. AIDL → Stub / Proxy', pills:[['aidl 컴파일','amber'],['Stub (Server)','blue'],['Proxy (Client)','teal'],['asInterface 분기','green']],
+  reset(){hide('a_arrow','a_gen','a_code','a_stub','a_proxy','a_asif','a_br','a_same','a_diff','a_note');['a_file_box','a_stub_box','a_proxy_box','a_same_box','a_diff_box'].forEach(unlit);},
+  steps:[
+   ['개발자가 작성하는 것은 <b>.aidl 인터페이스 한 파일</b>뿐 — Method 시그니처만 선언한다.',()=>lit('a_file_box','#f5b942')],
+   ['Build → Make Project 시 <b>aidl 컴파일러</b>가 Java 소스를 자동 생성한다 (build/generated/…).',()=>show('a_arrow','a_gen')],
+   ['Method 마다 <b>TRANSACTION_xxx 정수 코드</b>가 선언 순서대로 1, 2, 3 … 부여된다. service call 의 code 가 이것.',()=>show('a_code')],
+   ['<b>Stub</b> — Binder 를 상속. onTransact() 가 code 로 분기해 실제 Method 를 호출. <b>Server 가 상속해서 구현</b>한다.',()=>{show('a_stub');lit('a_stub_box','#60a5fa');}],
+   ['<b>Stub.Proxy</b> — 같은 인터페이스를 구현하지만 내부는 Parcel 포장 + transact(). <b>Client 가 받는 대리 객체</b>.',()=>{show('a_proxy');lit('a_proxy_box','#2dd4bf');}],
+   ['onServiceConnected() 의 <b>Stub.asInterface(binder)</b> — queryLocalInterface() 로 같은 Process 인지 확인.',()=>show('a_asif','a_br')],
+   ['<b>같은 Process</b> 면 Stub 객체 그대로 반환 → Binder 를 거치지 않는 직접 호출 → "Same process: YES".',()=>{show('a_same');lit('a_same_box','#34d399');}],
+   ['<b>다른 Process</b> 면 new Proxy(binder) → transact() 로 Driver 경유 → "Same process: NO". Client 코드는 두 경우 동일.',()=>{show('a_diff','a_note');lit('a_diff_box','#2dd4bf');}],
+  ]},
+{ id:'s6', title:'6. Binder Thread Pool', pills:[['Binder Thread 병렬','blue'],['synchronized','amber'],['Main Thread','teal'],['runOnUiThread','red']],
+  reset(){hide('p_a1','p_a2','p_a3','p_t1w','p_t2w','p_t3w','p_lock','p_race','p_ui','p_sum');['p_c1b','p_c2b','p_c3b','p_main','p_t1b','p_t2b','p_t3b','p_sharedb'].forEach(unlit);},
+  steps:[
+   ['Service Process 에는 <b>Main Thread 1개</b>와 Driver 가 관리하는 <b>Binder Thread Pool</b>(최대 16)이 있다.',()=>lit('p_main','#2dd4bf')],
+   ['Client A 가 add() 호출 → Driver 가 <b>대기 중인 Binder Thread _1</b> 을 깨워 Stub.onTransact() 실행.',()=>{lit('p_c1b','#2dd4bf');show('p_a1','p_t1w');lit('p_t1b','#34d399');}],
+   ['<b>동시에</b> Client B, C 가 호출 → 각각 _2, _3 에서 <b>병렬 실행</b>. Main Thread 는 전혀 관여하지 않는다.',()=>{lit('p_c2b','#2dd4bf');lit('p_c3b','#2dd4bf');show('p_a2','p_a3','p_t2w','p_t3w');lit('p_t2b','#34d399');lit('p_t3b','#34d399');}],
+   ['세 Thread 가 같은 <b>history List</b> 를 읽고 쓴다 → 보호가 없으면 데이터가 깨진다.',()=>{lit('p_sharedb','#f87171');show('p_race');}],
+   ['그래서 실습 7 의 Service 는 <b>synchronized(lock)</b> 으로 감쌌다. Stub Method 는 항상 Thread-safe 하게 작성.',()=>{lit('p_sharedb','#f5b942');hide('p_race');show('p_lock');}],
+   ['반대로 Service → Client 콜백, DeathRecipient 도 <b>Client 의 Binder Thread</b> 에서 실행 → View 를 만지면 예외.',()=>{show('p_ui');}],
+   ['정리 — AIDL 은 병렬(lock 필요), Messenger 는 Handler 큐 순차(lock 불필요). UI 는 항상 runOnUiThread().',()=>show('p_sum')],
+  ]},
+{ id:'s7', title:'7. Transaction Buffer 한계', pills:[['1 MB 공유','amber'],['TransactionTooLarge','red'],['FD 4 byte','green'],['Pipe 스트리밍','blue']],
+  reset(){W('tb_fill',0);W('tb_other',0);W('pp_flow',0);$('tb_fill').setAttribute('x',20);$('tb_fill').setAttribute('fill','#2dd4bf');$('tb_lbl').textContent='';hide('tb_otherlbl','tb_l1','tb_l2','tb_l3','tb_l4','tb_l5','tb_l6','tb_why','pp_ttl','pp_parcel','pp_drv','pp_lane','pp_client','pp_srv');},
+  steps:[
+   ['Process 당 Binder Buffer 는 <b>1 MB</b>. AMS 콜백 등 <b>다른 Transaction 이 이미 일부를</b> 점유하고 있다.',()=>{W('tb_other',300);show('tb_otherlbl');}],
+   ['getDataDirect(10 KB) — reply Parcel 에 byte[] 가 통째로 복사된다. 여유가 있어 성공.',()=>{$('tb_fill').setAttribute('x',320);W('tb_fill',9);$('tb_lbl').textContent='+10 KB';show('tb_l1');}],
+   ['80 KB, 320 KB 도 성공 — 하지만 남은 공간이 빠르게 줄어든다.',()=>{W('tb_fill',294);$('tb_lbl').textContent='+320 KB';show('tb_l2','tb_l3');}],
+   ['<b>640 KB</b> 요청 → 남은 공간보다 크다 → Driver 가 거부 → <b>TransactionTooLargeException</b>.',()=>{W('tb_fill',620);$('tb_fill').setAttribute('fill','#f87171');$('tb_lbl').textContent='+640 KB ✕';show('tb_l4','tb_l5','tb_l6');}],
+   ['Intent extras, Bundle, savedInstanceState 도 <b>같은 Buffer</b> 를 쓴다 — 큰 Bitmap 을 startActivity() 에 넣으면 같은 예외.',()=>show('tb_why')],
+   ['해결 — <b>ParcelFileDescriptor.createPipe()</b>. Parcel 에는 <b>FD 하나(4 byte)</b> 만 실린다.',()=>{$('tb_fill').setAttribute('fill','#2dd4bf');W('tb_fill',2);$('tb_lbl').textContent='+FD 4 byte';hide('tb_l4','tb_l5','tb_l6');show('pp_ttl','pp_parcel','pp_drv');}],
+   ['Driver 는 FD 를 수신 Process 에 <b>복제</b>해 준다. Service 는 별도 PipeWriter Thread 에서 write() — Binder Thread 를 막지 않는다.',()=>show('pp_client','pp_srv','pp_lane')],
+   ['데이터 4 MB 는 <b>Pipe 로 스트리밍</b> — Binder Buffer 를 전혀 쓰지 않는다. 대용량은 항상 FD/ashmem/파일.',()=>W('pp_flow',920)],
+  ]},
+{ id:'s8', title:'8. AOSP 빌드·배포 파이프라인', pills:[['lunch','amber'],['m / mm','amber'],['WinSCP','blue'],['adb push','teal']],
+  reset(){hide('bp_t1','bp_t2','bp_t3','bp_t4','bp_t4b','bp_t5','bp_t6','bp_t6b','bp_out','bp_scp','bp_w1','bp_w2','bp_w3','bp_w4','bp_emu','bp_e1','bp_e2','bp_e3','bp_sum');const f=$('bp_file');f.style.opacity=0;f.style.transform='translate(400px,330px)';},
+  steps:[
+   ['PuTTY 로 서버 접속 → <b>source build/envsetup.sh</b> — m, mm, lunch 같은 빌드 함수를 쉘에 로드 (세션마다).',()=>show('bp_t1','bp_t2')],
+   ['<b>lunch product-release-variant</b> — 타겟 선택. $OUT 등 환경 변수가 정해진다.',()=>show('bp_t3')],
+   ['<b>m -j$(nproc)</b> 전체(증분) 빌드 → <b>m emu_img_zip</b> 으로 Emulator 이미지 zip 생성.',()=>show('bp_t4','bp_t4b')],
+   ['모듈 디렉토리에서 <b>mm</b> — Android.bp 의 cc_binary 하나만 빌드. 이후 실습은 대부분 이 단계.',()=>show('bp_t5','bp_t6','bp_t6b','bp_out')],
+   ['<b>WinSCP</b> 로 $OUT/system/bin/my_sp 를 Windows 로 다운로드 (SFTP, 같은 .ppk 키).',()=>{show('bp_scp');const f=$('bp_file');f.style.opacity=1;f.style.transform='translate(520px,120px)';}],
+   ['cmd 에서 <b>adb root</b> → <b>adb push my_sp /data</b> — adb server(5037) 가 Emulator 의 adbd 로 전송.',()=>{show('bp_w1','bp_w2','bp_emu');$('bp_file').style.transform='translate(770px,260px)';}],
+   ['<b>chmod 755</b> 로 실행 권한 부여 후 실행 → Emulator 에서 출력 확인. (system.img 는 커스텀 이미지에서 로드)',()=>{show('bp_w3','bp_w4','bp_e1','bp_e2','bp_e3');$('bp_file').style.opacity=0;}],
+   ['이 흐름이 Day 2~4 Native 실습(Binder Service, JNI, SurfaceFlinger, APEX)의 공통 배포 절차다.',()=>show('bp_sum')],
+  ]},
+];
+
+let cur=0, step=-1, timer=null;
+const tabs=$('tabs');
+SCENES.forEach((s,i)=>{const t=document.createElement('div');t.className='tab';t.textContent=s.title;t.onclick=()=>select(i);tabs.appendChild(t);});
+function select(i){stop();cur=i;document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('on',k===i));document.querySelectorAll('.scene').forEach((sc,k)=>sc.classList.toggle('on',k===i));
+  $('pills').innerHTML=SCENES[i].pills.map(p=>`<span class="pill ${p[1]}">${p[0]}</span>`).join('');reset();}
+function reset(){stop();step=-1;SCENES[cur].reset();$('caption').innerHTML='▶ 재생 또는 다음 ▶ 을 눌러 시작합니다.';$('stepTxt').textContent=`0 / ${SCENES[cur].steps.length}`;}
+function next(){const st=SCENES[cur].steps;if(step>=st.length-1){stop();return;}step++;st[step][1]();$('caption').innerHTML=st[step][0];$('stepTxt').textContent=`${step+1} / ${st.length}`;}
+function prev(){if(step<0)return;const target=step-1;SCENES[cur].reset();step=-1;for(let k=0;k<=target;k++)next();if(target<0)reset();}
+function play(){if(timer){stop();return;}$('btnPlay').textContent='❚❚ 일시정지';if(step>=SCENES[cur].steps.length-1)reset();next();timer=setInterval(()=>{next();if(step>=SCENES[cur].steps.length-1)stop();},2600);}
+function stop(){if(timer)clearInterval(timer);timer=null;$('btnPlay').textContent='▶ 재생';}
+$('btnPlay').onclick=play;$('btnNext').onclick=()=>{stop();next();};$('btnPrev').onclick=()=>{stop();prev();};$('btnReset').onclick=reset;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();next();}else if(e.key==='ArrowLeft'){stop();prev();}else if(e.key===' '){e.preventDefault();play();}});
+(function(){var h=parseInt((location.hash||'').replace('#s',''),10);select(isNaN(h)||h<1||h>SCENES.length?0:h-1);})();
+window.addEventListener('hashchange',function(){var h=parseInt((location.hash||'').replace('#s',''),10);if(!isNaN(h)&&h>=1&&h<=SCENES.length)select(h-1);});
+</script>
+</body>
+</html>
