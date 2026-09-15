@@ -605,6 +605,7 @@ cc_binary {
 <span class="s">    class main</span>
 <span class="s">    user system</span>
 <span class="s">    group system</span>
+<span class="s">    seclabel u:r:su:s0</span>
 <span class="s">    disabled</span>
 <span class="s">EOT</span>
 </code></pre></div>
@@ -2118,10 +2119,33 @@ LEDON denied  (uid=10050 pid=6230)
     class main
     user system
     group system
+    seclabel u:r:su:s0  # ★ SELinux 도메인을 su 로 지정 — userdebug 전용 실습 우회
     disabled            # 부팅 시 자동 시작 안 함 — start 명령으로만 (실습용)
 </code></pre></div>
 
 <p><code>Android.bp</code> 의 <code>init_rc: ["rc_service/rc_led_service.rc"]</code> (실습 1) 가 이 파일을 <code>/system/etc/init/</code> 에 설치한다.</p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user</code> / <code>group</code></td>
+<td>init 이 <code>setuid/setgid</code> 할 계정 → 데몬의 UID 가 1000 (system)</td>
+</tr>
+<tr>
+<td><code>seclabel u:r:su:s0</code></td>
+<td>exec 시 전환할 SELinux 도메인. 전용 <code>.te</code> 가 없는 실습에서 <strong>userdebug 의 <code>su</code> 도메인(permissive 도메인)</strong> 을 빌려 쓴다. user 빌드에는 <code>su</code> 도메인이 없어 동작하지 않는다</td>
+</tr>
+<tr>
+<td><code>disabled</code></td>
+<td>부팅 시 자동 시작하지 않음. 빼면 <code>class main</code> 시작 시 자동 실행</td>
+</tr>
+</tbody>
+</table>
 <h2>Step 3. 빌드 · 설치 (<code>/system</code> 에 써야 하므로 remount)</h2>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>rc_led_service
 ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/rc_led_service<span class="w"> </span><span class="nv">$OUT</span>/system/etc/init/rc_led_service.rc
@@ -2156,13 +2180,27 @@ getprop<span class="w"> </span>init.svc.rc_led_service<span class="w">  </span><
 </code></pre></div>
 
 <p><code>.rc</code> 에서 <code>disabled</code> 를 지우면 부팅 시 자동 시작된다.</p>
-<h2>Step 5. SELinux — enforcing 으로 바꿔 보기</h2>
+<h2>Step 5. SELinux — seclabel 의 효과와 enforcing</h2>
 <p>커스텀 이미지는 <code>androidboot.selinux=permissive</code> 로 부팅했다. 정책 위반이 <strong>기록만</strong> 되고 차단되지 않는 상태다.</p>
+<h3>5-1. 현재 도메인 확인</h3>
 <div class="codehilite"><pre><span></span><code>getenforce<span class="w">                        </span><span class="c1"># Permissive</span>
+ps<span class="w"> </span>-AZ<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>rc_led<span class="w">              </span><span class="c1"># u:r:su:s0  system  6301  1  rc_led_service   ← seclabel 이 적용된 도메인</span>
 logcat<span class="w"> </span>-b<span class="w"> </span>all<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>avc<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>rc_led<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
 </code></pre></div>
 
-<p>permissive 에서도 <code>avc: denied</code> 로그는 남는다. 예:</p>
+<p><code>seclabel u:r:su:s0</code> 덕분에 데몬이 <code>su</code> 도메인으로 돈다. <code>su</code> 는 userdebug 정책에서 <code>permissive su</code> 로 선언된 도메인이라, 시스템이 enforcing 이어도 이 도메인만은 기록만 하고 차단하지 않는다.</p>
+<div class="codehilite"><pre><span></span><code>setenforce<span class="w"> </span><span class="m">1</span>
+stop<span class="w"> </span>rc_led_service<span class="p">;</span><span class="w"> </span>start<span class="w"> </span>rc_led_service
+logcat<span class="w"> </span>-s<span class="w"> </span>rc_led_service<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-2<span class="w">     </span><span class="c1"># addService = 0  ← su 도메인이라 enforcing 에서도 통과</span>
+setenforce<span class="w"> </span><span class="m">0</span>
+</code></pre></div>
+
+<h3>5-2. seclabel 을 빼면 — init 도메인으로 실행</h3>
+<p><code>.rc</code> 에서 <code>seclabel</code> 줄을 지우고 다시 설치·재부팅한 뒤 같은 실험을 한다 (시간이 없으면 강사 시연).</p>
+<div class="codehilite"><pre><span></span><code>ps<span class="w"> </span>-AZ<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>rc_led<span class="w">              </span><span class="c1"># u:r:init:s0   ← 전용 도메인이 없어 init 도메인 그대로</span>
+logcat<span class="w"> </span>-b<span class="w"> </span>all<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>avc<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>rc_led<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</code></pre></div>
+
 <div class="codehilite"><pre><span></span><code>avc: denied { call } for pid=6301 comm=&quot;rc_led_service&quot; scontext=u:r:init:s0 tcontext=u:r:servicemanager:s0 tclass=binder permissive=1
 avc: denied { add } for pid=6301 comm=&quot;rc_led_service&quot; name=&quot;rc.led&quot; scontext=u:r:init:s0 tcontext=u:object_r:default_android_service:s0 tclass=service_manager permissive=1
 </code></pre></div>
@@ -2181,7 +2219,7 @@ avc: denied { add } for pid=6301 comm=&quot;rc_led_service&quot; name=&quot;rc.l
 </tr>
 <tr>
 <td><code>scontext=u:r:init:s0</code></td>
-<td>주체 도메인 — <strong>우리 데몬이 init 도메인으로 돌고 있다</strong> (전용 도메인이 없어서)</td>
+<td>주체 도메인 — <strong>데몬이 init 도메인으로 돌고 있다</strong></td>
 </tr>
 <tr>
 <td><code>tcontext=…servicemanager</code> / <code>default_android_service</code></td>
@@ -2193,13 +2231,42 @@ avc: denied { add } for pid=6301 comm=&quot;rc_led_service&quot; name=&quot;rc.l
 </tr>
 </tbody>
 </table>
-<p>enforcing 으로 바꾸면:</p>
 <div class="codehilite"><pre><span></span><code>setenforce<span class="w"> </span><span class="m">1</span>
 stop<span class="w"> </span>rc_led_service<span class="p">;</span><span class="w"> </span>start<span class="w"> </span>rc_led_service
-logcat<span class="w"> </span>-s<span class="w"> </span>rc_led_service<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-2<span class="w">     </span><span class="c1"># addService = -1  (PERMISSION_DENIED)</span>
+logcat<span class="w"> </span>-s<span class="w"> </span>rc_led_service<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-2<span class="w">     </span><span class="c1"># addService = -1  (PERMISSION_DENIED) ← init 도메인은 enforcing 에서 차단</span>
 setenforce<span class="w"> </span><span class="m">0</span><span class="w">                              </span><span class="c1"># 다시 permissive</span>
 </code></pre></div>
 
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>seclabel u:r:su:s0</code></th>
+<th>seclabel 없음 (init 도메인)</th>
+<th>전용 <code>.te</code> (Step 6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Permissive</td>
+<td>동작</td>
+<td>동작 (avc 기록)</td>
+<td>동작</td>
+</tr>
+<tr>
+<td>Enforcing</td>
+<td>동작 (su 는 permissive 도메인)</td>
+<td><strong>차단</strong></td>
+<td>동작</td>
+</tr>
+<tr>
+<td>user 빌드</td>
+<td>su 도메인 없음 → 실패</td>
+<td>차단</td>
+<td>동작 — 제품에서 유일한 정답</td>
+</tr>
+</tbody>
+</table>
 <h2>Step 6. 필요한 정책 읽기 (작성은 데모)</h2>
 <p>제대로 하려면 전용 도메인을 만들어야 한다. <code>system/sepolicy/private/</code> 에 추가하는 최소 정책:</p>
 <p><strong><code>rc_led_service.te</code></strong></p>
@@ -2223,15 +2290,16 @@ adb<span class="w"> </span>logcat<span class="w"> </span>-b<span class="w"> </sp
 <ul>
 <li><input type="checkbox"> <code>start rc_led_service</code> 후 <code>ps</code> 에서 PPID 1, uid system</li>
 <li><input type="checkbox"> <code>logcat -s rc_led_service</code> 에 <code>addService = 0</code></li>
-<li><input type="checkbox"> <code>avc: denied</code> 로그의 <code>scontext</code> 가 <code>u:r:init:s0</code> 임을 읽을 수 있다</li>
-<li><input type="checkbox"> <code>setenforce 1</code> 에서 <code>addService = -1</code>, <code>setenforce 0</code> 복귀</li>
+<li><input type="checkbox"> <code>ps -AZ</code> 에서 도메인이 <code>u:r:su:s0</code> (seclabel 적용)</li>
+<li><input type="checkbox"> seclabel 제거 시 <code>avc: denied</code> 의 <code>scontext</code> 가 <code>u:r:init:s0</code> 임을 읽을 수 있다</li>
+<li><input type="checkbox"> enforcing 에서 su 도메인은 통과, init 도메인은 <code>addService = -1</code>, <code>setenforce 0</code> 복귀</li>
 </ul>
 <h2>핵심 정리</h2>
 <ul>
 <li><code>init_rc</code> 속성 → <code>/system/etc/init/&lt;name&gt;.rc</code> → <code>start/stop &lt;name&gt;</code> 으로 제어. <code>getprop init.svc.&lt;name&gt;</code> 이 상태.</li>
 <li><code>user/group</code> 으로 데몬의 UID 를 정한다 → 실습 8 의 UID 검사가 여기서 의미를 갖는다.</li>
 <li>SELinux 는 <strong>도메인(scontext) × 객체(tcontext) × 권한</strong> 삼중 검사. permissive 는 기록, enforcing 은 차단.</li>
-<li>전용 도메인 없이 init 도메인으로 돌면 거의 모든 것이 거부된다 → <code>.te</code> + <code>service_contexts</code> + <code>file_contexts</code> 세트가 필요.</li>
+<li><code>seclabel</code> 로 실행 도메인을 지정할 수 있다. <code>u:r:su:s0</code> 은 userdebug 의 permissive 도메인을 빌리는 실습용 우회이고, 제품에서는 <code>.te</code> + <code>service_contexts</code> + <code>file_contexts</code> 세트로 전용 도메인을 만든다.</li>
 </ul>
 <h2>트러블슈팅</h2>
 <table>
@@ -2252,7 +2320,11 @@ adb<span class="w"> </span>logcat<span class="w"> </span>-b<span class="w"> </sp
 </tr>
 <tr>
 <td><code>addService = -1</code> (permissive 인데도)</td>
-<td><code>adb shell getenforce</code> 확인. Enforcing 이면 <code>setenforce 0</code></td>
+<td><code>adb shell getenforce</code> 확인. Enforcing 이면 <code>setenforce 0</code>. <code>.rc</code> 의 <code>seclabel u:r:su:s0</code> 가 있는지, <code>ps -AZ</code> 도메인 확인</td>
+</tr>
+<tr>
+<td><code>seclabel</code> 을 넣었는데 시작 실패</td>
+<td>user 빌드에는 <code>su</code> 도메인이 없다 — userdebug 이미지인지 <code>getprop ro.build.type</code> 확인</td>
 </tr>
 <tr>
 <td>logcat 에 아무것도 없음</td>
