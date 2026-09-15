@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Android Framework 16 심화 — Day 2 애니메이션</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2b;--line:#22304a;--ink:#dbe4f0;--muted:#8a9bb5;--amber:#f5b942;--teal:#2dd4bf;--blue:#60a5fa;--green:#34d399;--red:#f87171;--violet:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:1.05rem;color:var(--amber);font-weight:600}
+header span{color:var(--muted);font-size:.85rem}
+.tabs{display:flex;gap:6px;padding:12px 24px 0;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.9rem}
+.tab.on{color:var(--amber);border-bottom-color:var(--panel);background:#15203a}
+main{padding:0 24px 24px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px;min-height:520px}
+.scene{display:none}.scene.on{display:block}
+svg{width:100%;height:auto;display:block}
+.svgtext{font-family:inherit;font-size:14px;fill:var(--ink)}
+.mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;font-size:12px;fill:var(--muted)}
+.box{fill:#0f1728;stroke:var(--line);stroke-width:1.5;rx:8}
+.hid{opacity:0;transition:opacity .45s}
+.vis{opacity:1}
+.glow{transition:stroke .3s,fill .3s}
+.pkt{transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .3s}
+.controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{background:#15203a;border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:.88rem}
+button:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#062a26;border-color:var(--teal);font-weight:600}
+.step{color:var(--muted);font-size:.85rem;margin-left:auto}
+.caption{margin-top:12px;padding:12px 16px;background:#0f1728;border-left:3px solid var(--amber);border-radius:0 6px 6px 0;min-height:56px;font-size:.95rem}
+.caption b{color:var(--amber)}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.78rem;color:var(--muted)}
+.pill.teal{color:var(--teal);border-color:var(--teal)}.pill.amber{color:var(--amber);border-color:var(--amber)}.pill.blue{color:var(--blue);border-color:var(--blue)}.pill.green{color:var(--green);border-color:var(--green)}.pill.red{color:var(--red);border-color:var(--red)}
+.bar{transition:width .6s linear}
+@media (prefers-reduced-motion:reduce){.hid,.pkt,.bar,.glow{transition:none}}
+</style>
+</head>
+<body>
+<header><h1>Android Framework 16 심화 · Day 2 애니메이션</h1><span>libbinder · interface_cast · Bn/Bp · Callback · AIDL cpp · UID · init.rc/SELinux · HAL/VINTF</span></header>
+<div class="tabs" id="tabs"></div>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs></svg>
+<main>
+<div class="stage">
+
+
+<!-- ===== Scene 1: libbinder 계층 ===== -->
+<div class="scene" id="s1">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="440" height="200" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="240" y="55" text-anchor="middle" fill="#f5b942">Process 전체에 하나 — ProcessState</text>
+  <g id="l_ps1" class="hid"><rect class="box" x="40" y="70" width="190" height="60"/><text class="svgtext" x="135" y="95" text-anchor="middle">open("/dev/binder")</text><text class="mono" x="135" y="115" text-anchor="middle">BINDER_VERSION · SET_MAX_THREADS</text></g>
+  <g id="l_ps2" class="hid"><rect class="box" x="250" y="70" width="190" height="60"/><text class="svgtext" x="345" y="95" text-anchor="middle">mmap 1 MB</text><text class="mono" x="345" y="115" text-anchor="middle">Transaction Buffer</text></g>
+  <g id="l_ps3" class="hid"><rect class="box" x="40" y="150" width="400" height="60"/><text class="svgtext" x="240" y="175" text-anchor="middle">Thread Pool 관리 — startThreadPool()</text><text class="mono" x="240" y="195" text-anchor="middle">Driver 가 BR_SPAWN_LOOPER 요청 → Binder Thread 생성</text></g>
+  <rect x="500" y="30" width="440" height="200" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="720" y="55" text-anchor="middle" fill="#2dd4bf">Thread 마다 하나 — IPCThreadState</text>
+  <g id="l_ipc1" class="hid"><rect class="box" x="520" y="70" width="190" height="60"/><text class="svgtext" x="615" y="95" text-anchor="middle">transact()</text><text class="mono" x="615" y="115" text-anchor="middle">ioctl(BINDER_WRITE_READ)</text></g>
+  <g id="l_ipc2" class="hid"><rect class="box" x="730" y="70" width="190" height="60"/><text class="svgtext" x="825" y="95" text-anchor="middle">joinThreadPool()</text><text class="mono" x="825" y="115" text-anchor="middle">요청 대기 루프 (반환 안 함)</text></g>
+  <g id="l_ipc3" class="hid"><rect class="box" x="520" y="150" width="400" height="60"/><text class="svgtext" x="720" y="175" text-anchor="middle">getCallingPid() / getCallingUid()</text><text class="mono" x="720" y="195" text-anchor="middle">현재 처리 중인 Transaction 의 발신자 (커널 cred)</text></g>
+  <!-- class tree -->
+  <text class="svgtext" x="20" y="265" fill="#f5b942">객체 모델</text>
+  <g id="l_ib" class="hid"><rect class="box glow" id="l_ibb" x="20" y="280" width="200" height="44"/><text class="svgtext" x="120" y="307" text-anchor="middle">IBinder</text></g>
+  <g id="l_bb" class="hid"><line x1="120" y1="324" x2="70" y2="360" stroke="#8a9bb5"/><rect class="box glow" id="l_bbb" x="20" y="360" width="100" height="44"/><text class="svgtext" x="70" y="380" text-anchor="middle">BBinder</text><text class="mono" x="70" y="396" text-anchor="middle">로컬 · onTransact</text></g>
+  <g id="l_bp" class="hid"><line x1="120" y1="324" x2="170" y2="360" stroke="#8a9bb5"/><rect class="box glow" id="l_bpb" x="130" y="360" width="100" height="44"/><text class="svgtext" x="180" y="380" text-anchor="middle">BpBinder</text><text class="mono" x="180" y="396" text-anchor="middle">원격 handle</text></g>
+  <g id="l_ii" class="hid"><rect class="box glow" id="l_iib" x="300" y="280" width="200" height="44"/><text class="svgtext" x="400" y="307" text-anchor="middle">IInterface</text></g>
+  <g id="l_bn" class="hid"><line x1="400" y1="324" x2="350" y2="360" stroke="#8a9bb5"/><rect class="box glow" id="l_bnb" x="290" y="360" width="120" height="44"/><text class="svgtext" x="350" y="380" text-anchor="middle">BnInterface&lt;I&gt;</text><text class="mono" x="350" y="396" text-anchor="middle">= BBinder + I</text></g>
+  <g id="l_bpi" class="hid"><line x1="400" y1="324" x2="460" y2="360" stroke="#8a9bb5"/><rect class="box glow" id="l_bpib" x="420" y="360" width="120" height="44"/><text class="svgtext" x="480" y="380" text-anchor="middle">BpInterface&lt;I&gt;</text><text class="mono" x="480" y="396" text-anchor="middle">remote() = BpBinder</text></g>
+  <g id="l_user" class="hid"><rect class="box" x="580" y="280" width="360" height="124"/><text class="svgtext" x="592" y="303" fill="#34d399">우리가 쓰는 클래스 (실습 4)</text>
+    <text class="mono" x="592" y="326" fill="#dbe4f0">ILedService : IInterface           ← 인터페이스</text>
+    <text class="mono" x="592" y="346" fill="#dbe4f0">BnLedService : BnInterface&lt;ILed&gt;  ← Stub</text>
+    <text class="mono" x="592" y="366" fill="#dbe4f0">BpLedService : BpInterface&lt;ILed&gt;  ← Proxy</text>
+    <text class="mono" x="592" y="386" fill="#dbe4f0">LedService : BnLedService          ← 구현체</text></g>
+  <g id="l_note" class="hid"><text class="svgtext" x="20" y="440" fill="#8a9bb5">Java 대응: IBinder ↔ IBinder · BBinder ↔ Binder · BpBinder ↔ BinderProxy · BnInterface ↔ Stub · BpInterface ↔ Stub.Proxy</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 2: interface_cast ===== -->
+<div class="scene" id="s2">
+<svg viewBox="0 0 960 480">
+  <g><rect class="box" x="20" y="40" width="300" height="130"/><text class="svgtext" x="32" y="63" fill="#f5b942">ILedService.h</text>
+    <text class="mono" x="32" y="88" fill="#dbe4f0">class ILedService : public IInterface {</text>
+    <text class="mono" x="32" y="108" fill="#f5b942">  DECLARE_META_INTERFACE(LedService);</text>
+    <text class="mono" x="32" y="128" fill="#dbe4f0">  virtual void ledOn() = 0;</text>
+    <text class="mono" x="32" y="148" fill="#dbe4f0">};</text></g>
+  <g id="i_decl" class="hid"><rect class="box" x="20" y="190" width="300" height="90"/><text class="svgtext" x="32" y="213" fill="#8a9bb5">매크로가 선언하는 것</text>
+    <text class="mono" x="32" y="236" fill="#dbe4f0">static const String16 descriptor;</text>
+    <text class="mono" x="32" y="256" fill="#dbe4f0">static sp&lt;I&gt; asInterface(sp&lt;IBinder&gt;);</text>
+    <text class="mono" x="32" y="274" fill="#dbe4f0">getInterfaceDescriptor();</text></g>
+  <g id="i_impl" class="hid"><rect class="box" x="20" y="300" width="300" height="130"/><text class="svgtext" x="32" y="323" fill="#f5b942">ILedService.cpp</text>
+    <text class="mono" x="32" y="348" fill="#f5b942">IMPLEMENT_META_INTERFACE(LedService,</text>
+    <text class="mono" x="32" y="366" fill="#f5b942">    "android.my.ILedService");</text>
+    <text class="mono" x="32" y="392" fill="#8a9bb5">descriptor = "android.my.ILedService"</text>
+    <text class="mono" x="32" y="410" fill="#8a9bb5">asInterface() 본문 생성 →</text></g>
+  <!-- asInterface flow -->
+  <g id="i_call" class="hid"><rect class="box glow" id="i_callb" x="360" y="40" width="270" height="50"/><text class="mono" x="495" y="62" text-anchor="middle" fill="#dbe4f0">interface_cast&lt;ILedService&gt;(binder)</text><text class="mono" x="495" y="80" text-anchor="middle" fill="#8a9bb5">= ILedService::asInterface(binder)</text></g>
+  <g id="i_q" class="hid"><line x1="495" y1="90" x2="495" y2="118" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="i_qb" x="360" y="120" width="270" height="50"/><text class="mono" x="495" y="142" text-anchor="middle" fill="#dbe4f0">queryLocalInterface(descriptor)</text><text class="mono" x="495" y="160" text-anchor="middle" fill="#8a9bb5">"이 IBinder 는 내 Process 의 객체인가?"</text></g>
+  <g id="i_yes" class="hid"><line x1="430" y1="170" x2="430" y2="210" stroke="#34d399" marker-end="url(#arr)"/><text class="mono" x="372" y="195" fill="#34d399">BBinder (로컬)</text><rect class="box glow" id="i_yesb" x="360" y="215" width="130" height="80"/><text class="svgtext" x="425" y="240" text-anchor="middle" fill="#34d399">그대로 반환</text><text class="mono" x="425" y="260" text-anchor="middle">this (LedService*)</text><text class="mono" x="425" y="280" text-anchor="middle">Binder 안 거침</text></g>
+  <g id="i_no" class="hid"><line x1="560" y1="170" x2="560" y2="210" stroke="#2dd4bf" marker-end="url(#arr)"/><text class="mono" x="510" y="195" fill="#2dd4bf">BpBinder (원격)</text><rect class="box glow" id="i_nob" x="500" y="215" width="130" height="80"/><text class="svgtext" x="565" y="240" text-anchor="middle" fill="#2dd4bf">new BpLedService</text><text class="mono" x="565" y="260" text-anchor="middle">(binder)</text><text class="mono" x="565" y="280" text-anchor="middle">remote() = handle</text></g>
+  <g id="i_use" class="hid"><rect class="box" x="360" y="320" width="270" height="110"/><text class="svgtext" x="372" y="343" fill="#f5b942">Client (실습 3)</text>
+    <text class="mono" x="372" y="366" fill="#dbe4f0">sp&lt;IBinder&gt; p = sm-&gt;checkService(</text><text class="mono" x="372" y="384" fill="#dbe4f0">      String16("led.service"));</text>
+    <text class="mono" x="372" y="404" fill="#dbe4f0">sp&lt;ILedService&gt; led = interface_cast</text><text class="mono" x="372" y="422" fill="#dbe4f0">      &lt;ILedService&gt;(p);   led-&gt;ledOn();</text></g>
+  <g id="i_java" class="hid"><rect class="box" x="670" y="40" width="270" height="390"/><text class="svgtext" x="682" y="63" fill="#a78bfa">Java (Day 1) 와 대응</text>
+    <text class="mono" x="682" y="92" fill="#dbe4f0">DECLARE/IMPLEMENT_META_INTERFACE</text><text class="mono" x="682" y="110" fill="#8a9bb5">  ↔ aidl 이 생성한 Stub 클래스</text>
+    <text class="mono" x="682" y="140" fill="#dbe4f0">interface_cast&lt;I&gt;(b)</text><text class="mono" x="682" y="158" fill="#8a9bb5">  ↔ I.Stub.asInterface(b)</text>
+    <text class="mono" x="682" y="188" fill="#dbe4f0">queryLocalInterface(desc)</text><text class="mono" x="682" y="206" fill="#8a9bb5">  ↔ b.queryLocalInterface(DESCRIPTOR)</text>
+    <text class="mono" x="682" y="236" fill="#dbe4f0">new BpLedService(b)</text><text class="mono" x="682" y="254" fill="#8a9bb5">  ↔ new Stub.Proxy(b)</text>
+    <text class="mono" x="682" y="284" fill="#dbe4f0">descriptor 문자열</text><text class="mono" x="682" y="302" fill="#8a9bb5">  ↔ DESCRIPTOR = "com.example…"</text>
+    <text class="svgtext" x="682" y="350" fill="#34d399">AIDL 은 이 매크로를 대신 써 준다</text><text class="svgtext" x="682" y="372" fill="#8a9bb5">(실습 7 생성 코드에서 확인)</text>
+    <text class="svgtext" x="682" y="410" fill="#8a9bb5">같은 Process 면 Bp 없이 직접 호출</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 3: Bn/Bp Transaction 흐름 ===== -->
+<div class="scene" id="s3">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="290" height="330" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="165" y="55" text-anchor="middle" fill="#2dd4bf">my_client_test_4</text>
+  <rect class="box glow" id="t_c1" x="40" y="70" width="250" height="44"/><text class="mono" x="165" y="97" text-anchor="middle" fill="#dbe4f0">int r = led-&gt;ledOn(70);</text>
+  <rect class="box glow" id="t_c2" x="40" y="125" width="250" height="100"/><text class="svgtext" x="165" y="147" text-anchor="middle">BpLedService::ledOn</text>
+    <text class="mono" x="52" y="168" fill="#dbe4f0">data.writeInterfaceToken(desc)</text><text class="mono" x="52" y="186" fill="#dbe4f0">data.writeInt32(70)</text><text class="mono" x="52" y="204" fill="#dbe4f0">transact(LED_ON=1, data, &amp;reply)</text><text class="mono" x="52" y="220" fill="#8a9bb5">return reply.readInt32()</text>
+  <rect class="box glow" id="t_c3" x="40" y="240" width="250" height="44"/><text class="mono" x="165" y="258" text-anchor="middle" fill="#dbe4f0">IPCThreadState::transact</text><text class="mono" x="165" y="276" text-anchor="middle" fill="#8a9bb5">ioctl(BINDER_WRITE_READ) · 응답 대기</text>
+  <g id="t_parcel" class="hid"><rect class="box" x="40" y="298" width="250" height="52"/><text class="mono" x="52" y="318" fill="#f5b942">data Parcel (바이트)</text><text class="mono" x="52" y="338" fill="#dbe4f0">[token …ILedService][int32 70]</text></g>
+  <rect x="340" y="30" width="270" height="330" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="475" y="55" text-anchor="middle" fill="#f5b942">Binder Driver</text>
+  <rect class="box glow" id="t_d1" x="360" y="90" width="230" height="60"/><text class="svgtext" x="475" y="114" text-anchor="middle">code=1 · 1-copy</text><text class="mono" x="475" y="134" text-anchor="middle">+ sender pid/uid 부착</text>
+  <rect class="box glow" id="t_d2" x="360" y="170" width="230" height="60"/><text class="svgtext" x="475" y="194" text-anchor="middle">Server Binder Thread 깨움</text><text class="mono" x="475" y="214" text-anchor="middle">binder:PID_1</text>
+  <rect x="640" y="30" width="300" height="330" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="790" y="55" text-anchor="middle" fill="#60a5fa">my_server_test_4</text>
+  <rect class="box glow" id="t_s1" x="660" y="70" width="260" height="120"/><text class="svgtext" x="790" y="92" text-anchor="middle">BnLedService::onTransact(1)</text>
+    <text class="mono" x="672" y="114" fill="#dbe4f0">CHECK_INTERFACE(ILedService, data)</text><text class="mono" x="672" y="132" fill="#dbe4f0">int ratio = data.readInt32()   // 70</text><text class="mono" x="672" y="150" fill="#dbe4f0">int a = ledOn(ratio)  // 가상 호출</text><text class="mono" x="672" y="168" fill="#dbe4f0">reply-&gt;writeInt32(a)</text><text class="mono" x="672" y="184" fill="#8a9bb5">return NO_ERROR</text>
+  <rect class="box glow" id="t_s2" x="660" y="205" width="260" height="60"/><text class="svgtext" x="790" y="228" text-anchor="middle">LedService::ledOn(70)</text><text class="mono" x="790" y="248" text-anchor="middle">범위 보정 → 70 반환</text>
+  <g id="t_reply" class="hid"><rect class="box" x="660" y="298" width="260" height="52"/><text class="mono" x="672" y="318" fill="#34d399">reply Parcel</text><text class="mono" x="672" y="338" fill="#dbe4f0">[int32 70]</text></g>
+  <g id="pkt3" class="pkt" style="opacity:0"><rect x="-44" y="-14" width="88" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt3_t">code 1 · 70</text></g>
+  <g id="t_note" class="hid"><rect class="box" x="20" y="380" width="920" height="80"/><text class="svgtext" x="32" y="405" fill="#f5b942">Parcel 은 타입 없는 바이트 스트림</text><text class="svgtext" x="32" y="428">Proxy 가 쓴 순서(token → int32) 그대로 Stub 이 읽어야 한다. 순서가 어긋나도 컴파일러는 모른다 (실습 5 Step 6). AIDL 은 이 쌍을 자동 생성해 어긋남을 원천 차단한다.</text><text class="svgtext" x="32" y="450" fill="#8a9bb5">service call my.led_service 1 s16 "android.my.ILedService" i32 30 — 같은 바이트를 쉘에서 손으로 만든 것</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 4: Callback 역방향 ===== -->
+<div class="scene" id="s4">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="300" height="300" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="170" y="55" text-anchor="middle" fill="#2dd4bf">binder_client_5 (PID 6011)</text>
+  <rect class="box glow" id="cb_obj" x="40" y="70" width="260" height="60"/><text class="svgtext" x="170" y="94" text-anchor="middle">MyCallback : BnMyDataCallback</text><text class="mono" x="170" y="114" text-anchor="middle">로컬 BBinder 객체 · node 생성</text>
+  <rect class="box glow" id="cb_reg" x="40" y="145" width="260" height="60"/><text class="svgtext" x="170" y="169" text-anchor="middle">svc-&gt;registerCallback(cb)</text><text class="mono" x="170" y="189" text-anchor="middle">data.writeStrongBinder(asBinder(cb))</text>
+  <rect class="box glow" id="cb_pool" x="40" y="220" width="260" height="60"/><text class="svgtext" x="170" y="244" text-anchor="middle">startThreadPool + joinThreadPool</text><text class="mono" x="170" y="264" text-anchor="middle">★ Client 도 요청을 받아야 한다</text>
+  <g id="cb_recv" class="hid"><rect x="40" y="290" width="260" height="30" rx="6" fill="#0f2a22" stroke="#34d399"/><text class="mono" x="170" y="310" text-anchor="middle" fill="#34d399">onDataReceived("Hello…") tid=6013</text></g>
+  <rect x="350" y="30" width="260" height="300" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">Binder Driver</text>
+  <rect class="box glow" id="cb_node" x="370" y="70" width="220" height="90"/><text class="svgtext" x="480" y="94" text-anchor="middle">Node / Ref 테이블</text><text class="mono" x="480" y="114" text-anchor="middle">node 21 (client MyCallback)</text><text class="mono" x="480" y="132" text-anchor="middle">→ server 측 ref handle 7</text><text class="mono" x="480" y="150" text-anchor="middle">참조 카운트 +1</text>
+  <rect class="box glow" id="cb_tx" x="370" y="180" width="220" height="60"/><text class="svgtext" x="480" y="204" text-anchor="middle">flat_binder_object 변환</text><text class="mono" x="480" y="224" text-anchor="middle">BINDER_TYPE_BINDER → HANDLE</text>
+  <rect x="640" y="30" width="300" height="300" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="790" y="55" text-anchor="middle" fill="#60a5fa">binder_server_5 (PID 5990)</text>
+  <rect class="box glow" id="cb_read" x="660" y="70" width="260" height="60"/><text class="svgtext" x="790" y="94" text-anchor="middle">data.readStrongBinder()</text><text class="mono" x="790" y="114" text-anchor="middle">→ BpBinder(handle 7)</text>
+  <rect class="box glow" id="cb_cast" x="660" y="145" width="260" height="60"/><text class="svgtext" x="790" y="169" text-anchor="middle">interface_cast&lt;IMyDataCallback&gt;</text><text class="mono" x="790" y="189" text-anchor="middle">→ BpMyDataCallback (Proxy)</text>
+  <rect class="box glow" id="cb_call" x="660" y="220" width="260" height="60"/><text class="svgtext" x="790" y="244" text-anchor="middle">cb-&gt;onDataReceived("Hello…")</text><text class="mono" x="790" y="264" text-anchor="middle">transact(ON_DATA_RECEIVED) — 역방향</text>
+  <g id="pkt4" class="pkt" style="opacity:0"><rect x="-50" y="-14" width="100" height="28" rx="14" fill="#a78bfa"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#0b1220" id="pkt4_t">IBinder</text></g>
+  <g id="cb_note" class="hid"><rect class="box" x="20" y="350" width="920" height="110"/><text class="svgtext" x="32" y="375" fill="#f5b942">IBinder 는 Parcel 에 실을 수 있는 특별한 타입</text>
+    <text class="svgtext" x="32" y="400">송신 측에서는 객체 포인터(BINDER_TYPE_BINDER), Driver 를 지나면 수신 측 handle(BINDER_TYPE_HANDLE) 로 바뀐다. 포인터가 Process 를 넘어가는 것이 아니다.</text>
+    <text class="svgtext" x="32" y="424">Server 가 그 handle 로 transact 하면 Driver 가 node 21 의 소유 Process(Client) 의 Binder Thread 를 깨운다 → Client 에 Thread Pool 이 없으면 콜백은 영원히 대기.</text>
+    <text class="svgtext" x="32" y="448" fill="#8a9bb5">Day 1 의 RemoteCallbackList · linkToDeath 는 이 node/ref 참조 위에 사망 통지를 얹은 것</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 5: AIDL cpp backend ===== -->
+<div class="scene" id="s5">
+<svg viewBox="0 0 960 480">
+  <g><rect class="box glow" id="a5_aidl" x="20" y="40" width="230" height="135"/><text class="svgtext" x="32" y="63" fill="#f5b942">IMyDataService.aidl</text>
+    <text class="mono" x="32" y="88" fill="#dbe4f0">import IMyDataCallback;</text><text class="mono" x="32" y="108" fill="#dbe4f0">interface IMyDataService {</text><text class="mono" x="32" y="126" fill="#dbe4f0">  void registerCallback(</text><text class="mono" x="32" y="144" fill="#dbe4f0">        IMyDataCallback cb);</text><text class="mono" x="32" y="162" fill="#dbe4f0">  int add(int a, int b);  }</text></g>
+  <g id="a5_bp" class="hid"><rect class="box" x="20" y="185" width="230" height="125"/><text class="svgtext" x="32" y="208" fill="#f5b942">Android.bp</text>
+    <text class="mono" x="32" y="226" fill="#dbe4f0">aidl_interface {</text><text class="mono" x="32" y="244" fill="#dbe4f0">  name: "my_interface",</text><text class="mono" x="32" y="262" fill="#dbe4f0">  srcs: [".aidl" × 2],</text><text class="mono" x="32" y="280" fill="#f5b942">  backend: { cpp: { enabled: true } },</text><text class="mono" x="32" y="298" fill="#8a9bb5">  unstable: true }</text></g>
+  <g id="a5_arrow" class="hid"><line x1="255" y1="107" x2="305" y2="107" stroke="#8a9bb5" marker-end="url(#arr)"/><text class="mono" x="280" y="95" text-anchor="middle" fill="#f5b942">aidl</text></g>
+  <g id="a5_gen" class="hid"><rect class="box" x="310" y="40" width="320" height="270"/><text class="svgtext" x="322" y="63" fill="#2dd4bf">out/soong/.intermediates/…/my_interface-cpp-source</text>
+    <rect class="box glow" id="a5_g1" x="325" y="75" width="290" height="46"/><text class="mono" x="337" y="93" fill="#dbe4f0">IMyDataService.h</text><text class="mono" x="337" y="111" fill="#8a9bb5">IInterface + DECLARE_META_INTERFACE</text>
+    <rect class="box glow" id="a5_g2" x="325" y="128" width="290" height="46"/><text class="mono" x="337" y="146" fill="#dbe4f0">BnMyDataService.h</text><text class="mono" x="337" y="164" fill="#8a9bb5">onTransact · TRANSACTION_* = 1, 2 …</text>
+    <rect class="box glow" id="a5_g3" x="325" y="181" width="290" height="46"/><text class="mono" x="337" y="199" fill="#dbe4f0">BpMyDataService.h</text><text class="mono" x="337" y="217" fill="#8a9bb5">Proxy: token · writeStrongBinder · transact</text>
+    <rect class="box glow" id="a5_g4" x="325" y="234" width="290" height="46"/><text class="mono" x="337" y="252" fill="#dbe4f0">IMyDataService.cpp</text><text class="mono" x="337" y="270" fill="#8a9bb5">IMPLEMENT_META_INTERFACE · Bn/Bp 본문</text>
+    <text class="mono" x="322" y="298" fill="#8a9bb5">+ Callback 세트 4개 → libmy_interface-cpp.a</text></g>
+  <g id="a5_use" class="hid"><rect class="box" x="660" y="40" width="280" height="130"/><text class="svgtext" x="672" y="63" fill="#60a5fa">server.cpp — 상속만</text>
+    <text class="mono" x="672" y="88" fill="#dbe4f0">class Svc : BnMyDataService {</text><text class="mono" x="672" y="106" fill="#dbe4f0">  Status add(int32_t a, int32_t b,</text><text class="mono" x="672" y="124" fill="#dbe4f0">             int32_t* _aidl_return) override</text><text class="mono" x="672" y="142" fill="#8a9bb5">  // 반환값은 out 포인터, 예외는 Status</text><text class="mono" x="672" y="160" fill="#dbe4f0">};</text></g>
+  <g id="a5_status" class="hid"><rect class="box" x="660" y="185" width="280" height="125"/><text class="svgtext" x="672" y="208" fill="#f5b942">binder::Status 가 Parcel 을 타고 간다</text>
+    <text class="mono" x="672" y="232" fill="#34d399">Status::ok() → 정상 (예외 헤더 0)</text><text class="mono" x="672" y="252" fill="#f87171">EX_ILLEGAL_ARGUMENT → IllegalArgument</text><text class="mono" x="672" y="272" fill="#f87171">EX_SECURITY → SecurityException</text><text class="mono" x="672" y="292" fill="#a78bfa">ServiceSpecificError(n) → ServiceSpecific</text></g>
+  <g id="a5_cmp" class="hid"><rect class="box" x="20" y="330" width="920" height="130"/><text class="svgtext" x="32" y="355" fill="#f5b942">실습 6 (수작업) → 실습 7 (AIDL): 무엇이 사라졌나</text>
+    <text class="svgtext" x="32" y="380">IMyDataService.h/.cpp · IMyDataCallback.h/.cpp 4개 파일 (Bn/Bp/META 매크로/Parcel 읽고 쓰기) → <tspan fill="#34d399">.aidl 2개</tspan> 로 대체. server/client 는 상속·호출만 남는다.</text>
+    <text class="svgtext" x="32" y="404">읽기·쓰기 순서 불일치, 토큰 누락, code 번호 실수가 <tspan fill="#34d399">원천 차단</tspan>. 인터페이스를 바꾸면 양쪽 코드가 자동으로 같이 바뀐다.</text>
+    <text class="svgtext" x="32" y="428" fill="#8a9bb5">ndk backend 로 바꾸면 aidl::&lt;pkg&gt;::BnX · ScopedAStatus · std::shared_ptr 로 같은 구조가 생성된다 (실습 10 HAL)</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 6: UID 접근 제어 ===== -->
+<div class="scene" id="s6">
+<svg viewBox="0 0 960 480">
+  <g id="u_c1"><rect class="box glow" id="u_c1b" x="20" y="50" width="200" height="60"/><text class="svgtext" x="120" y="74" text-anchor="middle" fill="#f87171">/data/led_auth_client</text><text class="mono" x="120" y="94" text-anchor="middle">uid 0 (root shell)</text></g>
+  <g id="u_c2"><rect class="box glow" id="u_c2b" x="20" y="130" width="200" height="60"/><text class="svgtext" x="120" y="154" text-anchor="middle" fill="#34d399">su 1000 led_auth_client</text><text class="mono" x="120" y="174" text-anchor="middle">uid 1000 (system)</text></g>
+  <g id="u_c3"><rect class="box glow" id="u_c3b" x="20" y="210" width="200" height="60"/><text class="svgtext" x="120" y="234" text-anchor="middle" fill="#f87171">NativeCallLab App</text><text class="mono" x="120" y="254" text-anchor="middle">uid 10152 (실습 12)</text></g>
+  <rect x="270" y="30" width="260" height="260" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="400" y="55" text-anchor="middle" fill="#f5b942">Binder Driver (커널)</text>
+  <rect class="box glow" id="u_cred" x="290" y="80" width="220" height="90"/><text class="svgtext" x="400" y="104" text-anchor="middle">sender 의 task cred 읽기</text><text class="mono" x="400" y="124" text-anchor="middle">tr-&gt;sender_euid = current-&gt;cred</text><text class="mono" x="400" y="142" text-anchor="middle">tr-&gt;sender_pid</text><text class="mono" x="400" y="160" text-anchor="middle" fill="#f5b942">사용자 공간이 못 바꾼다</text>
+  <g id="u_fake" class="hid"><rect x="290" y="190" width="220" height="80" rx="8" fill="#3b1220" stroke="#f87171"/><text class="svgtext" x="400" y="214" text-anchor="middle" fill="#f87171">Parcel 에 "uid=1000" 이라 써도</text><text class="mono" x="400" y="234" text-anchor="middle">서버는 data 가 아니라</text><text class="mono" x="400" y="252" text-anchor="middle">Driver 가 준 값을 본다</text></g>
+  <rect x="580" y="30" width="360" height="260" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="760" y="55" text-anchor="middle" fill="#60a5fa">led_auth_service · LEDON()</text>
+  <rect class="box glow" id="u_get" x="600" y="80" width="320" height="50"/><text class="mono" x="760" y="100" text-anchor="middle" fill="#dbe4f0">IPCThreadState::self()-&gt;getCallingUid()</text><text class="mono" x="760" y="118" text-anchor="middle" fill="#8a9bb5">처리 중인 Transaction 의 sender_euid</text>
+  <rect class="box glow" id="u_if" x="600" y="145" width="320" height="50"/><text class="mono" x="760" y="165" text-anchor="middle" fill="#dbe4f0">if (uid != AID_SYSTEM /*1000*/)</text><text class="mono" x="760" y="183" text-anchor="middle" fill="#f87171">return fromExceptionCode(EX_SECURITY)</text>
+  <g id="u_r1" class="hid"><rect x="600" y="210" width="150" height="30" rx="6" fill="#3b1220" stroke="#f87171"/><text class="mono" x="675" y="230" text-anchor="middle" fill="#f87171">uid 0 → denied</text></g>
+  <g id="u_r2" class="hid"><rect x="765" y="210" width="155" height="30" rx="6" fill="#0f2a22" stroke="#34d399"/><text class="mono" x="842" y="230" text-anchor="middle" fill="#34d399">uid 1000 → LED ON</text></g>
+  <g id="u_r3" class="hid"><rect x="600" y="250" width="320" height="30" rx="6" fill="#3b1220" stroke="#f87171"/><text class="mono" x="760" y="270" text-anchor="middle" fill="#f87171">uid 10152 → denied → App: SecurityException</text></g>
+  <g id="pkt6" class="pkt" style="opacity:0"><rect x="-56" y="-14" width="112" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt6_t">LEDON · uid ?</text></g>
+  <g id="u_note" class="hid"><rect class="box" x="20" y="310" width="920" height="150"/><text class="svgtext" x="32" y="335" fill="#f5b942">Android 권한 모델의 바닥</text>
+    <text class="svgtext" x="32" y="360">App 은 10000 번대 UID 를 하나씩 받는다 → Binder 로 무엇을 부르든 서버는 "누가" 불렀는지 커널 보증으로 안다.</text>
+    <text class="svgtext" x="32" y="384">Java 의 checkCallingPermission(perm) 도 이 uid 로 PackageManager 에 "이 uid 가 perm 을 가졌나" 를 묻는 것.</text>
+    <text class="svgtext" x="32" y="408">App 이 HAL/Native Service 를 직접 못 부르는 이유: system_server(uid 1000) 만 허용하도록 만들면 App 은 반드시 Java Service 를 거친다 → 권한 검사 지점이 한 곳.</text>
+    <text class="svgtext" x="32" y="440" fill="#8a9bb5">EX_SECURITY 는 Parcel 의 예외 헤더로 전달되어 Java 쪽 reply.readException() 에서 SecurityException 으로 되살아난다 (실습 12)</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 7: init.rc + SELinux ===== -->
+<div class="scene" id="s7">
+<svg viewBox="0 0 960 480">
+  <g><rect class="box" x="20" y="40" width="250" height="110"/><text class="svgtext" x="32" y="63" fill="#f5b942">/system/etc/init/rc_led_service.rc</text>
+    <text class="mono" x="32" y="86" fill="#dbe4f0">service rc_led_service /system/bin/rc_led_service</text><text class="mono" x="32" y="104" fill="#dbe4f0">    class main</text><text class="mono" x="32" y="122" fill="#dbe4f0">    user system    group system</text><text class="mono" x="32" y="140" fill="#8a9bb5">    disabled</text></g>
+  <g id="r_init" class="hid"><rect class="box glow" id="r_initb" x="20" y="170" width="250" height="70"/><text class="svgtext" x="145" y="194" text-anchor="middle">init (PID 1)</text><text class="mono" x="145" y="214" text-anchor="middle">start rc_led_service</text><text class="mono" x="145" y="230" text-anchor="middle">= setprop ctl.start</text></g>
+  <g id="r_fork" class="hid"><line x1="270" y1="205" x2="315" y2="205" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="r_forkb" x="320" y="170" width="220" height="70"/><text class="svgtext" x="430" y="194" text-anchor="middle">fork → setuid(1000) → exec</text><text class="mono" x="430" y="214" text-anchor="middle">PPID 1 · uid system</text><text class="mono" x="430" y="230" text-anchor="middle">init.svc.rc_led_service=running</text></g>
+  <g id="r_dom" class="hid"><line x1="540" y1="205" x2="585" y2="205" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="r_domb" x="590" y="170" width="350" height="70"/><text class="svgtext" x="765" y="194" text-anchor="middle">SELinux 도메인 결정</text><text class="mono" x="765" y="214" text-anchor="middle" fill="#f87171">.te 없음 → u:r:init:s0 그대로</text><text class="mono" x="765" y="230" text-anchor="middle" fill="#34d399">init_daemon_domain() → u:r:rc_led_service:s0</text></g>
+  <g id="r_add" class="hid"><rect class="box glow" id="r_addb" x="320" y="270" width="220" height="60"/><text class="svgtext" x="430" y="294" text-anchor="middle">addService("rc.led")</text><text class="mono" x="430" y="314" text-anchor="middle">→ servicemanager</text></g>
+  <g id="r_sm" class="hid"><line x1="540" y1="300" x2="585" y2="300" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="r_smb" x="590" y="260" width="350" height="80"/><text class="svgtext" x="765" y="284" text-anchor="middle">servicemanager · mAccess-&gt;canAdd()</text><text class="mono" x="765" y="304" text-anchor="middle">u:r:init:s0 × default_android_service</text><text class="mono" x="765" y="322" text-anchor="middle">× tclass service_manager × { add }</text></g>
+  <g id="r_perm" class="hid"><rect x="20" y="360" width="450" height="100" rx="8" fill="#2a2510" stroke="#f5b942"/><text class="svgtext" x="32" y="384" fill="#f5b942">Permissive (커스텀 이미지)</text><text class="mono" x="32" y="406" fill="#dbe4f0">avc: denied { add } for pid=6301 comm="rc_led_service"</text><text class="mono" x="32" y="424" fill="#dbe4f0">  scontext=u:r:init:s0 tcontext=…default_android_service:s0</text><text class="mono" x="32" y="442" fill="#dbe4f0">  tclass=service_manager <tspan fill="#f5b942">permissive=1</tspan>   → 기록만, addService = 0</text></g>
+  <g id="r_enf" class="hid"><rect x="490" y="360" width="450" height="100" rx="8" fill="#3b1220" stroke="#f87171"/><text class="svgtext" x="502" y="384" fill="#f87171">Enforcing (setenforce 1)</text><text class="mono" x="502" y="406" fill="#dbe4f0">같은 avc 로그, <tspan fill="#f87171">permissive=0</tspan> → 차단</text><text class="mono" x="502" y="424" fill="#dbe4f0">addService = -1 (PERMISSION_DENIED)</text><text class="mono" x="502" y="442" fill="#8a9bb5">해결: .te + service_contexts + file_contexts (실습 9 Step 6)</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 8: HAL / VINTF ===== -->
+<div class="scene" id="s8">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="440" height="230" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="240" y="55" text-anchor="middle" fill="#60a5fa">system 파티션 (Google / Framework)</text>
+  <g id="h_app" class="hid"><rect class="box" x="40" y="70" width="180" height="44"/><text class="svgtext" x="130" y="97" text-anchor="middle">App (uid 10xxx)</text></g>
+  <g id="h_ss" class="hid"><line x1="130" y1="114" x2="130" y2="135" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="h_ssb" x="40" y="140" width="180" height="60"/><text class="svgtext" x="130" y="162" text-anchor="middle">system_server</text><text class="mono" x="130" y="182" text-anchor="middle">LightsService · uid 1000</text></g>
+  <g id="h_cli" class="hid"><rect class="box glow" id="h_clib" x="250" y="140" width="190" height="60"/><text class="svgtext" x="345" y="162" text-anchor="middle">led_hal_client (실습 10)</text><text class="mono" x="345" y="182" text-anchor="middle">ndk · fromBinder</text></g>
+  <g id="h_cm" class="hid"><rect class="box" x="40" y="215" width="400" height="34"/><text class="mono" x="52" y="237" fill="#dbe4f0">compatibility_matrix.xml — "ILights v2 이상 필요"</text></g>
+  <rect x="500" y="30" width="440" height="230" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="720" y="55" text-anchor="middle" fill="#f5b942">vendor 파티션 (SoC / 제조사)</text>
+  <g id="h_hal" class="hid"><rect class="box glow" id="h_halb" x="520" y="70" width="400" height="70"/><text class="svgtext" x="720" y="94" text-anchor="middle">vendor.example.led-service  (vendor: true)</text><text class="mono" x="720" y="114" text-anchor="middle">aidl::vendor::example::led::BnLed · libbinder_ndk 만</text><text class="mono" x="720" y="132" text-anchor="middle">AServiceManager_addService("…led.ILed/default")</text></g>
+  <g id="h_hw" class="hid"><line x1="720" y1="140" x2="720" y2="160" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box" x="520" y="165" width="400" height="34"/><text class="mono" x="720" y="187" text-anchor="middle" fill="#dbe4f0">sysfs / i2c / 커널 드라이버 — 실제 하드웨어</text></g>
+  <g id="h_mf" class="hid"><rect class="box" x="520" y="215" width="400" height="34"/><text class="mono" x="532" y="237" fill="#dbe4f0">/vendor/etc/vintf/manifest.xml — "ILights v2 제공"</text></g>
+  <g id="h_binder" class="hid"><rect x="380" y="270" width="200" height="34" rx="17" fill="#15203a" stroke="#f5b942"/><text class="mono" x="480" y="292" text-anchor="middle" fill="#f5b942">/dev/binder (같은 Driver)</text><line x1="345" y1="200" x2="470" y2="270" stroke="#f5b942" stroke-dasharray="4 4"/><line x1="720" y1="140" x2="520" y2="270" stroke="#f5b942" stroke-dasharray="4 4"/></g>
+  <g id="h_vintf" class="hid"><rect class="box" x="20" y="320" width="450" height="140"/><text class="svgtext" x="32" y="345" fill="#f5b942">VINTF — 부팅 시 대조</text>
+    <text class="svgtext" x="32" y="370">vendor <tspan fill="#f5b942">manifest</tspan>(제공) ↔ system <tspan fill="#60a5fa">compat matrix</tspan>(요구)</text>
+    <text class="svgtext" x="32" y="394">불일치 → 부팅 실패/OTA 거부. system 만 갱신해도 vendor 유지(Treble)</text>
+    <text class="svgtext" x="32" y="418"><tspan fill="#f87171">stability vintf</tspan> 는 manifest 없으면 addService 거부</text>
+    <text class="svgtext" x="32" y="442" fill="#8a9bb5">실습은 unstable: true 라 검사 제외 → /data 에서 바로 실행 가능</text></g>
+  <g id="h_rule" class="hid"><rect class="box" x="490" y="320" width="450" height="140"/><text class="svgtext" x="502" y="345" fill="#f5b942">HAL 경계 규칙 4가지</text>
+    <text class="svgtext" x="502" y="370">① 이름 <tspan fill="#2dd4bf">&lt;pkg&gt;.&lt;Interface&gt;/&lt;instance&gt;</tspan></text>
+    <text class="svgtext" x="502" y="394">② vendor 는 <tspan fill="#2dd4bf">libbinder_ndk</tspan> 만 → NDK backend</text>
+    <text class="svgtext" x="502" y="418">③ <tspan fill="#2dd4bf">vendor: true</tspan> → /vendor/bin · vendor_available</text>
+    <text class="svgtext" x="502" y="442">④ App 은 직접 못 부름 — system_server 가 대신</text></g>
+</svg>
+</div>
+
+</div>
+<div class="controls">
+  <button id="btnPlay" class="primary">▶ 재생</button>
+  <button id="btnPrev">◀ 이전</button>
+  <button id="btnNext">다음 ▶</button>
+  <button id="btnReset">↺ 처음</button>
+  <span class="step" id="stepTxt"></span>
+</div>
+<div class="caption" id="caption"></div>
+<div class="pills" id="pills"></div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=(...ids)=>ids.forEach(i=>$(i).classList.add('vis'));
+const hide=(...ids)=>ids.forEach(i=>$(i).classList.remove('vis'));
+const lit=(id,c)=>{$(id).style.stroke=c;$(id).style.strokeWidth='2.5';};
+const unlit=id=>{$(id).style.stroke='';$(id).style.strokeWidth='';};
+const W=(id,w)=>$(id).setAttribute('width',w);
+
+const SCENES=[
+{ id:'s1', title:'1. libbinder 계층', pills:[['ProcessState','amber'],['IPCThreadState','teal'],['BBinder / BpBinder','blue'],['BnInterface / BpInterface','green']],
+  reset(){['l_ps1','l_ps2','l_ps3','l_ipc1','l_ipc2','l_ipc3','l_ib','l_bb','l_bp','l_ii','l_bn','l_bpi','l_user','l_note'].forEach(i=>hide(i));['l_ibb','l_bbb','l_bpb','l_iib','l_bnb','l_bpib'].forEach(unlit);},
+  steps:[
+   ['<b>ProcessState::self()</b> — Process 에 하나. 생성 시 /dev/binder 를 열고 BINDER_VERSION, SET_MAX_THREADS ioctl.',()=>show('l_ps1')],
+   ['같은 시점에 <b>1 MB 를 mmap</b> — Day 1 의 Transaction Buffer 가 여기서 잡힌다 (실습 13 strace 로 확인).',()=>show('l_ps2')],
+   ['<b>startThreadPool()</b> — Driver 가 BR_SPAWN_LOOPER 로 요청하면 Binder Thread 를 추가 생성. 없으면 main 하나만 요청을 받는다.',()=>show('l_ps3')],
+   ['<b>IPCThreadState::self()</b> — Thread 마다 하나. <b>transact()</b> 가 실제 ioctl(BINDER_WRITE_READ) 를 부른다.',()=>show('l_ipc1')],
+   ['<b>joinThreadPool()</b> — 현재 Thread 를 Binder 요청 대기 루프로. 서버 main 의 마지막 줄, 반환하지 않는다.',()=>show('l_ipc2')],
+   ['<b>getCallingUid()/Pid()</b> — Thread 가 지금 처리 중인 Transaction 의 발신자. Stub Method 안에서만 의미 (실습 8).',()=>show('l_ipc3')],
+   ['객체 모델 — <b>IBinder</b> 아래 <b>BBinder</b>(로컬 객체, onTransact 를 가짐) 와 <b>BpBinder</b>(원격 handle 을 감싼 Proxy).',()=>{show('l_ib','l_bb','l_bp');lit('l_ibb','#f5b942');lit('l_bbb','#34d399');lit('l_bpb','#2dd4bf');}],
+   ['<b>IInterface</b> 아래 <b>BnInterface&lt;I&gt;</b> = BBinder + I (Stub), <b>BpInterface&lt;I&gt;</b> = remote() 로 BpBinder 를 쓰는 Proxy.',()=>{show('l_ii','l_bn','l_bpi');lit('l_iib','#f5b942');lit('l_bnb','#34d399');lit('l_bpib','#2dd4bf');}],
+   ['실습 4 에서 만드는 네 클래스가 이 자리에 들어간다. Java 와 1:1 대응.',()=>show('l_user','l_note')],
+  ]},
+{ id:'s2', title:'2. interface_cast 와 META 매크로', pills:[['DECLARE_META_INTERFACE','amber'],['IMPLEMENT_META_INTERFACE','amber'],['queryLocalInterface','blue'],['BpLedService','teal']],
+  reset(){['i_decl','i_impl','i_call','i_q','i_yes','i_no','i_use','i_java'].forEach(i=>hide(i));['i_callb','i_qb','i_yesb','i_nob'].forEach(unlit);},
+  steps:[
+   ['헤더의 <b>DECLARE_META_INTERFACE(LedService)</b> 한 줄이 descriptor, asInterface(), getInterfaceDescriptor() 를 선언한다.',()=>show('i_decl')],
+   ['.cpp 의 <b>IMPLEMENT_META_INTERFACE(LedService, "android.my.ILedService")</b> 가 그 본문을 만든다. 문자열이 descriptor.',()=>show('i_impl')],
+   ['Client 의 <b>interface_cast&lt;ILedService&gt;(binder)</b> 는 그냥 ILedService::asInterface(binder) 다.',()=>{show('i_call');lit('i_callb','#f5b942');}],
+   ['asInterface 는 먼저 <b>binder-&gt;queryLocalInterface(descriptor)</b> — "이 IBinder 가 내 Process 의 BBinder 인가?"',()=>{show('i_q');lit('i_qb','#60a5fa');}],
+   ['<b>로컬</b>이면 BBinder 가 자기 자신(ILedService*)을 돌려준다 → Binder 를 거치지 않는 직접 호출. Java 의 "Same process: YES".',()=>{show('i_yes');lit('i_yesb','#34d399');}],
+   ['<b>원격</b>(BpBinder)이면 new BpLedService(binder) — remote() 가 handle 을 가진 Proxy. "Same process: NO".',()=>{show('i_no');lit('i_nob','#2dd4bf');}],
+   ['실습 3 Client: checkService 로 IBinder 를 얻고 interface_cast 한 뒤 ledOn(). 개발자는 분기를 모른다.',()=>show('i_use')],
+   ['Java 와의 대응. AIDL 은 이 매크로 세트를 대신 써 준다 — 실습 7 생성 코드에 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE 가 있다.',()=>show('i_java')],
+  ]},
+{ id:'s3', title:'3. Bn/Bp Transaction 흐름', pills:[['writeInterfaceToken','amber'],['writeInt32 → readInt32','teal'],['CHECK_INTERFACE','blue'],['reply Parcel','green']],
+  reset(){hide('t_parcel','t_reply','t_note');['t_c1','t_c2','t_c3','t_d1','t_d2','t_s1','t_s2'].forEach(unlit);const p=$('pkt3');p.style.opacity=0;p.style.transform='translate(165px,92px)';$('pkt3_t').textContent='code 1 · 70';p.firstElementChild.setAttribute('fill','#2dd4bf');},
+  steps:[
+   ['Client: <b>led-&gt;ledOn(70)</b> — ILedService 포인터지만 실체는 BpLedService.',()=>{lit('t_c1','#2dd4bf');const p=$('pkt3');p.style.transform='translate(165px,92px)';p.style.opacity=1;}],
+   ['<b>BpLedService::ledOn</b> — Parcel 에 인터페이스 토큰, int32 70 을 쓰고 <b>remote()-&gt;transact(LED_ON=1)</b>.',()=>{lit('t_c2','#2dd4bf');show('t_parcel');$('pkt3').style.transform='translate(165px,175px)';}],
+   ['<b>IPCThreadState::transact</b> — ioctl(BINDER_WRITE_READ). 동기 호출이므로 이 Thread 는 reply 까지 대기.',()=>{lit('t_c3','#2dd4bf');$('pkt3').style.transform='translate(165px,262px)';}],
+   ['Driver: code 1 과 Parcel 을 <b>1-copy</b> 로 서버 Buffer 에, 발신자 pid/uid 를 붙인다.',()=>{lit('t_d1','#f5b942');$('pkt3').style.transform='translate(475px,120px)';}],
+   ['서버의 대기 중 <b>Binder Thread</b> 를 깨운다 (binder:PID_1).',()=>{lit('t_d2','#f5b942');$('pkt3').style.transform='translate(475px,200px)';}],
+   ['<b>BnLedService::onTransact(1)</b> — CHECK_INTERFACE 로 토큰 확인, readInt32 로 70, 가상 함수 ledOn(70) 호출.',()=>{lit('t_s1','#60a5fa');$('pkt3').style.transform='translate(790px,130px)';}],
+   ['구현체 <b>LedService::ledOn(70)</b> — 실제 일. 반환값 70 을 <b>reply-&gt;writeInt32</b>.',()=>{lit('t_s2','#34d399');show('t_reply');$('pkt3').style.transform='translate(790px,235px)';$('pkt3_t').textContent='reply · 70';$('pkt3').firstElementChild.setAttribute('fill','#34d399');}],
+   ['reply 가 되돌아오고 Proxy 의 <b>reply.readInt32()</b> 가 70 을 반환. Parcel 은 순서가 계약 — AIDL 이 이 쌍을 자동 생성한다.',()=>{$('pkt3').style.transform='translate(165px,92px)';show('t_note');}],
+  ]},
+{ id:'s4', title:'4. Callback 역방향 — IBinder 가 Parcel 을 타다', pills:[['writeStrongBinder','amber'],['node → handle','amber'],['readStrongBinder','blue'],['Client Thread Pool','green']],
+  reset(){hide('cb_recv','cb_note');['cb_obj','cb_reg','cb_pool','cb_node','cb_tx','cb_read','cb_cast','cb_call'].forEach(unlit);const p=$('pkt4');p.style.opacity=0;p.style.transform='translate(170px,175px)';$('pkt4_t').textContent='IBinder';},
+  steps:[
+   ['Client 가 <b>MyCallback : BnMyDataCallback</b> 을 만든다 — 로컬 BBinder. Driver 에 아직 node 는 없다.',()=>lit('cb_obj','#2dd4bf')],
+   ['<b>registerCallback(cb)</b> — Proxy 가 data.writeStrongBinder(asBinder(cb)). Parcel 에 객체 <b>포인터</b>가 실린다 (BINDER_TYPE_BINDER).',()=>{lit('cb_reg','#2dd4bf');const p=$('pkt4');p.style.transform='translate(170px,175px)';p.style.opacity=1;}],
+   ['Driver 가 이 객체에 <b>node</b> 를 만들고, 서버 Process 용 <b>ref (handle 7)</b> 를 만든다. 참조 카운트 +1.',()=>{lit('cb_node','#f5b942');$('pkt4').style.transform='translate(480px,115px)';}],
+   ['Parcel 안의 flat_binder_object 를 <b>BINDER_TYPE_HANDLE</b> 로 바꿔 서버에 전달. 포인터는 Process 를 넘지 않는다.',()=>{lit('cb_tx','#f5b942');$('pkt4').style.transform='translate(480px,210px)';$('pkt4_t').textContent='handle 7';}],
+   ['서버 Stub: <b>readStrongBinder()</b> → BpBinder(handle 7).',()=>{lit('cb_read','#60a5fa');$('pkt4').style.transform='translate(790px,100px)';}],
+   ['<b>interface_cast&lt;IMyDataCallback&gt;</b> → BpMyDataCallback. 서버가 Client 의 <b>Proxy</b> 를 갖게 됐다.',()=>{lit('cb_cast','#60a5fa');$('pkt4').style.transform='translate(790px,175px)';}],
+   ['서버가 <b>cb-&gt;onDataReceived("Hello…")</b> — 이번엔 서버 → Client 방향 transact. Driver 가 node 21 의 주인 Process 를 찾는다.',()=>{lit('cb_call','#a78bfa');$('pkt4').style.transform='translate(790px,250px)';$('pkt4_t').textContent='ON_DATA…';}],
+   ['Client 의 <b>Binder Thread</b>(tid 6013) 에서 onDataReceived 실행. Client 에 <b>startThreadPool + joinThreadPool</b> 이 없으면 여기서 멈춘다.',()=>{lit('cb_pool','#34d399');show('cb_recv','cb_note');$('pkt4').style.transform='translate(170px,305px)';}],
+  ]},
+{ id:'s5', title:'5. AIDL cpp backend 생성', pills:[['aidl_interface','amber'],['Bn / Bp / I 자동 생성','teal'],['binder::Status','blue'],['-cpp 라이브러리','green']],
+  reset(){hide('a5_bp','a5_arrow','a5_gen','a5_use','a5_status','a5_cmp');['a5_aidl','a5_g1','a5_g2','a5_g3','a5_g4'].forEach(unlit);},
+  steps:[
+   ['개발자가 쓰는 것은 <b>.aidl 두 파일</b>뿐. Method 시그니처와 import.',()=>lit('a5_aidl','#f5b942')],
+   ['<b>aidl_interface</b> 모듈 — srcs, backend { cpp }, unstable. Soong 이 aidl 컴파일러를 돌리고 라이브러리로 묶는다.',()=>show('a5_bp')],
+   ['빌드 시 <b>aidl --lang=cpp</b> 실행 → out/soong/.intermediates 아래에 소스가 생긴다.',()=>show('a5_arrow','a5_gen')],
+   ['<b>IMyDataService.h</b> — 실습 3 의 ILedService.h 와 같은 것. DECLARE_META_INTERFACE 포함.',()=>lit('a5_g1','#2dd4bf')],
+   ['<b>BnMyDataService.h</b> — 실습 4 의 BnLedService. onTransact 와 TRANSACTION_* 상수 (1, 2 …).',()=>lit('a5_g2','#60a5fa')],
+   ['<b>BpMyDataService.h</b> — 실습 3·5·6 에서 손으로 쓴 Proxy. writeInterfaceToken · writeStrongBinder · transact 가 다 들어 있다.',()=>lit('a5_g3','#2dd4bf')],
+   ['<b>.cpp</b> 에 IMPLEMENT_META_INTERFACE 와 Bn/Bp 본문. 서버는 <b>BnMyDataService 를 상속만</b> 하면 된다. 반환값은 out 포인터, 예외는 <b>Status</b>.',()=>{lit('a5_g4','#34d399');show('a5_use');}],
+   ['<b>binder::Status</b> 가 Parcel 의 예외 헤더로 전달되어 Java 예외로 매핑된다. 실습 6 → 7 에서 사라진 것: 파일 4개와 실수할 여지.',()=>show('a5_status','a5_cmp')],
+  ]},
+{ id:'s6', title:'6. UID 접근 제어', pills:[['sender_euid','amber'],['getCallingUid','blue'],['AID_SYSTEM 1000','green'],['EX_SECURITY','red']],
+  reset(){hide('u_fake','u_r1','u_r2','u_r3','u_note');['u_c1b','u_c2b','u_c3b','u_cred','u_get','u_if'].forEach(unlit);const p=$('pkt6');p.style.opacity=0;p.style.transform='translate(120px,120px)';},
+  steps:[
+   ['같은 <b>led_auth_client</b> 바이너리를 세 UID 로 실행한다: root(0), su 1000(system), App(10152).',()=>{lit('u_c1b','#f87171');lit('u_c2b','#34d399');lit('u_c3b','#f87171');}],
+   ['transact 가 Driver 에 들어오면 커널이 <b>current-&gt;cred</b> 에서 euid/pid 를 읽어 Transaction 에 붙인다.',()=>{lit('u_cred','#f5b942');const p=$('pkt6');p.style.transform='translate(400px,125px)';p.style.opacity=1;}],
+   ['Parcel 에 "uid=1000" 이라고 써 넣어도 소용없다 — 서버는 <b>data 가 아니라 Driver 가 준 값</b>을 본다.',()=>show('u_fake')],
+   ['서버 <b>getCallingUid()</b> — 처리 중인 Transaction 의 sender_euid.',()=>{lit('u_get','#60a5fa');$('pkt6').style.transform='translate(760px,105px)';}],
+   ['<b>uid != 1000 → Status::fromExceptionCode(EX_SECURITY)</b>. 1000 이면 LED ON.',()=>lit('u_if','#f5b942')],
+   ['root 로 실행: uid 0 → <b>denied</b>. root 라도 1000 이 아니면 거부된다.',()=>{show('u_r1');$('pkt6_t').textContent='LEDON · uid 0';}],
+   ['su 1000: uid 1000 → <b>LED turned ON</b>.',()=>{show('u_r2');$('pkt6_t').textContent='LEDON · uid 1000';}],
+   ['App(실습 12): uid 10152 → denied → Java 에서 <b>SecurityException</b>. 이것이 Android 권한 모델의 바닥이다.',()=>{show('u_r3','u_note');$('pkt6_t').textContent='LEDON · uid 10152';}],
+  ]},
+{ id:'s7', title:'7. init.rc 와 SELinux', pills:[['init.rc service','amber'],['user system','green'],['scontext / tcontext','blue'],['permissive / enforcing','red']],
+  reset(){hide('r_init','r_fork','r_dom','r_add','r_sm','r_perm','r_enf');['r_initb','r_forkb','r_domb','r_addb','r_smb'].forEach(unlit);},
+  steps:[
+   ['<b>.rc 파일</b> — init_rc 속성으로 /system/etc/init/ 에 설치. service 이름, 경로, user/group, disabled.',()=>{}],
+   ['<b>start rc_led_service</b> — 사실은 setprop ctl.start. init(PID 1) 이 .rc 정의를 찾는다.',()=>{show('r_init');lit('r_initb','#f5b942');}],
+   ['init 이 <b>fork → setuid(1000) → exec</b>. PPID 1, uid system. init.svc.rc_led_service=running.',()=>{show('r_fork');lit('r_forkb','#34d399');}],
+   ['exec 순간 SELinux <b>도메인 전환</b>. 전용 .te 가 없으면 <b>u:r:init:s0</b> 그대로 — 거의 모든 것이 거부 대상.',()=>{show('r_dom');lit('r_domb','#f87171');}],
+   ['데몬이 <b>addService("rc.led")</b> → servicemanager.',()=>{show('r_add');lit('r_addb','#60a5fa');}],
+   ['servicemanager 의 <b>mAccess-&gt;canAdd()</b> — SELinux 에 "scontext × tcontext × service_manager { add }" 를 묻는다.',()=>{show('r_sm');lit('r_smb','#60a5fa');}],
+   ['<b>Permissive</b>: avc: denied 가 기록되지만 permissive=1 → 통과. addService = 0. 커스텀 이미지의 상태.',()=>show('r_perm')],
+   ['<b>Enforcing</b>(setenforce 1): 같은 로그, 이번엔 차단 → addService = -1. 해결은 .te + service_contexts + file_contexts.',()=>show('r_enf')],
+  ]},
+{ id:'s8', title:'8. AIDL HAL 과 VINTF', pills:[['system ↔ vendor','amber'],['libbinder_ndk','teal'],['manifest ↔ matrix','blue'],['stability vintf','red']],
+  reset(){hide('h_app','h_ss','h_cli','h_cm','h_hal','h_hw','h_mf','h_binder','h_vintf','h_rule');['h_ssb','h_clib','h_halb'].forEach(unlit);},
+  steps:[
+   ['Android 는 <b>system</b>(Framework) 과 <b>vendor</b>(SoC/제조사) 파티션으로 나뉜다 — Treble. 경계를 넘는 통신이 HAL.',()=>{}],
+   ['vendor 쪽 <b>vendor.example.led-service</b> — vendor: true, NDK backend, <b>libbinder_ndk</b> 만 링크. 인스턴스 이름 &lt;pkg&gt;.ILed/default.',()=>{show('h_hal');lit('h_halb','#f5b942');}],
+   ['HAL 이 실제로 하는 일 — sysfs / i2c / 커널 드라이버 접근. 실습에서는 bool 변수.',()=>show('h_hw')],
+   ['system 쪽 Client — 실습 10 의 led_hal_client, 실제로는 <b>system_server 의 LightsService</b>(uid 1000).',()=>{show('h_ss','h_cli');lit('h_ssb','#60a5fa');lit('h_clib','#60a5fa');}],
+   ['둘 사이는 <b>같은 /dev/binder</b>. Day 1·2 에서 본 Binder 그대로. (HIDL 시절엔 /dev/hwbinder 로 분리)',()=>show('h_binder')],
+   ['App 은 HAL 을 직접 못 부른다 — 실습 8 의 UID 검사 + SELinux 로 system_server 만 허용. 권한 검사 지점이 한 곳.',()=>show('h_app')],
+   ['<b>VINTF</b>: vendor manifest "제공" ↔ system compatibility matrix "요구" 를 부팅 시 대조. stability: vintf 면 manifest 없이 addService 불가.',()=>show('h_mf','h_cm','h_vintf')],
+   ['HAL 경계 규칙 4가지. Day 4 의 VHAL(android.hardware.automotive.vehicle.IVehicle/default) 도 이 규칙 그대로다.',()=>show('h_rule')],
+  ]},
+];
+let cur=0, step=-1, timer=null;
+const tabs=$('tabs');
+SCENES.forEach((s,i)=>{const t=document.createElement('div');t.className='tab';t.textContent=s.title;t.onclick=()=>select(i);tabs.appendChild(t);});
+function select(i){stop();cur=i;document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('on',k===i));document.querySelectorAll('.scene').forEach((sc,k)=>sc.classList.toggle('on',k===i));
+  $('pills').innerHTML=SCENES[i].pills.map(p=>`<span class="pill ${p[1]}">${p[0]}</span>`).join('');reset();}
+function reset(){stop();step=-1;SCENES[cur].reset();$('caption').innerHTML='▶ 재생 또는 다음 ▶ 을 눌러 시작합니다.';$('stepTxt').textContent=`0 / ${SCENES[cur].steps.length}`;}
+function next(){const st=SCENES[cur].steps;if(step>=st.length-1){stop();return;}step++;st[step][1]();$('caption').innerHTML=st[step][0];$('stepTxt').textContent=`${step+1} / ${st.length}`;}
+function prev(){if(step<0)return;const target=step-1;SCENES[cur].reset();step=-1;for(let k=0;k<=target;k++)next();if(target<0)reset();}
+function play(){if(timer){stop();return;}$('btnPlay').textContent='❚❚ 일시정지';if(step>=SCENES[cur].steps.length-1)reset();next();timer=setInterval(()=>{next();if(step>=SCENES[cur].steps.length-1)stop();},2600);}
+function stop(){if(timer)clearInterval(timer);timer=null;$('btnPlay').textContent='▶ 재생';}
+$('btnPlay').onclick=play;$('btnNext').onclick=()=>{stop();next();};$('btnPrev').onclick=()=>{stop();prev();};$('btnReset').onclick=reset;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();next();}else if(e.key==='ArrowLeft'){stop();prev();}else if(e.key===' '){e.preventDefault();play();}});
+(function(){var h=parseInt((location.hash||'').replace('#s',''),10);select(isNaN(h)||h<1||h>SCENES.length?0:h-1);})();
+window.addEventListener('hashchange',function(){var h=parseInt((location.hash||'').replace('#s',''),10);if(!isNaN(h)&&h>=1&&h<=SCENES.length)select(h-1);});
+</script>
+</body>
+</html>
