@@ -623,30 +623,18 @@ m<span class="w"> </span>my_server_test_1<span class="w"> </span><span class="m"
 <div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>exuberant-ctags<span class="w"> </span>-y
 </code></pre></div>
 
-<h3>6-2. tags 생성 — libbinder · 실습 소스 · 커널</h3>
-<div class="codehilite"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/source_tags
-
-<span class="c1"># libbinder (오늘 가장 많이 읽는 소스)</span>
-<span class="nb">cd</span><span class="w"> </span>~/android/frameworks/native/libs/binder
+<h3>6-2. tags 생성 — Android 전체 · 커널</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Android 소스 전체 (시간이 걸린다 — 10~20분, 한 번만)</span>
+<span class="nb">cd</span><span class="w"> </span>~/android/
 find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.c&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cc&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.hpp&#39;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span><span class="se">\</span>
-<span class="w">     </span>-exec<span class="w"> </span>ctags<span class="w"> </span>-o<span class="w"> </span>~/source_tags/binder_tags<span class="w"> </span>-a<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+<span class="w">     </span>-exec<span class="w"> </span>ctags<span class="w"> </span>-o<span class="w"> </span>android_tags<span class="w"> </span>-a<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
 
-<span class="c1"># servicemanager 데몬 (실습 9·11)</span>
-<span class="nb">cd</span><span class="w"> </span>~/android/frameworks/native/cmds/servicemanager
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.c&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cc&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.hpp&#39;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span><span class="se">\</span>
-<span class="w">     </span>-exec<span class="w"> </span>ctags<span class="w"> </span>-o<span class="w"> </span>~/source_tags/binder_tags<span class="w"> </span>-a<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
-
-<span class="c1"># Day 2 실습 소스 (실습이 진행되면 다시 실행해 갱신)</span>
-<span class="nb">cd</span><span class="w"> </span>~/android/day2
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.c&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cc&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.hpp&#39;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span><span class="se">\</span>
-<span class="w">     </span>-exec<span class="w"> </span>ctags<span class="w"> </span>-o<span class="w"> </span>~/source_tags/c_tags<span class="w"> </span>-a<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
-
-<span class="c1"># 커널 (Binder Driver 를 읽을 때 — 실습 13, 시간이 걸리므로 선택)</span>
+<span class="c1"># 커널 (Binder Driver 를 읽을 때 — 실습 13, 선택)</span>
 <span class="nb">cd</span><span class="w"> </span>~/android-kernel/common
 make<span class="w"> </span>tags<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>ctags<span class="w"> </span>-R<span class="w"> </span>-o<span class="w"> </span>tags<span class="w"> </span>drivers/android<span class="w"> </span>include/uapi/linux/android
 </code></pre></div>
 
-<p><code>-a</code> 는 기존 tags 파일에 추가(append) 하므로 여러 디렉토리를 하나의 tags 에 합칠 수 있다. 파일이 오래되면 지우고 다시 만든다 (<code>rm ~/source_tags/binder_tags</code>).</p>
+<p><code>-a</code> 는 기존 tags 파일에 추가(append) 하므로 명령을 두 번 실행하면 항목이 중복된다. 다시 만들 때는 먼저 지운다 (<code>rm ~/android/android_tags</code>). 실습 소스(<code>day2/</code>)는 Android 트리 안에 있으므로 같은 tags 에 포함된다 — 실습이 진행되어 파일이 늘면 위 명령을 다시 실행한다.</p>
 <h3>6-3. ~/.vimrc</h3>
 <div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>~/.vimrc<span class="w"> </span><span class="s">&lt;&lt; &#39;EOT&#39;</span>
 <span class="s">set cindent</span>
@@ -654,8 +642,7 @@ make<span class="w"> </span>tags<span class="w"> </span><span class="m">2</span>
 <span class="s">set ts=4</span>
 <span class="s">set sw=4</span>
 
-<span class="s">set tags+=/home/worker/source_tags/binder_tags</span>
-<span class="s">set tags+=/home/worker/source_tags/c_tags</span>
+<span class="s">set tags+=/home/worker/android/android_tags</span>
 <span class="s">set tags+=/home/worker/android-kernel/common/tags</span>
 <span class="s">EOT</span>
 </code></pre></div>
