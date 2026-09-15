@@ -170,7 +170,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 <li><code>SystemServer.java</code> 의 Service 등록 경로가 오늘 만든 C++ 서비스와 같은 <code>servicemanager</code> 에 도착함을 확인한다.</li>
 </ol>
 <hr />
-<h2>Part 0. 환경·등록 실습 (총 25분)</h2>
+<h2>Part 0. 환경·등록 실습 (총 30분)</h2>
 <table>
 <thead>
 <tr>
@@ -185,7 +185,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 <td>1</td>
 <td>Day 2 환경 점검 · 실습 모듈 <code>Android.bp</code> 일괄 등록 · ctags/vim 소스 분석 환경</td>
 <td>★☆☆</td>
-<td>25분</td>
+<td>30분</td>
 </tr>
 </tbody>
 </table>
@@ -460,9 +460,9 @@ SystemServer / publishBinderService / dumpsys
 - <input type="checkbox"> Day 2 Worksheet 인쇄본 + 정답지</p>
 <p><strong>수강생</strong>
 - <input type="checkbox"> Day 1 실습 4 의 배포 절차(<code>mm</code> → WinSCP → <code>adb push</code> → <code>chmod 755</code>) 숙지
-- <input type="checkbox"> PuTTY 세션 3개 동시 사용 (server / client / trace)</p><div class="nav"><span></span><a href="#lab1" style="text-align:right">다음 →<span>실습 1 Day 2 환경 점검 · Android.bp 일괄 등록 · ctags/vim</span></a></div></div></section><section class="page" id="pg-lab1"><div class="wrap"><div class="meta"><b>실습 1</b><span>소요시간 25분</span><span>Android Framework 16 심화 · Day 2</span></div><h1>실습 1. Day 2 환경 점검 · 실습 모듈 일괄 등록</h1>
+- <input type="checkbox"> PuTTY 세션 3개 동시 사용 (server / client / trace)</p><div class="nav"><span></span><a href="#lab1" style="text-align:right">다음 →<span>실습 1 Day 2 환경 점검 · Android.bp 일괄 등록 · ctags/vim</span></a></div></div></section><section class="page" id="pg-lab1"><div class="wrap"><div class="meta"><b>실습 1</b><span>소요시간 30분</span><span>Android Framework 16 심화 · Day 2</span></div><h1>실습 1. Day 2 환경 점검 · 실습 모듈 일괄 등록</h1>
 <blockquote>
-<p><strong>소요시간:</strong> 25분 · <strong>난이도:</strong> ★☆☆<br />
+<p><strong>소요시간:</strong> 30분 · <strong>난이도:</strong> ★☆☆<br />
 <strong>환경:</strong> Ubuntu 빌드 서버 (<code>~/android</code>, PuTTY) + 커스텀 Emulator (adb root)  </p>
 </blockquote>
 <h2>목표</h2>
@@ -623,18 +623,81 @@ m<span class="w"> </span>my_server_test_1<span class="w"> </span><span class="m"
 <div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>exuberant-ctags<span class="w"> </span>-y
 </code></pre></div>
 
-<h3>6-2. tags 생성 — Android 전체 · 커널</h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Android 소스 전체 (시간이 걸린다 — 10~20분, 한 번만)</span>
-<span class="nb">cd</span><span class="w"> </span>~/android/
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.c&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cc&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.hpp&#39;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span><span class="se">\</span>
-<span class="w">     </span>-exec<span class="w"> </span>ctags<span class="w"> </span>-o<span class="w"> </span>android_tags<span class="w"> </span>-a<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+<h3>6-2. tags 생성 — Android Native Framework · 커널</h3>
+<p>최상위 디렉토리만 나열하면 하부 구조는 <code>find</code> 가 전부 훑는다. 파일 목록을 <code>-L</code> 로 한 번에 넘기므로 <code>ctags</code> 가 단일 실행으로 끝나고, 재실행해도 중복이 생기지 않는다.</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android
+find<span class="w"> </span>frameworks<span class="w"> </span>system<span class="w"> </span>hardware<span class="w"> </span>libnativehelper<span class="w"> </span>bionic<span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.c&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cc&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.hpp&#39;</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>&gt;<span class="w"> </span>/tmp/native_files.txt
+
+ctags<span class="w"> </span>--c++-kinds<span class="o">=</span>+p<span class="w"> </span>--fields<span class="o">=</span>+iaS<span class="w"> </span>--extra<span class="o">=</span>+q<span class="w"> </span>-L<span class="w"> </span>/tmp/native_files.txt<span class="w"> </span>-o<span class="w"> </span>android_native_tags
 
 <span class="c1"># 커널 (Binder Driver 를 읽을 때 — 실습 13, 선택)</span>
 <span class="nb">cd</span><span class="w"> </span>~/android-kernel/common
 make<span class="w"> </span>tags<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>ctags<span class="w"> </span>-R<span class="w"> </span>-o<span class="w"> </span>tags<span class="w"> </span>drivers/android<span class="w"> </span>include/uapi/linux/android
 </code></pre></div>
 
-<p><code>-a</code> 는 기존 tags 파일에 추가(append) 하므로 명령을 두 번 실행하면 항목이 중복된다. 다시 만들 때는 먼저 지운다 (<code>rm ~/android/android_tags</code>). 실습 소스(<code>day2/</code>)는 Android 트리 안에 있으므로 같은 tags 에 포함된다 — 실습이 진행되어 파일이 늘면 위 명령을 다시 실행한다.</p>
+<table>
+<thead>
+<tr>
+<th>디렉토리</th>
+<th>하부에 포함되는 것</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frameworks</code></td>
+<td>native (libbinder · servicemanager · SurfaceFlinger), av (AudioFlinger · Camera · Media), base/core/jni (JNI)</td>
+</tr>
+<tr>
+<td><code>system</code></td>
+<td>core (libutils <code>sp</code>/<code>wp</code>/<code>Looper</code>), libbase, logging, libhidl, libhwbinder, sepolicy</td>
+</tr>
+<tr>
+<td><code>hardware</code></td>
+<td>interfaces (AIDL/HIDL HAL), libhardware (Legacy HAL)</td>
+</tr>
+<tr>
+<td><code>libnativehelper</code></td>
+<td><code>JNIHelp.h</code></td>
+</tr>
+<tr>
+<td><code>bionic</code></td>
+<td>libc 헤더</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>옵션</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--c++-kinds=+p</code></td>
+<td>함수 프로토타입도 인덱싱</td>
+</tr>
+<tr>
+<td><code>--fields=+iaS</code></td>
+<td>상속 · 접근 지정자 · 시그니처 정보</td>
+</tr>
+<tr>
+<td><code>--extra=+q</code></td>
+<td><code>BBinder::onTransact</code> 처럼 클래스 한정 이름으로 검색 가능</td>
+</tr>
+<tr>
+<td><code>-L 파일</code></td>
+<td>파일 목록을 한 번에 입력 (<code>-a</code> 불필요)</td>
+</tr>
+</tbody>
+</table>
+<p>파일 6~8만 개, 5~10분 정도 걸린다. 실습 소스(<code>day2/</code>)를 함께 넣으려면 <code>find</code> 대상에 <code>day2</code> 를 추가한다. 다시 만들 때는 같은 명령을 그대로 재실행하면 된다.</p>
+<div class="codehilite"><pre><span></span><code>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^AudioFlinger&quot;</span><span class="w"> </span>android_native_tags<span class="w">      </span><span class="c1"># 포함 확인</span>
+grep<span class="w"> </span>-m3<span class="w"> </span><span class="s2">&quot;^Looper   &quot;</span><span class="w"> </span>android_native_tags
+</code></pre></div>
+
 <h3>6-3. ~/.vimrc</h3>
 <div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>~/.vimrc<span class="w"> </span><span class="s">&lt;&lt; &#39;EOT&#39;</span>
 <span class="s">set cindent</span>
@@ -642,7 +705,7 @@ make<span class="w"> </span>tags<span class="w"> </span><span class="m">2</span>
 <span class="s">set ts=4</span>
 <span class="s">set sw=4</span>
 
-<span class="s">set tags+=/home/worker/android/android_tags</span>
+<span class="s">set tags+=/home/worker/android/android_native_tags</span>
 <span class="s">set tags+=/home/worker/android-kernel/common/tags</span>
 <span class="s">EOT</span>
 </code></pre></div>
@@ -2764,7 +2827,7 @@ cat<span class="w"> </span>/dev/binderfs/binder_logs/proc/<span class="nv">$SPID
 <p>Day 3 에서는 이 Binder 위에 JNI 와 SurfaceFlinger 클라이언트를 얹는다.</p><div class="nav"><a href="#lab12">← 이전<span>실습 12 App 에서 Native Service 호출 (선택 / 과제)</span></a><span></span></div></div></section></div>
 </main>
 <script>
-var ITEMS=[{"k": "curriculum", "num": "Day 2 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 2 환경 점검 · Android.bp 일괄 등록 · ctags/vim", "d": "25분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "최소 Native Binder Server — BBinder 하나 등록", "d": "20분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Client 측 Proxy 수작업 — ILedService · BpLedService", "d": "30분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Bn/Bp 대칭 완성 — BnLedService::onTransact", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Parcel 로 인자·반환값 전달", "d": "20분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "역방향 호출 — Callback 을 writeStrongBinder 로", "d": "30분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "AIDL cpp backend 로 전환 — Bn/Bp 자동 생성", "d": "40분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "UID 기반 접근 제어 — getCallingUid · EX_SECURITY", "d": "30분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "init.rc 로 Service 자동 시작 + SELinux 기초", "d": "40분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "AIDL HAL 구조 따라 만들기 — NDK · vendor · VINTF", "d": "45분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "Java System Service 들여다보기 — SystemServer · dumpsys", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "App 에서 Native Service 호출 (선택 / 과제)", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13 (데모)", "t": "Binder 호출 비용 측정 · strace 로 ioctl 관찰", "d": "15분", "g": "demo"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
+var ITEMS=[{"k": "curriculum", "num": "Day 2 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 2 환경 점검 · Android.bp 일괄 등록 · ctags/vim", "d": "30분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "최소 Native Binder Server — BBinder 하나 등록", "d": "20분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Client 측 Proxy 수작업 — ILedService · BpLedService", "d": "30분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Bn/Bp 대칭 완성 — BnLedService::onTransact", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Parcel 로 인자·반환값 전달", "d": "20분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "역방향 호출 — Callback 을 writeStrongBinder 로", "d": "30분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "AIDL cpp backend 로 전환 — Bn/Bp 자동 생성", "d": "40분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "UID 기반 접근 제어 — getCallingUid · EX_SECURITY", "d": "30분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "init.rc 로 Service 자동 시작 + SELinux 기초", "d": "40분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "AIDL HAL 구조 따라 만들기 — NDK · vendor · VINTF", "d": "45분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "Java System Service 들여다보기 — SystemServer · dumpsys", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "App 에서 Native Service 호출 (선택 / 과제)", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13 (데모)", "t": "Binder 호출 비용 측정 · strace 로 ioctl 관찰", "d": "15분", "g": "demo"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
 var done={}; try{done=JSON.parse(localStorage.getItem('day2done')||'{}')}catch(e){}
 var nav=document.getElementById('nav');
 GROUPS.forEach(function(g){
