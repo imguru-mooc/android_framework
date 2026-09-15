@@ -597,6 +597,7 @@ cc_binary {
     srcs: [&quot;led_hal/LedHalClient.cpp&quot;],
     shared_libs: [&quot;libbinder_ndk&quot;,&quot;libbase&quot;,&quot;liblog&quot;],
     static_libs: [&quot;vendor.example.led-ndk&quot;],
+    vendor: true,
 }
 </code></pre></div>
 
@@ -2408,6 +2409,7 @@ cc_binary {
     srcs: [&quot;led_hal/LedHalClient.cpp&quot;],
     shared_libs: [&quot;libbinder_ndk&quot;, &quot;libbase&quot;, &quot;liblog&quot;],
     static_libs: [&quot;vendor.example.led-ndk&quot;],
+    vendor: true,                                        // client 도 vendor 모듈 → $OUT/vendor/bin
 }
 </code></pre></div>
 
@@ -2465,21 +2467,28 @@ cc_binary {
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">binder</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s not found</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">ILed</span><span class="o">&gt;</span><span class="w"> </span><span class="n">led</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ILed</span><span class="o">::</span><span class="n">fromBinder</span><span class="p">(</span><span class="n">binder</span><span class="p">);</span><span class="w">     </span><span class="c1">// ★ NDK 의 interface_cast</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">led</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;fromBinder failed (descriptor mismatch?)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argc</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;on&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">led</span><span class="o">-&gt;</span><span class="n">setOn</span><span class="p">(</span><span class="n">on</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">ndk</span><span class="o">::</span><span class="n">ScopedAStatus</span><span class="w"> </span><span class="n">st</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">led</span><span class="o">-&gt;</span><span class="n">setOn</span><span class="p">(</span><span class="n">on</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;setOn(%d): %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">on</span><span class="p">,</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">isOk</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;OK&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">getDescription</span><span class="p">().</span><span class="n">c_str</span><span class="p">());</span>
+
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">    </span><span class="n">led</span><span class="o">-&gt;</span><span class="n">isOn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">now</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;LED is now %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;ON&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;OFF&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">st</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">led</span><span class="o">-&gt;</span><span class="n">isOn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">now</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;isOn: %s -&gt; %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">isOk</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;OK&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">getDescription</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span>
+<span class="w">           </span><span class="n">now</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;ON&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;OFF&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 
+<p><code>ScopedAStatus</code> 를 매 호출마다 확인한다. <code>isOk()</code> 가 false 면 <code>getDescription()</code> 에 예외 코드와 메시지가 들어 있다 (cpp backend 의 <code>Status::toString8()</code> 에 해당).</p>
 <h2>Step 5. 빌드 · 배포</h2>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>vendor.example.led-service<span class="w"> </span>led_hal_client
-ls<span class="w"> </span><span class="nv">$OUT</span>/vendor/bin/vendor.example.led-service<span class="w"> </span><span class="nv">$OUT</span>/system/bin/led_hal_client
+ls<span class="w"> </span><span class="nv">$OUT</span>/vendor/bin/vendor.example.led-service<span class="w"> </span><span class="nv">$OUT</span>/vendor/bin/led_hal_client
 </code></pre></div>
 
-<p><code>vendor: true</code> 라 결과물이 <strong><code>$OUT/vendor/bin</code></strong> 에 생긴다.</p>
+<p>두 모듈 모두 <code>vendor: true</code> 라 결과물이 <strong><code>$OUT/vendor/bin</code></strong> 에 생긴다.</p>
 <div class="codehilite"><pre><span></span><code>adb push vendor.example.led-service /data
 adb push led_hal_client /data
 adb shell chmod 755 /data/vendor.example.led-service /data/led_hal_client
@@ -2489,8 +2498,8 @@ adb shell chmod 755 /data/vendor.example.led-service /data/led_hal_client
 <div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/vendor.example.led-service<span class="w"> </span><span class="p">&amp;</span>
 adb<span class="w"> </span>shell<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>vendor.example
 <span class="c1"># vendor.example.led.ILed/default: [vendor.example.led.ILed]        ← ★ HAL 이름 규칙</span>
-adb<span class="w"> </span>shell<span class="w"> </span>/data/led_hal_client<span class="w"> </span>on<span class="w">      </span><span class="c1"># LED is now ON</span>
-adb<span class="w"> </span>shell<span class="w"> </span>/data/led_hal_client<span class="w"> </span>off<span class="w">     </span><span class="c1"># LED is now OFF</span>
+adb<span class="w"> </span>shell<span class="w"> </span>/data/led_hal_client<span class="w"> </span>on<span class="w">      </span><span class="c1"># setOn(1): OK / isOn: OK -&gt; ON</span>
+adb<span class="w"> </span>shell<span class="w"> </span>/data/led_hal_client<span class="w"> </span>off<span class="w">     </span><span class="c1"># setOn(0): OK / isOn: OK -&gt; OFF</span>
 adb<span class="w"> </span>shell<span class="w"> </span>logcat<span class="w"> </span>-s<span class="w"> </span>vendor.example.led<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-3
 </code></pre></div>
 
@@ -2519,7 +2528,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>logcat<span class="w"> <
 <hr />
 <h2>확인 포인트</h2>
 <ul>
-<li><input type="checkbox"> <code>$OUT/vendor/bin</code> 에 서비스, <code>$OUT/system/bin</code> 에 client</li>
+<li><input type="checkbox"> <code>$OUT/vendor/bin</code> 에 서비스와 client 모두 생성</li>
 <li><input type="checkbox"> <code>service list</code> 에 <code>vendor.example.led.ILed/default</code> (패키지.인터페이스/인스턴스)</li>
 <li><input type="checkbox"> <code>on/off</code> 동작, logcat 에 HAL 로그</li>
 <li><input type="checkbox"> <code>/vendor/etc/vintf/manifest.xml</code> 에서 실제 HAL 항목 찾기</li>
@@ -2566,7 +2575,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>logcat<span class="w"> <
 </tr>
 </tbody>
 </table>
-<p>vendor 프로세스는 <code>libbinder</code>(system 전용) 를 쓸 수 없어 <strong>NDK backend 가 HAL 의 표준</strong>이다.</p>
+<p>vendor 프로세스는 <code>libbinder</code>(system 전용) 를 쓸 수 없어 <strong>NDK backend 가 HAL 의 표준</strong>이다. 이번 실습은 client 도 <code>vendor: true</code> 로 두어 vendor ↔ vendor 통신이지만, 실제 Framework 측 client(system_server) 는 system 모듈이면서 같은 NDK backend 를 쓴다.</p>
 <h2>트러블슈팅</h2>
 <table>
 <thead>
