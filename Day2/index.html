@@ -459,7 +459,7 @@ SystemServer / publishBinderService / dumpsys
 - <input type="checkbox"> 실습 9 SELinux <code>.te</code> 시연용 정책 리빌드 이미지 (선택)
 - <input type="checkbox"> Day 2 Worksheet 인쇄본 + 정답지</p>
 <p><strong>수강생</strong>
-- <input type="checkbox"> Day 1 실습 4 의 배포 절차(<code>mm</code> → WinSCP → <code>adb push</code> → <code>chmod 755</code>) 숙지
+- <input type="checkbox"> Day 1 실습 4 의 배포 절차(<code>m &lt;모듈명&gt;</code> → WinSCP → <code>adb push</code> → <code>chmod 755</code>) 숙지
 - <input type="checkbox"> PuTTY 세션 3개 동시 사용 (server / client / trace)</p><div class="nav"><span></span><a href="#lab1" style="text-align:right">다음 →<span>실습 1 Day 2 환경 점검 · Android.bp 일괄 등록 · ctags/vim</span></a></div></div></section><section class="page" id="pg-lab1"><div class="wrap"><div class="meta"><b>실습 1</b><span>소요시간 30분</span><span>Android Framework 16 심화 · Day 2</span></div><h1>실습 1. Day 2 환경 점검 · 실습 모듈 일괄 등록</h1>
 <blockquote>
 <p><strong>소요시간:</strong> 30분 · <strong>난이도:</strong> ★☆☆<br />
@@ -469,7 +469,7 @@ SystemServer / publishBinderService / dumpsys
 <ul>
 <li>Day 1 에서 만든 빌드 환경과 Emulator 가 정상인지 확인한다.</li>
 <li>Day 2 실습 전체의 <code>Android.bp</code> 를 <strong>한 번에</strong> 등록해 Soong 재분석(6분+)을 하루 한 번으로 끝낸다.</li>
-<li>이후 실습에서는 <code>.cpp</code> 만 편집 → <code>mm</code> 수십 초.</li>
+<li>이후 실습에서는 <code>.cpp</code> 만 편집 → <code>m &lt;모듈명&gt;</code> 수십 초. 빌드는 <strong>디렉토리 이동 없이</strong> 소스가 있는 곳에서 <code>m my_server_test_3 my_client_test_3</code> 처럼 모듈명으로 실행한다 (<code>lunch</code> 가 된 셸이면 어디서든 동작).</li>
 </ul>
 <hr />
 <h2>Step 1. 빌드 환경 확인</h2>
@@ -616,7 +616,7 @@ m<span class="w"> </span>my_server_test_1<span class="w"> </span><span class="m"
 <span class="c1"># 분석 (5~6분) → my_server.cpp 가 비어 있으면 링크 오류 — 정상. 분석은 끝났다.</span>
 </code></pre></div>
 
-<p>이후 실습에서 <code>.cpp</code> 를 채운 뒤 <code>mm</code> 또는 <code>m &lt;module&gt;</code> 을 실행하면 <code>analyzing Android.bp</code> 없이 수십 초에 끝난다.</p>
+<p>이후 실습에서 <code>.cpp</code> 를 채운 뒤 소스 디렉토리에서 <code>m &lt;모듈명&gt; [모듈명 …]</code> 을 실행하면 <code>analyzing Android.bp</code> 없이 수십 초에 끝난다. <code>mm</code> 은 현재 디렉토리의 <code>Android.bp</code> 를 찾아 올라가므로 <code>day2/binder3</code> 안에서도 동작하지만, 모듈명을 지정하는 <code>m</code> 이 필요한 것만 빌드해 더 빠르고 명확하다.</p>
 <h2>Step 6. 소스 분석 도구 — ctags · vim</h2>
 <p>Day 2 부터는 <code>frameworks/native/libs/binder</code> 같은 AOSP 소스를 직접 읽는다. 터미널에서 정의로 바로 점프할 수 있게 <strong>ctags</strong> 를 만들어 둔다.</p>
 <h3>6-1. ctags 설치</h3>
@@ -756,7 +756,7 @@ vim<span class="w"> </span>Binder.cpp
 <ul>
 <li><input type="checkbox"> <code>echo $OUT</code> 정상 · <code>adb shell getenforce</code> = Permissive</li>
 <li><input type="checkbox"> <code>~/android/day2/Android.bp</code> 작성, <code>m my_server_test_1</code> 에서 <code>analyzing Android.bp</code> 단계 통과</li>
-<li><input type="checkbox"> 이후 <code>mm</code> 실행 시 분석 단계가 다시 나오지 않음</li>
+<li><input type="checkbox"> 이후 <code>m &lt;모듈명&gt;</code> 실행 시 분석 단계가 다시 나오지 않음</li>
 <li><input type="checkbox"> <code>vim</code> 에서 <code>:tag BBinder</code> 로 <code>Binder.h</code> 정의로 이동</li>
 </ul>
 <h2>트러블슈팅</h2>
@@ -783,6 +783,10 @@ vim<span class="w"> </span>Binder.cpp
 <tr>
 <td><code>.bp</code> 를 고쳤더니 다시 6분</td>
 <td>정상. <code>.bp</code> 는 하루 한 번만 손댄다</td>
+</tr>
+<tr>
+<td><code>m: command not found</code></td>
+<td>새 PuTTY 창 — <code>source build/envsetup.sh</code> 와 <code>lunch</code> 를 다시 실행</td>
 </tr>
 </tbody>
 </table><div class="nav"><a href="#curriculum">← 이전<span>Day 2 커리큘럼 전체 개요</span></a><a href="#lab2" style="text-align:right">다음 →<span>실습 2 최소 Native Binder Server — BBinder 하나 등록</span></a></div></div></section><section class="page" id="pg-lab2"><div class="wrap"><div class="meta"><b>실습 2</b><span>소요시간 20분</span><span>Android Framework 16 심화 · Day 2</span></div><h1>실습 2. 최소 Native Binder Server — BBinder 하나 등록하기</h1>
@@ -851,7 +855,7 @@ vim<span class="w"> </span>Binder.cpp
 </code></pre></div>
 
 <h2>Step 2. 빌드 · 배포</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span><span class="w">          </span><span class="c1"># 또는 m my_server_test_1</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>my_server_test_1
 ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/my_server_test_1
 </code></pre></div>
 
@@ -911,7 +915,7 @@ service<span class="w"> </span>call<span class="w"> </span>my.service<span class
 <td>SELinux — <code>adb shell setenforce 0</code> (커스텀 이미지는 이미 permissive)</td>
 </tr>
 <tr>
-<td><code>mm</code> 이 다시 6분</td>
+<td><code>m</code> 이 다시 6분</td>
 <td><code>Android.bp</code> 를 건드렸는지 확인. <code>.cpp</code> 만 고쳤다면 분석이 다시 돌지 않는다</td>
 </tr>
 </tbody>
@@ -1046,7 +1050,7 @@ service<span class="w"> </span>call<span class="w"> </span>my.service<span class
 </code></pre></div>
 
 <h2>Step 5. 빌드 · 실행</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>my_server_test_2<span class="w"> </span>my_client_test_2
 <span class="c1"># → $OUT/system/bin/my_server_test_2, my_client_test_2</span>
 </code></pre></div>
 
@@ -1278,7 +1282,7 @@ my_client.cpp      interface_cast → ledOn()
 </code></pre></div>
 
 <h2>Step 5. 빌드 · 실행</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>my_server_test_3<span class="w"> </span>my_client_test_3
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code>adb push my_server_test_3 /data <span class="p">&amp;</span> adb push my_client_test_3 /data
@@ -1411,7 +1415,7 @@ cp<span class="w"> </span>binder3/*.cpp<span class="w"> </span>binder3/*.h<span 
 
 <p>(<code>#include &lt;cstdlib&gt;</code> 추가)</p>
 <h2>Step 5. 빌드 · 실행</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>my_server_test_4<span class="w"> </span>my_client_test_4
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/my_server_test_4<span class="w"> </span><span class="p">&amp;</span>
@@ -1632,7 +1636,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>service<span class="w"> 
 </code></pre></div>
 
 <h2>Step 4. 빌드 · 실행</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>binder_server_5<span class="w"> </span>binder_client_5
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/binder_server_5<span class="w"> </span><span class="p">&amp;</span>
@@ -1783,7 +1787,7 @@ cc_binary { name: &quot;binder_server_7&quot;, ..., static_libs: [&quot;my_inter
 </code></pre></div>
 
 <h2>Step 5. 빌드 · 생성 코드 보기</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>binder_server_7<span class="w"> </span>binder_client_7
 
 <span class="c1"># ★ Soong 이 자동 생성한 파일 찾기</span>
 find<span class="w"> </span>~/android/out/soong/.intermediates/day2/my_interface-cpp-source<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.h&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
@@ -1992,7 +1996,7 @@ server: callback status=No error
 </code></pre></div>
 
 <h2>Step 4. 빌드 · 배포</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>led_auth_service<span class="w"> </span>led_auth_client
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code>adb push led_auth_service /data <span class="p">&amp;</span> adb push led_auth_client /data
@@ -2119,7 +2123,7 @@ LEDON denied  (uid=10050 pid=6230)
 
 <p><code>Android.bp</code> 의 <code>init_rc: ["rc_service/rc_led_service.rc"]</code> (실습 1) 가 이 파일을 <code>/system/etc/init/</code> 에 설치한다.</p>
 <h2>Step 3. 빌드 · 설치 (<code>/system</code> 에 써야 하므로 remount)</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>rc_led_service
 ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/rc_led_service<span class="w"> </span><span class="nv">$OUT</span>/system/etc/init/rc_led_service.rc
 </code></pre></div>
 
@@ -2403,7 +2407,7 @@ cc_binary {
 </code></pre></div>
 
 <h2>Step 5. 빌드 · 배포</h2>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mm<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>vendor.example.led-service<span class="w"> </span>led_hal_client
 ls<span class="w"> </span><span class="nv">$OUT</span>/vendor/bin/vendor.example.led-service<span class="w"> </span><span class="nv">$OUT</span>/system/bin/led_hal_client
 </code></pre></div>
 
