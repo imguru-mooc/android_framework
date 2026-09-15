@@ -501,7 +501,8 @@ touch<span class="w"> </span>binder5/server.cpp<span class="w"> </span>binder5/c
 touch<span class="w"> </span>binder7/server.cpp<span class="w"> </span>binder7/client.cpp<span class="w"> </span>binder7/IMyDataService.aidl<span class="w"> </span>binder7/IMyDataCallback.aidl
 touch<span class="w"> </span>auth/LedAuthService.cpp<span class="w"> </span>auth/LedAuthClient.cpp<span class="w"> </span>auth/ILedAuthService.aidl
 touch<span class="w"> </span>rc_service/rc_led_service.cpp
-touch<span class="w"> </span>led_hal/LedHal.cpp<span class="w"> </span>led_hal/LedHalClient.cpp<span class="w"> </span>led_hal/ILed.aidl
+mkdir<span class="w"> </span>-p<span class="w"> </span>led_hal/vendor/example/led
+touch<span class="w"> </span>led_hal/LedHal.cpp<span class="w"> </span>led_hal/LedHalClient.cpp<span class="w"> </span>led_hal/vendor/example/led/ILed.aidl
 </code></pre></div>
 
 <blockquote>
@@ -517,7 +518,7 @@ cat<span class="w"> </span>&gt;<span class="w"> </span>binder7/IMyDataService.ai
 cat<span class="w"> </span>&gt;<span class="w"> </span>auth/ILedAuthService.aidl<span class="w"> </span><span class="s">&lt;&lt; &#39;EOT&#39;</span>
 <span class="s">interface ILedAuthService { void LEDON(); }</span>
 <span class="s">EOT</span>
-cat<span class="w"> </span>&gt;<span class="w"> </span>led_hal/ILed.aidl<span class="w"> </span><span class="s">&lt;&lt; &#39;EOT&#39;</span>
+cat<span class="w"> </span>&gt;<span class="w"> </span>led_hal/vendor/example/led/ILed.aidl<span class="w"> </span><span class="s">&lt;&lt; &#39;EOT&#39;</span>
 <span class="s">package vendor.example.led;</span>
 <span class="s">interface ILed { void setOn(boolean on); boolean isOn(); }</span>
 <span class="s">EOT</span>
@@ -578,11 +579,11 @@ cc_binary {
 // ---------- led_hal : AIDL HAL 구조 ----------
 aidl_interface {
     name: &quot;vendor.example.led&quot;,
-    srcs: [&quot;led_hal/ILed.aidl&quot;],
+    srcs: [&quot;led_hal/vendor/example/led/ILed.aidl&quot;],   // ★ 패키지 경로와 일치 (vendor.example.led)
     local_include_dir: &quot;led_hal&quot;,
-    vendor_available: true,
+    vendor_available: true,                              // vendor 파티션에서 링크 가능
     backend: { ndk: { enabled: true }, cpp: { enabled: false }, java: { enabled: false } },
-    unstable: true,
+    unstable: true,                                      // 실무: stability: &quot;vintf&quot;, versions: [&quot;1&quot;]
 }
 cc_binary {
     name: &quot;vendor.example.led-service&quot;,
@@ -2377,18 +2378,13 @@ adb<span class="w"> </span>logcat<span class="w"> </span>-b<span class="w"> </sp
 </table>
 <hr />
 <h2>Step 1. AIDL (패키지 포함)</h2>
-<p><strong><code>led_hal/ILed.aidl</code></strong></p>
+<p><strong><code>led_hal/vendor/example/led/ILed.aidl</code></strong> — 패키지 <code>vendor.example.led</code> 와 디렉토리가 일치해야 한다 (실습 1 에서 이 경로로 만들어 두었다).</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">vendor.example.led</span><span class="p">;</span>
 
 <span class="kd">interface</span> <span class="nc">ILed</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">setOn</span><span class="p">(</span><span class="kt">boolean</span><span class="w"> </span><span class="n">on</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isOn</span><span class="p">();</span>
 <span class="p">}</span>
-</code></pre></div>
-
-<p>디렉토리도 패키지와 맞춘다: <code>led_hal/vendor/example/led/ILed.aidl</code> 로 옮기고 <code>Android.bp</code> 의 <code>srcs</code> 를 <code>["led_hal/vendor/example/led/ILed.aidl"]</code> 로 바꾼다 — <strong><code>.bp</code> 를 고치면 Soong 재분석</strong>이 돌므로, 실습 1 에서 이미 이 경로로 만들어 두었다면 그대로 진행한다.</p>
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/android/day2/led_hal
-mkdir<span class="w"> </span>-p<span class="w"> </span>vendor/example/led<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>mv<span class="w"> </span>ILed.aidl<span class="w"> </span>vendor/example/led/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>mv<span class="w"> </span>ILed.aidl<span class="w"> </span>vendor/example/led/
 </code></pre></div>
 
 <h2>Step 2. Android.bp 확인 (실습 1 등록분)</h2>
