@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Android Framework 16 심화 — Day 3 애니메이션</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2b;--line:#22304a;--ink:#dbe4f0;--muted:#8a9bb5;--amber:#f5b942;--teal:#2dd4bf;--blue:#60a5fa;--green:#34d399;--red:#f87171;--violet:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:1.05rem;color:var(--amber);font-weight:600}
+header span{color:var(--muted);font-size:.85rem}
+.tabs{display:flex;gap:6px;padding:12px 24px 0;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.9rem}
+.tab.on{color:var(--amber);border-bottom-color:var(--panel);background:#15203a}
+main{padding:0 24px 24px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px;min-height:520px}
+.scene{display:none}.scene.on{display:block}
+svg{width:100%;height:auto;display:block}
+.svgtext{font-family:inherit;font-size:14px;fill:var(--ink)}
+.mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;font-size:12px;fill:var(--muted)}
+.box{fill:#0f1728;stroke:var(--line);stroke-width:1.5;rx:8}
+.hid{opacity:0;transition:opacity .45s}
+.vis{opacity:1}
+.glow{transition:stroke .3s,fill .3s}
+.pkt{transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .3s}
+.controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{background:#15203a;border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:.88rem}
+button:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#062a26;border-color:var(--teal);font-weight:600}
+.step{color:var(--muted);font-size:.85rem;margin-left:auto}
+.caption{margin-top:12px;padding:12px 16px;background:#0f1728;border-left:3px solid var(--amber);border-radius:0 6px 6px 0;min-height:56px;font-size:.95rem}
+.caption b{color:var(--amber)}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.78rem;color:var(--muted)}
+.pill.teal{color:var(--teal);border-color:var(--teal)}.pill.amber{color:var(--amber);border-color:var(--amber)}.pill.blue{color:var(--blue);border-color:var(--blue)}.pill.green{color:var(--green);border-color:var(--green)}.pill.red{color:var(--red);border-color:var(--red)}
+.bar{transition:width .6s linear}
+@media (prefers-reduced-motion:reduce){.hid,.pkt,.bar,.glow{transition:none}}
+</style>
+</head>
+<body>
+<header><h1>Android Framework 16 심화 · Day 3 애니메이션</h1><span>sp/RefBase · wp · Thread · Looper · Binder Thread vs Looper · JNI · SurfaceFlinger · 공유 메모리</span></header>
+<div class="tabs" id="tabs"></div>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs></svg>
+<main>
+<div class="stage">
+
+
+
+<!-- ===== Scene 1: sp / RefBase ===== -->
+<div class="scene" id="s1">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="420" height="300" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="230" y="55" text-anchor="middle" fill="#2dd4bf">스택 — sp 변수</text>
+  <g id="r_p" class="hid"><rect class="box glow" id="r_pb" x="40" y="80" width="180" height="60"/><text class="svgtext" x="130" y="104" text-anchor="middle">sp&lt;AAA&gt; p</text><text class="mono" x="130" y="124" text-anchor="middle">mPtr → AAA</text></g>
+  <g id="r_q" class="hid"><rect class="box glow" id="r_qb" x="240" y="80" width="180" height="60"/><text class="svgtext" x="330" y="104" text-anchor="middle">sp&lt;AAA&gt; q = p</text><text class="mono" x="330" y="124" text-anchor="middle">mPtr → AAA (같은 객체)</text></g>
+  <g id="r_code" class="hid"><rect class="box" x="40" y="160" width="380" height="150"/><text class="svgtext" x="52" y="183" fill="#f5b942">template&lt;T&gt; class sp</text>
+    <text class="mono" x="52" y="206" fill="#dbe4f0">sp(T* ptr)       : mPtr(ptr)   { mPtr-&gt;incStrong(); }</text>
+    <text class="mono" x="52" y="226" fill="#dbe4f0">sp(const sp&amp; r) : mPtr(r.mPtr){ mPtr-&gt;incStrong(); }</text>
+    <text class="mono" x="52" y="246" fill="#dbe4f0">~sp()            { mPtr-&gt;decStrong(); }</text>
+    <text class="mono" x="52" y="274" fill="#8a9bb5">카운트는 sp 가 아니라 객체(RefBase) 안에 있다</text>
+    <text class="mono" x="52" y="294" fill="#8a9bb5">→ intrusive. shared_ptr 은 control block 에 (non-intrusive)</text></g>
+  <rect x="480" y="30" width="460" height="300" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="710" y="55" text-anchor="middle" fill="#f5b942">힙 — AAA : RefBase</text>
+  <g id="r_obj" class="hid"><rect class="box glow" id="r_objb" x="500" y="80" width="420" height="110"/><text class="svgtext" x="512" y="103" fill="#dbe4f0">AAA 객체  (new AAA())</text>
+    <text class="mono" x="512" y="128" fill="#8a9bb5">RefBase 부분:</text>
+    <text class="mono" x="640" y="128" fill="#f5b942" id="r_cnt">mStrong = 0</text>
+    <text class="mono" x="512" y="150" fill="#dbe4f0">incStrong() { mStrong++; }</text>
+    <text class="mono" x="512" y="170" fill="#dbe4f0">decStrong() { if (--mStrong == 0) delete this; }</text></g>
+  <g id="r_bar" class="hid"><text class="mono" x="500" y="222">mStrong</text><rect x="570" y="208" width="350" height="20" rx="4" fill="#0b1220" stroke="#22304a"/><rect id="r_barfill" class="bar" x="570" y="208" width="0" height="20" rx="4" fill="#f5b942"/><text id="r_barlbl" class="mono" x="580" y="223" fill="#0b1220"></text></g>
+  <g id="r_del" class="hid"><rect x="500" y="245" width="420" height="70" rx="8" fill="#3b1220" stroke="#f87171"/><text class="svgtext" x="710" y="270" text-anchor="middle" fill="#f87171">mStrong == 0 → delete this</text><text class="mono" x="710" y="292" text-anchor="middle">AAA::~AAA() → RefBase::~RefBase()  (virtual 소멸자)</text></g>
+  <g id="r_note" class="hid"><rect class="box" x="20" y="350" width="920" height="110"/><text class="svgtext" x="32" y="375" fill="#f5b942">실습 2 의 4단계가 도달한 곳</text>
+    <text class="svgtext" x="32" y="400">① sp 소멸자에서 delete → 복사하면 double free &nbsp;&nbsp; ② static 카운트 → 객체끼리 공유되어 누수 &nbsp;&nbsp; ③ 객체 안에 카운트 → 클래스마다 반복</text>
+    <text class="svgtext" x="32" y="424">④ RefBase 로 분리 — 카운트와 delete this 를 공통 부모로. Binder 객체·Surface·Thread·Looper 가 전부 이 RefBase.</text>
+    <text class="svgtext" x="32" y="448" fill="#8a9bb5">new 직후 바로 sp 에 담고, delete 는 절대 직접 쓰지 않는다. 마지막 sp 가 사라질 때 객체가 스스로 사라진다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 2: wp / promote / 순환 ===== -->
+<div class="scene" id="s2">
+<svg viewBox="0 0 960 480">
+  <text class="svgtext" x="20" y="35" fill="#f5b942">wp 와 promote()</text>
+  <g id="w_owner" class="hid"><rect class="box glow" id="w_ownerb" x="20" y="50" width="170" height="54"/><text class="svgtext" x="105" y="72" text-anchor="middle">sp&lt;AAA&gt; owner</text><text class="mono" x="105" y="92" text-anchor="middle">강한 참조 1</text></g>
+  <g id="w_wp" class="hid"><rect class="box glow" id="w_wpb" x="210" y="50" width="170" height="54"/><text class="svgtext" x="295" y="72" text-anchor="middle">wp&lt;AAA&gt; p = owner</text><text class="mono" x="295" y="92" text-anchor="middle">강한 카운트 무관</text></g>
+  <g id="w_obj" class="hid"><rect class="box glow" id="w_objb" x="20" y="120" width="360" height="60"/><text class="svgtext" x="200" y="143" text-anchor="middle">AAA 객체</text><text class="mono" x="200" y="165" text-anchor="middle" id="w_objcnt">mStrong = 1   mWeak = 2</text></g>
+  <g id="w_pr1" class="hid"><rect x="20" y="195" width="360" height="44" rx="8" fill="#0f2a22" stroke="#34d399"/><text class="mono" x="200" y="222" text-anchor="middle" fill="#34d399">sp&lt;AAA&gt; q = p.promote()  → 성공 (mStrong 2)</text></g>
+  <g id="w_clear" class="hid"><rect x="20" y="250" width="360" height="44" rx="8" fill="#2a2510" stroke="#f5b942"/><text class="mono" x="200" y="277" text-anchor="middle" fill="#f5b942">owner.clear()  → mStrong 0 → 객체 소멸</text></g>
+  <g id="w_pr2" class="hid"><rect x="20" y="305" width="360" height="44" rx="8" fill="#3b1220" stroke="#f87171"/><text class="mono" x="200" y="332" text-anchor="middle" fill="#f87171">p.promote()  → nullptr  (반드시 검사)</text></g>
+  <text class="svgtext" x="440" y="35" fill="#f5b942">순환 참조</text>
+  <g id="w_cyc" class="hid"><rect class="box glow" id="w_ab" x="440" y="60" width="200" height="70"/><text class="svgtext" x="540" y="85" text-anchor="middle">AAA</text><text class="mono" x="540" y="108" text-anchor="middle" id="w_a_field">sp&lt;BBB&gt; pb</text>
+    <rect class="box glow" id="w_bb" x="740" y="60" width="200" height="70"/><text class="svgtext" x="840" y="85" text-anchor="middle">BBB</text><text class="mono" x="840" y="108" text-anchor="middle" id="w_b_field">sp&lt;AAA&gt; pa</text>
+    <line x1="640" y1="80" x2="735" y2="80" stroke="#f87171" stroke-width="2" marker-end="url(#arr)"/><line x1="740" y1="110" x2="645" y2="110" stroke="#f87171" stroke-width="2" marker-end="url(#arr)" id="w_backarrow"/></g>
+  <g id="w_leak" class="hid"><rect x="440" y="150" width="500" height="80" rx="8" fill="#3b1220" stroke="#f87171"/><text class="svgtext" x="690" y="175" text-anchor="middle" fill="#f87171">main 의 p, q 가 사라져도 mStrong 이 1 로 남는다</text><text class="mono" x="690" y="198" text-anchor="middle">A 는 B 가, B 는 A 가 잡고 있다 → 소멸자 안 불림 = 누수</text><text class="mono" x="690" y="218" text-anchor="middle" fill="#8a9bb5">실습 3 ④: "after" 만 찍힌다</text></g>
+  <g id="w_fix" class="hid"><rect x="440" y="250" width="500" height="100" rx="8" fill="#0f2a22" stroke="#34d399"/><text class="svgtext" x="690" y="275" text-anchor="middle" fill="#34d399">한쪽을 wp 로 — BBB { wp&lt;AAA&gt; pa; }</text><text class="mono" x="690" y="298" text-anchor="middle">B → A 참조가 강한 카운트를 안 올린다 → main 이 놓으면 A 소멸 → B 소멸</text><text class="mono" x="690" y="320" text-anchor="middle">B 가 A 를 쓸 때는 pa.promote() 후 null 검사</text><text class="mono" x="690" y="340" text-anchor="middle" fill="#8a9bb5">Listener · Callback · 부모↔자식 은 항상 이 패턴</text></g>
+  <g id="w_note" class="hid"><rect class="box" x="20" y="370" width="920" height="90"/><text class="svgtext" x="32" y="395" fill="#f5b942">RefBase 의 두 카운트</text>
+    <text class="svgtext" x="32" y="420">mStrong: sp 의 수 — 0 이 되면 객체 소멸 &nbsp;&nbsp;&nbsp; mWeak: sp + wp 의 수 — 0 이 되면 weakref_impl(카운트 블록) 소멸</text>
+    <text class="svgtext" x="32" y="444" fill="#8a9bb5">그래서 객체가 죽은 뒤에도 wp 는 안전하게 "죽었다" 를 알 수 있다. onFirstRef() 는 mStrong 이 0→1 될 때 한 번 (실습 4 Thread::run 트리거)</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 3: Thread 단계별 ===== -->
+<div class="scene" id="s3">
+<svg viewBox="0 0 960 480">
+  <g id="t_s1" class="hid"><rect class="box glow" id="t_s1b" x="20" y="40" width="210" height="90"/><text class="svgtext" x="32" y="63" fill="#f5b942">① pthread 직접</text><text class="mono" x="32" y="86" fill="#dbe4f0">void* foo(void*)</text><text class="mono" x="32" y="104" fill="#dbe4f0">pthread_create(&amp;t,0,foo,0)</text><text class="mono" x="32" y="122" fill="#f87171">전역 함수 → 멤버 접근 불가</text></g>
+  <g id="t_s2" class="hid"><line x1="230" y1="85" x2="255" y2="85" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_s2b" x="260" y="40" width="210" height="90"/><text class="svgtext" x="272" y="63" fill="#f5b942">② static 트램폴린</text><text class="mono" x="272" y="86" fill="#dbe4f0">static void* __handler(void*)</text><text class="mono" x="272" y="104" fill="#dbe4f0">  { ((Thread*)d)-&gt;handler(); }</text><text class="mono" x="272" y="122" fill="#34d399">pthread_create(…,__hdl,this)</text></g>
+  <g id="t_s3" class="hid"><line x1="470" y1="85" x2="495" y2="85" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_s3b" x="500" y="40" width="210" height="90"/><text class="svgtext" x="512" y="63" text-anchor="start" fill="#f5b942">③ 순수 가상 handler</text><text class="mono" x="512" y="86" fill="#dbe4f0">virtual void handler() = 0;</text><text class="mono" x="512" y="104" fill="#dbe4f0">class MyThread : Thread</text><text class="mono" x="512" y="122" fill="#8a9bb5">골격은 부모, 내용은 자식</text></g>
+  <g id="t_s4" class="hid"><line x1="710" y1="85" x2="735" y2="85" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_s4b" x="740" y="40" width="200" height="90"/><text class="svgtext" x="752" y="63" fill="#f5b942">④ android::Thread</text><text class="mono" x="752" y="86" fill="#dbe4f0">utils/Thread.h</text><text class="mono" x="752" y="104" fill="#dbe4f0">: RefBase</text><text class="mono" x="752" y="122" fill="#34d399">run · readyToRun · threadLoop</text></g>
+  <!-- lifecycle timeline -->
+  <text class="svgtext" x="20" y="170" fill="#f5b942">④ 생명주기 — sp&lt;Thread&gt; p = new MyThread;  p-&gt;join();</text>
+  <g id="t_l1" class="hid"><rect class="box glow" id="t_l1b" x="20" y="185" width="150" height="50"/><text class="mono" x="95" y="206" text-anchor="middle" fill="#dbe4f0">new MyThread</text><text class="mono" x="95" y="224" text-anchor="middle" fill="#8a9bb5">생성자</text></g>
+  <g id="t_l2" class="hid"><line x1="170" y1="210" x2="190" y2="210" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_l2b" x="195" y="185" width="150" height="50"/><text class="mono" x="270" y="206" text-anchor="middle" fill="#f5b942">onFirstRef()</text><text class="mono" x="270" y="224" text-anchor="middle" fill="#8a9bb5">sp 에 담기는 순간 → run()</text></g>
+  <g id="t_l3" class="hid"><line x1="345" y1="210" x2="365" y2="210" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_l3b" x="370" y="185" width="150" height="50"/><text class="mono" x="445" y="206" text-anchor="middle" fill="#dbe4f0">run("name")</text><text class="mono" x="445" y="224" text-anchor="middle" fill="#8a9bb5">pthread + mHoldSelf</text></g>
+  <g id="t_l4" class="hid"><line x1="520" y1="210" x2="540" y2="210" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_l4b" x="545" y="185" width="150" height="50"/><text class="mono" x="620" y="206" text-anchor="middle" fill="#dbe4f0">readyToRun()</text><text class="mono" x="620" y="224" text-anchor="middle" fill="#8a9bb5">1회 · 실패 시 취소</text></g>
+  <g id="t_l5" class="hid"><line x1="695" y1="210" x2="715" y2="210" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="t_l5b" x="720" y="185" width="220" height="50"/><text class="mono" x="830" y="206" text-anchor="middle" fill="#dbe4f0">threadLoop()  true → 반복</text><text class="mono" x="830" y="224" text-anchor="middle" fill="#8a9bb5">false → 종료 → join 반환</text></g>
+  <g id="t_loop" class="hid"><path d="M 900 235 Q 900 262 830 262 Q 760 262 760 240" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arr)"/><text class="mono" x="830" y="280" text-anchor="middle" fill="#34d399">return true</text></g>
+  <g id="t_hold" class="hid"><rect class="box" x="20" y="300" width="450" height="80"/><text class="svgtext" x="32" y="323" fill="#f5b942">Thread 가 RefBase 인 이유</text><text class="mono" x="32" y="346" fill="#dbe4f0">_threadLoop: sp&lt;Thread&gt; strong(self-&gt;mHoldSelf);</text><text class="svgtext" x="32" y="370" fill="#8a9bb5">실행 중 자기 자신을 sp 로 잡아 둔다 → main 이 sp 를 버려도 끝까지 돈다</text></g>
+  <g id="t_java" class="hid"><rect class="box" x="490" y="300" width="450" height="80"/><text class="svgtext" x="502" y="323" fill="#a78bfa">같은 패턴</text><text class="svgtext" x="502" y="346">Looper 콜백 `void* data` (실습 5) · JNI · PoolThread (실습 6)</text><text class="svgtext" x="502" y="370" fill="#8a9bb5">"C 콜백에 this, static 에서 복원" — 공통 관용구</text></g>
+  <g id="t_note" class="hid"><rect class="box" x="20" y="400" width="920" height="60"/><text class="svgtext" x="32" y="425" fill="#f5b942">threadLoop 반환값이 루프를 결정한다</text><text class="svgtext" x="32" y="448" fill="#8a9bb5">while(1) 을 직접 쓰지 않는다. requestExit() 는 exitPending() 을 true 로 만들 뿐 — 루프 안에서 확인해 false 를 반환해야 종료된다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 4: Looper 두 얼굴 ===== -->
+<div class="scene" id="s4">
+<svg viewBox="0 0 960 480">
+  <rect x="330" y="30" width="300" height="300" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">Looper (main Thread)</text>
+  <rect class="box glow" id="lp_epoll" x="350" y="70" width="260" height="70"/><text class="svgtext" x="480" y="94" text-anchor="middle">epoll_wait(mEpollFd, timeout)</text><text class="mono" x="480" y="114" text-anchor="middle">pollOnce() 의 실체</text><text class="mono" x="480" y="130" text-anchor="middle" id="lp_state" fill="#8a9bb5">대기 중…</text>
+  <rect class="box glow" id="lp_set" x="350" y="155" width="260" height="80"/><text class="svgtext" x="480" y="178" text-anchor="middle">등록된 fd 집합</text><text class="mono" x="360" y="200" fill="#dbe4f0">mWakeEventFd (eventfd)  ← 항상</text><text class="mono" x="360" y="218" fill="#8a9bb5" id="lp_fd2">pipe fd[0] + callback + data</text>
+  <rect class="box glow" id="lp_q" x="350" y="250" width="260" height="70"/><text class="svgtext" x="480" y="273" text-anchor="middle">메시지 큐 mMessageEnvelopes</text><text class="mono" x="480" y="295" text-anchor="middle" id="lp_qtxt" fill="#8a9bb5">(비어 있음)</text><text class="mono" x="480" y="311" text-anchor="middle" fill="#8a9bb5">uptime 순 정렬 · 만기 시 handleMessage</text>
+  <!-- producers -->
+  <rect x="20" y="30" width="280" height="300" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="160" y="55" text-anchor="middle" fill="#2dd4bf">MyThread (실습 4) — 생산자</text>
+  <g id="lp_p1" class="hid"><rect class="box glow" id="lp_p1b" x="40" y="75" width="240" height="44"/><text class="mono" x="160" y="102" text-anchor="middle" fill="#dbe4f0">looper-&gt;wake()</text></g>
+  <g id="lp_p2" class="hid"><rect class="box glow" id="lp_p2b" x="40" y="130" width="240" height="44"/><text class="mono" x="160" y="157" text-anchor="middle" fill="#dbe4f0">write(fd[1], "W", 1)</text></g>
+  <g id="lp_p3" class="hid"><rect class="box glow" id="lp_p3b" x="40" y="185" width="240" height="60"/><text class="mono" x="160" y="206" text-anchor="middle" fill="#dbe4f0">sendMessage(h, Message(1))</text><text class="mono" x="160" y="226" text-anchor="middle" fill="#dbe4f0">sendMessageDelayed(3s, h, Message(3))</text></g>
+  <!-- results -->
+  <rect x="660" y="30" width="280" height="300" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#60a5fa">pollOnce 반환 · 실행</text>
+  <g id="lp_r0" class="hid"><rect class="box" x="680" y="75" width="240" height="36"/><text class="mono" x="800" y="98" text-anchor="middle" fill="#8a9bb5">POLL_TIMEOUT  (1000 ms 경과)</text></g>
+  <g id="lp_r1" class="hid"><rect class="box" x="680" y="120" width="240" height="36"/><text class="mono" x="800" y="143" text-anchor="middle" fill="#f5b942">POLL_WAKE  (eventfd 에 1)</text></g>
+  <g id="lp_r2" class="hid"><rect class="box" x="680" y="165" width="240" height="52"/><text class="mono" x="800" y="186" text-anchor="middle" fill="#34d399">callback(fd, EVENT_INPUT, data)</text><text class="mono" x="800" y="206" text-anchor="middle" fill="#34d399">→ POLL_CALLBACK</text></g>
+  <g id="lp_r3" class="hid"><rect class="box" x="680" y="226" width="240" height="52"/><text class="mono" x="800" y="247" text-anchor="middle" fill="#a78bfa">handleMessage(1), (2) 즉시</text><text class="mono" x="800" y="267" text-anchor="middle" fill="#a78bfa">handleMessage(3) 3초 후</text></g>
+  <g id="pkt4" class="pkt" style="opacity:0"><rect x="-40" y="-14" width="80" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt4_t">wake</text></g>
+  <g id="lp_note" class="hid"><rect class="box" x="20" y="350" width="920" height="110"/><text class="svgtext" x="32" y="375" fill="#f5b942">Looper 의 두 얼굴</text>
+    <text class="svgtext" x="32" y="400"><tspan fill="#34d399">fd 이벤트 루프</tspan> — addFd 로 등록한 fd 가 읽을 수 있게 되면 callback (③④). VSync fd(실습 10), Input fd, Socket 이 여기로 들어온다.</text>
+    <text class="svgtext" x="32" y="424"><tspan fill="#a78bfa">메시지 큐</tspan> — sendMessage[Delayed] 가 큐에 넣고 wake(). pollOnce 는 fd 처리 후 만기 메시지를 handleMessage 로 (⑤). Java Handler 의 실체.</text>
+    <text class="svgtext" x="32" y="448" fill="#8a9bb5">콜백을 클래스로 만들 때 static 트램폴린 + this (실습 4 ②) = Android LooperCallback / MessageHandler</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 5: Binder Thread vs Looper Thread ===== -->
+<div class="scene" id="s5">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="450" height="270" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="245" y="55" text-anchor="middle" fill="#f5b942">Binder Thread  (binder:PID_N)</text>
+  <g id="b_pool" class="hid"><rect class="box glow" id="b_poolb" x="40" y="70" width="410" height="60"/><text class="mono" x="52" y="92" fill="#dbe4f0">spawnPooledThread → new PoolThread → run(name)</text><text class="mono" x="52" y="112" fill="#8a9bb5">class PoolThread : public Thread   ← 실습 4 ④</text></g>
+  <g id="b_loop" class="hid"><rect class="box glow" id="b_loopb" x="40" y="145" width="410" height="60"/><text class="mono" x="52" y="167" fill="#dbe4f0">threadLoop() { IPCThreadState-&gt;joinThreadPool(); }</text><text class="mono" x="52" y="187" fill="#8a9bb5">do { talkWithDriver() → ioctl } while(…)</text></g>
+  <g id="b_exec" class="hid"><rect class="box glow" id="b_execb" x="40" y="220" width="410" height="60"/><text class="mono" x="52" y="242" fill="#dbe4f0">BR_TRANSACTION → BBinder::onTransact</text><text class="mono" x="52" y="262" fill="#f87171">Looper 없음 → View · Handler 큐 접근 불가</text></g>
+  <rect x="490" y="30" width="450" height="270" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="715" y="55" text-anchor="middle" fill="#60a5fa">Main Thread  (Looper Thread)</text>
+  <g id="b_jl" class="hid"><rect class="box glow" id="b_jlb" x="510" y="70" width="410" height="60"/><text class="mono" x="522" y="92" fill="#dbe4f0">Java Looper.loop() → MessageQueue.next()</text><text class="mono" x="522" y="112" fill="#8a9bb5">→ nativePollOnce → C++ Looper::pollOnce (실습 5)</text></g>
+  <g id="b_post" class="hid"><rect class="box glow" id="b_postb" x="510" y="145" width="410" height="60"/><text class="mono" x="522" y="167" fill="#dbe4f0">Handler.post(r) → enqueue → nativeWake</text><text class="mono" x="522" y="187" fill="#8a9bb5">→ C++ Looper::wake() → eventfd (실습 5 ②)</text></g>
+  <g id="b_ui" class="hid"><rect class="box glow" id="b_uib" x="510" y="220" width="410" height="60"/><text class="mono" x="522" y="242" fill="#34d399">handleMessage → r.run() → setText()</text><text class="mono" x="522" y="262" fill="#8a9bb5">UI 는 항상 이 Thread 에서</text></g>
+  <g id="b_arrow" class="hid"><line x1="450" y1="250" x2="505" y2="175" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/><text class="mono" x="478" y="205" text-anchor="middle" fill="#a78bfa">runOnUiThread</text></g>
+  <g id="pkt5" class="pkt" style="opacity:0"><rect x="-46" y="-14" width="92" height="28" rx="14" fill="#a78bfa"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#0b1220">onPriceUpdate</text></g>
+  <g id="b_note" class="hid"><rect class="box" x="20" y="320" width="920" height="140"/><text class="svgtext" x="32" y="345" fill="#f5b942">두 개의 대기 루프</text>
+    <text class="svgtext" x="32" y="370"><tspan fill="#f5b942">joinThreadPool</tspan>: Binder Driver 를 기다린다 (ioctl 블로킹). 깨우는 것은 다른 Process 의 transact. 실행되는 것은 onTransact.</text>
+    <text class="svgtext" x="32" y="394"><tspan fill="#60a5fa">Looper::pollOnce</tspan>: fd 집합을 기다린다 (epoll). 깨우는 것은 fd 이벤트 · wake · 메시지 만기. 실행되는 것은 callback / handleMessage.</text>
+    <text class="svgtext" x="32" y="418">서로 다른 루프라 서로의 일을 직접 못 한다 → Binder 콜백에서 UI 를 만지려면 <tspan fill="#a78bfa">Looper 큐에 넣어</tspan> 넘긴다. Day 1 실습 9 의 runOnUiThread 가 이것.</text>
+    <text class="svgtext" x="32" y="446" fill="#8a9bb5">Day 2 실습 6 Client 의 joinThreadPool 과 실습 10 의 pollAll 이 각각 이 두 루프다. startThreadPool 을 안 부르면 main 하나가 Binder 루프에 들어간다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 6: JNI ===== -->
+<div class="scene" id="s6">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="440" height="220" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="240" y="55" text-anchor="middle" fill="#60a5fa">Java (ART)</text>
+  <g id="j_cls" class="hid"><rect class="box glow" id="j_clsb" x="40" y="70" width="400" height="60"/><text class="mono" x="52" y="92" fill="#dbe4f0">class Hello { native void foo(); }</text><text class="mono" x="52" y="112" fill="#8a9bb5">loadLibrary("Hello") → .so → JNI_OnLoad</text></g>
+  <g id="j_call" class="hid"><rect class="box glow" id="j_callb" x="40" y="145" width="400" height="44"/><text class="mono" x="52" y="172" fill="#dbe4f0">hello.foo() → 심볼 조회 / RegisterNatives 표</text></g>
+  <g id="j_env" class="hid"><rect class="box" x="40" y="200" width="400" height="40"/><text class="mono" x="52" y="225" fill="#8a9bb5">JavaVM* (Process 1)  JNIEnv* (Thread 마다)</text></g>
+  <rect x="500" y="30" width="440" height="220" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="720" y="55" text-anchor="middle" fill="#2dd4bf">Native (libHello.so)</text>
+  <g id="j_fn" class="hid"><rect class="box glow" id="j_fnb" x="520" y="70" width="400" height="60"/><text class="mono" x="532" y="92" fill="#dbe4f0">Java_Hello_foo(JNIEnv* env, jobject thiz)</text><text class="mono" x="532" y="112" fill="#8a9bb5">규칙: Java_&lt;pkg_Class&gt;_&lt;method&gt; (First)</text></g>
+  <g id="j_reg" class="hid"><rect class="box glow" id="j_regb" x="520" y="145" width="400" height="44"/><text class="mono" x="532" y="172" fill="#dbe4f0">RegisterNatives(cls,{"foo","()V",foo}) (Third)</text></g>
+  <g id="j_back" class="hid"><rect class="box glow" id="j_backb" x="520" y="200" width="400" height="40"/><text class="mono" x="532" y="225" fill="#34d399">FindClass → GetMethodID → NewObject (Second)</text></g>
+  <g id="pkt6" class="pkt" style="opacity:0"><rect x="-30" y="-14" width="60" height="28" rx="14" fill="#60a5fa"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#0b1220" id="pkt6_t">foo()</text></g>
+  <!-- framework jni -->
+  <text class="svgtext" x="20" y="285" fill="#f5b942">Framework JNI — Java 객체 안의 long 하나가 C++ 객체 (실습 8)</text>
+  <g id="j_f1" class="hid"><rect class="box glow" id="j_f1b" x="20" y="300" width="295" height="70"/><text class="svgtext" x="32" y="323" fill="#dbe4f0">Binder ↔ JavaBBinder : BBinder</text><text class="mono" x="32" y="343" fill="#8a9bb5">onTransact → Call(execTransact)</text><text class="mono" x="32" y="360" fill="#8a9bb5">Day 1 Stub.onTransact 가 불리는 경로</text></g>
+  <g id="j_f2" class="hid"><rect class="box glow" id="j_f2b" x="332" y="300" width="295" height="70"/><text class="svgtext" x="344" y="323" fill="#dbe4f0">MessageQueue ↔ NativeMessageQueue</text><text class="mono" x="344" y="343" fill="#8a9bb5">mPtr(long) → sp&lt;Looper&gt;</text><text class="mono" x="344" y="360" fill="#8a9bb5">nativePollOnce = Looper::pollOnce</text></g>
+  <g id="j_f3" class="hid"><rect class="box glow" id="j_f3b" x="645" y="300" width="295" height="70"/><text class="svgtext" x="657" y="323" fill="#dbe4f0">Surface ↔ sp&lt;Surface&gt;</text><text class="mono" x="657" y="343" fill="#8a9bb5">mNativeObject(long) → Surface*</text><text class="mono" x="657" y="360" fill="#8a9bb5">nativeLockCanvas → surface-&gt;lock()</text></g>
+  <g id="j_note" class="hid"><rect class="box" x="20" y="390" width="920" height="70"/><text class="svgtext" x="32" y="415" fill="#f5b942">app_process = Invocation API + RegisterNatives 전부</text><text class="svgtext" x="32" y="440" fill="#8a9bb5">AndroidRuntime::start → JNI_CreateJavaVM → startReg (Framework JNI RegisterNatives) → ZygoteInit.main. Day 1 의 Zygote 가 이렇게 뜬다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 7: SurfaceFlinger 파이프라인 ===== -->
+<div class="scene" id="s7">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="280" height="250" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="160" y="55" text-anchor="middle" fill="#2dd4bf">surface_client_test (Producer)</text>
+  <g id="sf_c1" class="hid"><rect class="box glow" id="sf_c1b" x="40" y="70" width="240" height="44"/><text class="mono" x="160" y="90" text-anchor="middle" fill="#dbe4f0">SurfaceComposerClient (Binder)</text><text class="mono" x="160" y="106" text-anchor="middle" fill="#8a9bb5">createSurface → SurfaceControl</text></g>
+  <g id="sf_c2" class="hid"><rect class="box glow" id="sf_c2b" x="40" y="124" width="240" height="44"/><text class="mono" x="160" y="144" text-anchor="middle" fill="#dbe4f0">Transaction{setLayer,setPosition}</text><text class="mono" x="160" y="160" text-anchor="middle" fill="#8a9bb5">.apply() → 한 VSync 에 원자 적용</text></g>
+  <g id="sf_c3" class="hid"><rect class="box glow" id="sf_c3b" x="40" y="178" width="240" height="44"/><text class="mono" x="160" y="198" text-anchor="middle" fill="#dbe4f0">ANativeWindow_lock → 픽셀 write</text><text class="mono" x="160" y="214" text-anchor="middle" fill="#8a9bb5">unlockAndPost = queueBuffer</text></g>
+  <g id="sf_c4" class="hid"><rect class="box glow" id="sf_c4b" x="40" y="232" width="240" height="40"/><text class="mono" x="160" y="257" text-anchor="middle" fill="#a78bfa">VSync fd → Looper::addFd</text></g>
+  <rect x="330" y="30" width="300" height="250" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">BufferQueue (dmabuf)</text>
+  <g id="sf_bq" class="hid">
+    <rect id="sf_b0" x="350" y="80" width="80" height="60" rx="6" fill="#0f2a22" stroke="#34d399"/><text class="mono" x="390" y="105" text-anchor="middle" fill="#34d399">buf 0</text><text class="mono" x="390" y="125" text-anchor="middle" id="sf_b0s">FREE</text>
+    <rect id="sf_b1" x="440" y="80" width="80" height="60" rx="6" fill="#0f1728" stroke="#22304a"/><text class="mono" x="480" y="105" text-anchor="middle" fill="#dbe4f0">buf 1</text><text class="mono" x="480" y="125" text-anchor="middle" id="sf_b1s">FREE</text>
+    <rect id="sf_b2" x="530" y="80" width="80" height="60" rx="6" fill="#0f1728" stroke="#22304a"/><text class="mono" x="570" y="105" text-anchor="middle" fill="#dbe4f0">buf 2</text><text class="mono" x="570" y="125" text-anchor="middle" id="sf_b2s">FREE</text>
+    <text class="mono" x="480" y="165" text-anchor="middle" fill="#8a9bb5">dequeue → queue → acquire → release</text>
+    <text class="mono" x="480" y="185" text-anchor="middle" fill="#8a9bb5">GraphicBuffer = dmabuf FD — 픽셀 복사 없음</text></g>
+  <g id="sf_vs" class="hid"><rect class="box" x="350" y="205" width="260" height="60"/><text class="svgtext" x="480" y="228" text-anchor="middle" fill="#a78bfa">VSync 16.67 ms (60 Hz)</text><text class="mono" x="480" y="250" text-anchor="middle">SF 가 fd 로 통지 → requestNextVsync</text></g>
+  <rect x="660" y="30" width="280" height="250" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#60a5fa">SurfaceFlinger (Consumer)</text>
+  <g id="sf_s1" class="hid"><rect class="box glow" id="sf_s1b" x="680" y="70" width="240" height="60"/><text class="mono" x="800" y="92" text-anchor="middle" fill="#dbe4f0">Layer "My Cpp Surface"</text><text class="mono" x="800" y="112" text-anchor="middle" fill="#8a9bb5">z · pos · alpha · 상태 (Transaction)</text></g>
+  <g id="sf_s2" class="hid"><rect class="box glow" id="sf_s2b" x="680" y="145" width="240" height="60"/><text class="mono" x="800" y="167" text-anchor="middle" fill="#dbe4f0">onMessageRefresh → composite</text><text class="mono" x="800" y="187" text-anchor="middle" fill="#8a9bb5">모든 Layer 를 z 순서로 합성</text></g>
+  <g id="sf_s3" class="hid"><rect class="box glow" id="sf_s3b" x="680" y="220" width="240" height="50"/><text class="mono" x="800" y="240" text-anchor="middle" fill="#dbe4f0">HWC / Gralloc → Display</text><text class="mono" x="800" y="258" text-anchor="middle" fill="#8a9bb5">dumpsys SurfaceFlinger --latency</text></g>
+  <g id="sf_note" class="hid"><rect class="box" x="20" y="300" width="920" height="160"/><text class="svgtext" x="32" y="325" fill="#f5b942">Producer → BufferQueue → Consumer</text>
+    <text class="svgtext" x="32" y="350">Client 는 SurfaceFlinger 에 Binder 로 Layer 를 만들고(실습 9), 버퍼는 BufferQueue 에서 빌려(dequeue) 그린 뒤 돌려준다(queue). SF 는 다음 VSync 에 acquire 해 합성한다.</text>
+    <text class="svgtext" x="32" y="374">버퍼는 dmabuf FD 로 공유 — Day 1 실습 11 · 실습 11 의 FD 전달과 같은 메커니즘. 400×400 픽셀은 한 번도 복사되지 않는다. stride 가 width 보다 클 수 있다.</text>
+    <text class="svgtext" x="32" y="398">VSync 는 SF 가 fd 로 알려 준다 → 실습 5 의 Looper::addFd + LooperCallback 으로 받는다(실습 10). handleEvent 가 16.67 ms 를 넘기면 다음 프레임을 놓친다 = Jank (실습 13).</text>
+    <text class="svgtext" x="32" y="422" fill="#8a9bb5">App 의 SurfaceView·Window 도 WMS 가 같은 createSurface 를 대신 부른 것. Java Surface.mNativeObject = sp&lt;Surface&gt; (실습 8).</text>
+    <text class="svgtext" x="32" y="446" fill="#8a9bb5">Layer 의 수명 = sp&lt;SurfaceControl&gt; 의 수명 — 프로세스가 죽으면 Driver 가 참조를 정리하고 SF 가 Layer 를 지운다 (실습 3 · Day 2 DeathRecipient).</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 8: 공유 메모리 / FD 전달 ===== -->
+<div class="scene" id="s8">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="260" height="250" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="150" y="55" text-anchor="middle" fill="#60a5fa">Server</text>
+  <g id="m_s1" class="hid"><rect class="box glow" id="m_s1b" x="40" y="70" width="220" height="60"/><text class="mono" x="150" y="92" text-anchor="middle" fill="#dbe4f0">fd = pipe / ashmem / memfd</text><text class="mono" x="150" y="112" text-anchor="middle" fill="#8a9bb5">fd 테이블: 7 → 커널 file 객체</text></g>
+  <g id="m_s2" class="hid"><rect class="box glow" id="m_s2b" x="40" y="145" width="220" height="60"/><text class="mono" x="150" y="167" text-anchor="middle" fill="#dbe4f0">writeFileDescriptor(7)</text><text class="mono" x="150" y="187" text-anchor="middle" fill="#8a9bb5">flat_binder_object FD</text></g>
+  <rect x="330" y="30" width="300" height="250" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">Binder Driver (커널)</text>
+  <g id="m_d1" class="hid"><rect class="box glow" id="m_d1b" x="350" y="70" width="260" height="70"/><text class="svgtext" x="480" y="94" text-anchor="middle">수신 Process 의 fd 테이블에 dup</text><text class="mono" x="480" y="114" text-anchor="middle">같은 file 객체 → 새 번호 5</text><text class="mono" x="480" y="130" text-anchor="middle" fill="#8a9bb5">숫자가 아니라 참조가 넘어간다</text></g>
+  <g id="m_kobj" class="hid"><rect class="box" x="350" y="155" width="260" height="110"/><text class="svgtext" x="362" y="178" fill="#f5b942">file 객체의 종류만 다르다</text><text class="mono" x="362" y="200" fill="#dbe4f0">pipe   : 링 버퍼 64 KB — 복사 스트림</text><text class="mono" x="362" y="220" fill="#dbe4f0">ashmem : /dev/ashmem 페이지 — mmap 공유</text><text class="mono" x="362" y="240" fill="#dbe4f0">memfd  : tmpfs 익명 파일 — mmap + seal</text><text class="mono" x="362" y="258" fill="#dbe4f0">dmabuf : GraphicBuffer — GPU/HW 공유</text></g>
+  <rect x="660" y="30" width="280" height="250" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#2dd4bf">Client</text>
+  <g id="m_c1" class="hid"><rect class="box glow" id="m_c1b" x="680" y="70" width="240" height="60"/><text class="mono" x="800" y="92" text-anchor="middle" fill="#dbe4f0">reply.readFileDescriptor()</text><text class="mono" x="800" y="112" text-anchor="middle" fill="#8a9bb5">= 5  (서버의 7 과 다른 번호)</text></g>
+  <g id="m_c2" class="hid"><rect class="box glow" id="m_c2b" x="680" y="145" width="240" height="120"/><text class="mono" x="692" y="167" fill="#34d399">pipe  : read(fd) — 복사</text><text class="mono" x="692" y="192" fill="#34d399">ashmem: mmap(fd) — 같은 페이지</text><text class="mono" x="692" y="212" fill="#8a9bb5">  MemoryHeapBase 가 대신</text><text class="mono" x="692" y="237" fill="#34d399">memfd : PROT_WRITE → EPERM</text><text class="mono" x="692" y="257" fill="#8a9bb5">  F_SEAL_WRITE 를 커널이 보장</text></g>
+  <g id="pkt8" class="pkt" style="opacity:0"><rect x="-30" y="-14" width="60" height="28" rx="14" fill="#f5b942"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#0b1220" id="pkt8_t">fd 7</text></g>
+  <g id="m_note" class="hid"><rect class="box" x="20" y="300" width="920" height="160"/><text class="svgtext" x="32" y="325" fill="#f5b942">선택 기준</text>
+    <text class="svgtext" x="32" y="350"><tspan fill="#34d399">pipe</tspan> — 순차·1회·복사. 로그, 스트리밍, ParcelFileDescriptor.createPipe (Day 1 실습 11). 크기 무제한.</text>
+    <text class="svgtext" x="32" y="374"><tspan fill="#34d399">ashmem / MemoryHeapBase</tspan> — 임의 접근, 복사 없음, unpin 으로 회수 가능. AudioFlinger·Camera·CursorWindow. MemoryBase 로 일부만 공개.</text>
+    <text class="svgtext" x="32" y="398"><tspan fill="#34d399">memfd + F_SEAL</tspan> — ashmem 의 상류 대체(Android 11+ SharedMemory). 받는 쪽이 크기·내용을 못 바꾼다는 것을 커널이 보장 → 신뢰 경계 넘는 버퍼.</text>
+    <text class="svgtext" x="32" y="422"><tspan fill="#34d399">dmabuf</tspan> — GPU·디스플레이·코덱이 같은 버퍼를 본다. BufferQueue(실습 9·10)·MediaCodec.</text>
+    <text class="svgtext" x="32" y="446" fill="#8a9bb5">Binder Transaction Buffer(1 MB) 는 FD 하나(수십 byte)만 쓴다. dumpsys meminfo 의 Ashmem / Other mmap / Graphics 항목이 이 페이지들 (실습 12).</text></g>
+</svg>
+</div>
+
+</div>
+<div class="controls">
+  <button id="btnPlay" class="primary">▶ 재생</button>
+  <button id="btnPrev">◀ 이전</button>
+  <button id="btnNext">다음 ▶</button>
+  <button id="btnReset">↺ 처음</button>
+  <span class="step" id="stepTxt"></span>
+</div>
+<div class="caption" id="caption"></div>
+<div class="pills" id="pills"></div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=(...ids)=>ids.forEach(i=>$(i).classList.add('vis'));
+const hide=(...ids)=>ids.forEach(i=>$(i).classList.remove('vis'));
+const lit=(id,c)=>{$(id).style.stroke=c;$(id).style.strokeWidth='2.5';};
+const unlit=id=>{$(id).style.stroke='';$(id).style.strokeWidth='';};
+const W=(id,w)=>$(id).setAttribute('width',w);
+
+const SCENES=[
+{ id:'s1', title:'1. sp 와 RefBase', pills:[['incStrong / decStrong','amber'],['mStrong','amber'],['delete this','red'],['intrusive','teal']],
+  reset(){['r_p','r_q','r_code','r_obj','r_bar','r_del','r_note'].forEach(i=>hide(i));['r_pb','r_qb','r_objb'].forEach(unlit);$('r_cnt').textContent='mStrong = 0';W('r_barfill',0);$('r_barlbl').textContent='';},
+  steps:[
+   ['<b>new AAA()</b> — 힙에 객체. RefBase 부분의 mStrong 은 0. 아직 아무도 잡지 않았다.',()=>{show('r_obj','r_bar');lit('r_objb','#f5b942');}],
+   ['<b>sp&lt;AAA&gt; p = new AAA()</b> — sp 생성자가 mPtr-&gt;incStrong() → mStrong 1.',()=>{show('r_p','r_code');lit('r_pb','#2dd4bf');$('r_cnt').textContent='mStrong = 1';W('r_barfill',175);$('r_barlbl').textContent='1';}],
+   ['<b>sp&lt;AAA&gt; q = p</b> — 복사 생성자도 incStrong → mStrong 2. 같은 객체를 두 sp 가 가리킨다.',()=>{show('r_q');lit('r_qb','#2dd4bf');$('r_cnt').textContent='mStrong = 2';W('r_barfill',350);$('r_barlbl').textContent='2';}],
+   ['카운트는 <b>sp 가 아니라 객체 안</b>에 있다 (intrusive). 그래서 raw 포인터를 다시 sp 로 감싸도 카운트가 맞는다.',()=>lit('r_objb','#f5b942')],
+   ['스코프 종료 — q 소멸 → decStrong → mStrong 1.',()=>{hide('r_q');$('r_cnt').textContent='mStrong = 1';W('r_barfill',175);$('r_barlbl').textContent='1';}],
+   ['p 소멸 → decStrong → <b>mStrong 0 → delete this</b>. 소멸자는 virtual 이라 AAA::~AAA 부터 불린다.',()=>{hide('r_p');$('r_cnt').textContent='mStrong = 0';W('r_barfill',0);$('r_barlbl').textContent='';show('r_del');lit('r_objb','#f87171');}],
+   ['실습 2 의 4단계가 도달한 구조. Binder 객체 · Surface · Thread · Looper 가 전부 이 RefBase 다.',()=>show('r_note')],
+  ]},
+{ id:'s2', title:'2. wp · promote · 순환 참조', pills:[['wp','teal'],['promote() → nullptr','red'],['mWeak','amber'],['순환 끊기','green']],
+  reset(){['w_owner','w_wp','w_obj','w_pr1','w_clear','w_pr2','w_cyc','w_leak','w_fix','w_note'].forEach(i=>hide(i));['w_ownerb','w_wpb','w_objb','w_ab','w_bb'].forEach(unlit);$('w_objcnt').textContent='mStrong = 1   mWeak = 2';$('w_b_field').textContent='sp<AAA> pa';$('w_backarrow').setAttribute('stroke','#f87171');},
+  steps:[
+   ['<b>sp&lt;AAA&gt; owner</b> 가 객체를 잡고 있다 (mStrong 1). <b>wp&lt;AAA&gt; p = owner</b> — 약한 참조는 mStrong 을 올리지 않는다.',()=>{show('w_owner','w_wp','w_obj');lit('w_ownerb','#2dd4bf');lit('w_wpb','#2dd4bf');}],
+   ['<b>p.promote()</b> — 객체가 살아 있으므로 sp 를 돌려준다 (mStrong 2). wp 에는 -&gt; 가 없다, 반드시 promote.',()=>{show('w_pr1');$('w_objcnt').textContent='mStrong = 2   mWeak = 3';}],
+   ['<b>owner.clear()</b> — 마지막 강한 참조가 사라져 객체 소멸. wp 는 아직 살아 있다.',()=>{show('w_clear');lit('w_objb','#f87171');$('w_objcnt').textContent='mStrong = 0 (객체 소멸)   mWeak = 1';}],
+   ['<b>p.promote() → nullptr</b>. 죽은 객체를 안전하게 "죽었다" 고 알 수 있다 — mWeak 가 카운트 블록을 유지하기 때문.',()=>show('w_pr2')],
+   ['순환 참조 — AAA 가 <b>sp&lt;BBB&gt;</b>, BBB 가 <b>sp&lt;AAA&gt;</b> 로 서로를 잡는다.',()=>{show('w_cyc');lit('w_ab','#f87171');lit('w_bb','#f87171');}],
+   ['main 의 p, q 가 사라져도 서로가 mStrong 1 을 유지 → 소멸자가 영원히 안 불린다 = <b>누수</b> (실습 3 ④).',()=>show('w_leak')],
+   ['해결 — 한쪽을 <b>wp</b> 로. B→A 가 강한 카운트를 안 올리니 main 이 놓으면 A 소멸 → B 소멸.',()=>{show('w_fix');$('w_b_field').textContent='wp<AAA> pa';$('w_backarrow').setAttribute('stroke','#34d399');lit('w_ab','#34d399');lit('w_bb','#34d399');}],
+   ['mStrong 과 mWeak 두 카운트. onFirstRef() 는 0→1 순간 한 번 — 실습 4 Thread::run 의 트리거.',()=>show('w_note')],
+  ]},
+{ id:'s3', title:'3. Thread 단계별', pills:[['pthread_create','amber'],['static + this','teal'],['run · readyToRun · threadLoop','blue'],['onFirstRef · mHoldSelf','green']],
+  reset(){['t_s1','t_s2','t_s3','t_s4','t_l1','t_l2','t_l3','t_l4','t_l5','t_loop','t_hold','t_java','t_note'].forEach(i=>hide(i));['t_s1b','t_s2b','t_s3b','t_s4b','t_l1b','t_l2b','t_l3b','t_l4b','t_l5b'].forEach(unlit);},
+  steps:[
+   ['① <b>pthread_create</b> 를 클래스로 감싸 봐도 엔트리가 전역 함수라 멤버에 접근할 수 없다.',()=>{show('t_s1');lit('t_s1b','#f87171');}],
+   ['② <b>static 트램폴린</b> — pthread 는 C 함수 포인터만 받는다. static 으로 받고 4번째 인자로 넘긴 this 를 복원.',()=>{show('t_s2');lit('t_s2b','#2dd4bf');}],
+   ['③ <b>virtual handler() = 0</b> — 실행 골격은 부모, 내용은 자식. 프레임워크의 형태가 됐다.',()=>{show('t_s3');lit('t_s3b','#60a5fa');}],
+   ['④ <b>android::Thread</b> — 같은 구조 + RefBase. run / readyToRun / threadLoop / join / requestExit.',()=>{show('t_s4');lit('t_s4b','#34d399');}],
+   ['생명주기: <b>new MyThread</b> → 생성자. 아직 Thread 는 없다.',()=>{show('t_l1');lit('t_l1b','#dbe4f0');}],
+   ['<b>sp 에 담기는 순간 onFirstRef()</b> → 거기서 run(). 생성자 안에서는 sp&lt;this&gt; 를 못 만드니 이 훅을 쓴다.',()=>{show('t_l2');lit('t_l2b','#f5b942');}],
+   ['<b>run("name")</b> — pthread_create + 자기 자신을 sp 로 잡음(mHoldSelf). 이름은 ps -T 와 binder_logs 에 보인다.',()=>{show('t_l3');lit('t_l3b','#dbe4f0');}],
+   ['<b>readyToRun()</b> 1회 → <b>threadLoop()</b> 반복. true 면 다시, false 면 종료 → join 반환. while(1) 을 직접 쓰지 않는다.',()=>{show('t_l4','t_l5','t_loop');lit('t_l4b','#dbe4f0');lit('t_l5b','#34d399');}],
+   ['main 이 sp 를 바로 버려도 threadLoop 은 끝까지 돈다 — mHoldSelf. 같은 "static + this" 패턴이 Looper 콜백 · JNI · PoolThread 에 반복된다.',()=>show('t_hold','t_java','t_note')],
+  ]},
+{ id:'s4', title:'4. Looper 의 두 얼굴', pills:[['epoll_wait','amber'],['wake / eventfd','teal'],['addFd + callback','green'],['sendMessage 큐','blue']],
+  reset(){['lp_p1','lp_p2','lp_p3','lp_r0','lp_r1','lp_r2','lp_r3','lp_note'].forEach(i=>hide(i));['lp_epoll','lp_set','lp_q','lp_p1b','lp_p2b','lp_p3b'].forEach(unlit);$('lp_state').textContent='대기 중…';$('lp_qtxt').textContent='(비어 있음)';$('lp_fd2').setAttribute('fill','#8a9bb5');const p=$('pkt4');p.style.opacity=0;p.style.transform='translate(160px,97px)';},
+  steps:[
+   ['① <b>pollOnce(1000)</b> — 내부는 epoll_wait. 등록된 fd 는 wake 용 eventfd 하나뿐. 1초 후 <b>POLL_TIMEOUT</b>.',()=>{lit('lp_epoll','#f5b942');show('lp_r0');$('lp_state').textContent='timeout 1000 ms';}],
+   ['② 다른 Thread(실습 4 MyThread) 가 <b>looper-&gt;wake()</b> — eventfd 에 1 을 write.',()=>{show('lp_p1');lit('lp_p1b','#2dd4bf');const p=$('pkt4');p.style.transform='translate(160px,97px)';p.style.opacity=1;$('pkt4_t').textContent='wake';}],
+   ['epoll 이 깨어나 <b>POLL_WAKE</b> 반환.',()=>{$('pkt4').style.transform='translate(480px,100px)';show('lp_r1');$('lp_state').textContent='eventfd 읽힘';}],
+   ['③ <b>addFd(fd[0], 0, EVENT_INPUT, foo, data)</b> — pipe 읽기 fd 를 epoll 에 등록. data 는 나중에 그대로 돌아온다.',()=>{lit('lp_set','#34d399');$('lp_fd2').setAttribute('fill','#34d399');}],
+   ['MyThread 가 <b>write(fd[1], "W")</b> → fd[0] 이 읽을 수 있게 됨 → epoll 깨어남.',()=>{show('lp_p2');lit('lp_p2b','#2dd4bf');const p=$('pkt4');p.style.transform='translate(160px,152px)';$('pkt4_t').textContent='"W"';setTimeout(()=>p.style.transform='translate(480px,190px)',50);}],
+   ['Looper 가 <b>foo(fd, events, data)</b> 를 호출하고 <b>POLL_CALLBACK</b> 반환. ④ 콜백을 클래스로 = LooperCallback (static + this).',()=>show('lp_r2')],
+   ['⑤ <b>sendMessage(h, Message(1))</b> — 메시지 큐에 넣고 wake(). <b>sendMessageDelayed(3s, …)</b> 는 uptime 순으로 정렬.',()=>{show('lp_p3');lit('lp_p3b','#a78bfa');lit('lp_q','#a78bfa');$('lp_qtxt').textContent='[what=1][what=2][what=3 @+3s]';$('lp_qtxt').setAttribute('fill','#a78bfa');}],
+   ['pollOnce 가 fd 처리 후 만기된 메시지를 <b>handleMessage</b> 로 — 1, 2 즉시, 3 은 3초 후. fd 루프와 메시지 큐가 한 객체.',()=>{show('lp_r3','lp_note');$('lp_qtxt').textContent='[what=3 @+3s]';}],
+  ]},
+{ id:'s5', title:'5. Binder Thread vs Looper Thread', pills:[['PoolThread : Thread','amber'],['joinThreadPool','amber'],['nativePollOnce','blue'],['Handler.post → wake','green']],
+  reset(){['b_pool','b_loop','b_exec','b_jl','b_post','b_ui','b_arrow','b_note'].forEach(i=>hide(i));['b_poolb','b_loopb','b_execb','b_jlb','b_postb','b_uib'].forEach(unlit);const p=$('pkt5');p.style.opacity=0;p.style.transform='translate(245px,250px)';},
+  steps:[
+   ['Day 2 의 Binder Thread 는 <b>PoolThread : Thread</b> — 실습 4 ④ 의 android::Thread. spawnPooledThread 가 run(name).',()=>{show('b_pool');lit('b_poolb','#f5b942');}],
+   ['그 <b>threadLoop() 이 joinThreadPool()</b> — ioctl(BINDER_WRITE_READ) 로 Driver 를 기다리는 루프. 반환하지 않으므로 return false 는 형식.',()=>{show('b_loop');lit('b_loopb','#f5b942');}],
+   ['transact 가 오면 <b>BBinder::onTransact</b>. 여기에는 <b>Looper 가 없다</b> — View 나 Handler 큐를 직접 만질 수 없다.',()=>{show('b_exec');lit('b_execb','#f87171');const p=$('pkt5');p.style.opacity=1;p.style.transform='translate(245px,250px)';}],
+   ['Main Thread 는 <b>Java Looper.loop()</b> → MessageQueue.next() → <b>nativePollOnce = C++ Looper::pollOnce</b> (실습 5).',()=>{show('b_jl');lit('b_jlb','#60a5fa');}],
+   ['Binder 콜백에서 <b>runOnUiThread = Handler.post</b> → enqueueMessage → <b>nativeWake = Looper::wake</b> (실습 5 ②).',()=>{show('b_post','b_arrow');lit('b_postb','#a78bfa');$('pkt5').style.transform='translate(715px,175px)';}],
+   ['Main Looper 가 깨어나 handleMessage → r.run() → UI 갱신. Binder Thread 의 일이 Looper 큐를 거쳐 넘어왔다.',()=>{show('b_ui');lit('b_uib','#34d399');$('pkt5').style.transform='translate(715px,250px)';}],
+   ['두 루프는 대기 대상이 다르다 (Driver vs fd). Day 2 실습 6 Client 의 joinThreadPool 과 실습 10 의 pollAll 이 각각 이것.',()=>show('b_note')],
+  ]},
+{ id:'s6', title:'6. JNI — 두 방향과 Framework JNI', pills:[['Java_Class_method','amber'],['RegisterNatives','amber'],['FindClass / NewObject','green'],['long → C++ 객체','blue']],
+  reset(){['j_cls','j_call','j_env','j_fn','j_reg','j_back','j_f1','j_f2','j_f3','j_note'].forEach(i=>hide(i));['j_clsb','j_callb','j_fnb','j_regb','j_backb','j_f1b','j_f2b','j_f3b'].forEach(unlit);const p=$('pkt6');p.style.opacity=0;p.style.transform='translate(240px,167px)';},
+  steps:[
+   ['Java: <b>native void foo()</b> 선언 + System.loadLibrary("Hello"). .so 가 로드되면 JNI_OnLoad 가 1회 불린다.',()=>{show('j_cls','j_env');lit('j_clsb','#60a5fa');}],
+   ['hello.foo() 호출 → ART 가 <b>Java_Hello_foo</b> 심볼을 찾는다 (실습 7 First). 이름 규칙 = 패키지_클래스_메서드.',()=>{show('j_call','j_fn');lit('j_callb','#60a5fa');lit('j_fnb','#2dd4bf');const p=$('pkt6');p.style.opacity=1;p.style.transform='translate(240px,167px)';setTimeout(()=>p.style.transform='translate(720px,100px)',50);}],
+   ['또는 JNI_OnLoad 에서 <b>RegisterNatives</b> 로 {이름, 시그니처, 함수} 테이블을 등록 (Third). static 함수도 되고 Framework 는 전부 이 방식.',()=>{show('j_reg');lit('j_regb','#f5b942');}],
+   ['역방향: C 가 <b>FindClass → GetMethodID("&lt;init&gt;","(I)V") → NewObject</b> 로 Java 객체를 만들어 반환 (Second). JNIEnv 는 Thread 마다 다르다.',()=>{show('j_back');lit('j_backb','#34d399');$('pkt6').style.transform='translate(240px,167px)';$('pkt6_t').textContent='JniTest';}],
+   ['Framework JNI ① <b>Binder ↔ JavaBBinder : BBinder</b> — onTransact 가 Java execTransact 를 CallBooleanMethod. Day 1 Stub 이 불리는 길.',()=>{show('j_f1');lit('j_f1b','#f5b942');}],
+   ['② <b>MessageQueue ↔ NativeMessageQueue</b> — mPtr(long) 이 sp&lt;Looper&gt;. nativePollOnce = pollOnce (실습 5·6).',()=>{show('j_f2');lit('j_f2b','#60a5fa');}],
+   ['③ <b>Surface ↔ sp&lt;Surface&gt;</b> — mNativeObject(long) 이 C++ 포인터. nativeLockCanvas → surface-&gt;lock() (실습 9).',()=>{show('j_f3');lit('j_f3b','#2dd4bf');}],
+   ['<b>app_process</b> = JNI_CreateJavaVM (실습 8) + RegisterNatives 전부 + ZygoteInit.main. Day 1 의 Zygote 가 이렇게 뜬다.',()=>show('j_note')],
+  ]},
+{ id:'s7', title:'7. SurfaceFlinger 파이프라인', pills:[['SurfaceComposerClient','teal'],['Transaction','teal'],['BufferQueue / dmabuf','amber'],['VSync → Looper','blue']],
+  reset(){['sf_c1','sf_c2','sf_c3','sf_c4','sf_bq','sf_vs','sf_s1','sf_s2','sf_s3','sf_note'].forEach(i=>hide(i));['sf_c1b','sf_c2b','sf_c3b','sf_c4b','sf_s1b','sf_s2b','sf_s3b'].forEach(unlit);['sf_b0s','sf_b1s','sf_b2s'].forEach(i=>$(i).textContent='FREE');['sf_b0','sf_b1','sf_b2'].forEach(i=>{$(i).setAttribute('fill','#0f1728');$(i).setAttribute('stroke','#22304a');});},
+  steps:[
+   ['Client 가 <b>SurfaceComposerClient</b>(Binder) 로 SF 에 연결, <b>createSurface</b> → sp&lt;SurfaceControl&gt; = Layer 핸들.',()=>{show('sf_c1','sf_s1');lit('sf_c1b','#2dd4bf');lit('sf_s1b','#60a5fa');}],
+   ['<b>Transaction</b> { setLayer, setPosition, show }.apply() — 여러 속성이 한 VSync 에 원자 적용.',()=>{show('sf_c2');lit('sf_c2b','#2dd4bf');}],
+   ['<b>ANativeWindow_lock</b> = BufferQueue 에서 dequeue. 3개 버퍼(triple buffering) 중 FREE 하나를 빌린다.',()=>{show('sf_bq','sf_c3');lit('sf_c3b','#2dd4bf');$('sf_b0s').textContent='DEQUEUED';$('sf_b0').setAttribute('stroke','#2dd4bf');}],
+   ['픽셀을 stride 기준으로 쓴 뒤 <b>unlockAndPost</b> = queueBuffer. 버퍼는 <b>dmabuf FD</b> 라 복사가 없다.',()=>{$('sf_b0s').textContent='QUEUED';$('sf_b0').setAttribute('stroke','#f5b942');}],
+   ['다음 <b>VSync</b> 에 SF 가 acquire → <b>onMessageRefresh → composite</b> — 모든 Layer 를 z 순서로 합성.',()=>{show('sf_vs','sf_s2');lit('sf_s2b','#60a5fa');$('sf_b0s').textContent='ACQUIRED';$('sf_b0').setAttribute('stroke','#60a5fa');}],
+   ['<b>HWC / Gralloc → Display</b>. 표시가 끝나면 release → 버퍼가 FREE 로 돌아온다.',()=>{show('sf_s3');lit('sf_s3b','#60a5fa');$('sf_b0s').textContent='FREE';$('sf_b0').setAttribute('stroke','#34d399');}],
+   ['애니메이션(실습 10): SF 가 주는 <b>VSync fd</b> 를 <b>Looper::addFd + LooperCallback</b> 으로 받아 매 프레임 setPosition. 실습 5 ④ 그대로.',()=>{show('sf_c4');lit('sf_c4b','#a78bfa');}],
+   ['Producer → BufferQueue → Consumer. 16.67 ms 를 넘기면 Jank (실습 13). Layer 수명 = sp&lt;SurfaceControl&gt; 수명.',()=>show('sf_note')],
+  ]},
+{ id:'s8', title:'8. 공유 메모리 — FD 가 Binder 를 타다', pills:[['BINDER_TYPE_FD · dup','amber'],['pipe (복사)','green'],['ashmem / MemoryHeapBase','teal'],['memfd + F_SEAL','blue']],
+  reset(){['m_s1','m_s2','m_d1','m_kobj','m_c1','m_c2','m_note'].forEach(i=>hide(i));['m_s1b','m_s2b','m_d1b','m_c1b','m_c2b'].forEach(unlit);const p=$('pkt8');p.style.opacity=0;p.style.transform='translate(150px,175px)';$('pkt8_t').textContent='fd 7';},
+  steps:[
+   ['서버가 <b>pipe / ashmem / memfd</b> 중 하나를 만든다. fd 테이블의 번호 7 은 커널 file 객체를 가리키는 색인일 뿐.',()=>{show('m_s1');lit('m_s1b','#60a5fa');}],
+   ['<b>writeFileDescriptor(7)</b> — Parcel 에 flat_binder_object(BINDER_TYPE_FD). 데이터가 아니라 참조가 실린다.',()=>{show('m_s2');lit('m_s2b','#60a5fa');const p=$('pkt8');p.style.opacity=1;p.style.transform='translate(150px,175px)';}],
+   ['Driver 가 수신 Process 의 fd 테이블에 <b>dup</b> — 같은 file 객체, 새 번호 5. 숫자를 보내는 것이 아니다.',()=>{lit('m_d1b','#f5b942');show('m_d1');$('pkt8').style.transform='translate(480px,105px)';$('pkt8_t').textContent='dup';}],
+   ['Client 의 <b>readFileDescriptor() = 5</b>. 서버의 7 과 다른 번호 (실습 11 ① 출력).',()=>{show('m_c1');lit('m_c1b','#2dd4bf');$('pkt8').style.transform='translate(800px,100px)';$('pkt8_t').textContent='fd 5';}],
+   ['file 객체의 <b>종류</b>만 다르다 — pipe 링 버퍼 / ashmem 페이지 / memfd tmpfs 파일 / dmabuf. 전달 메커니즘은 하나.',()=>show('m_kobj')],
+   ['<b>pipe</b>: read 로 복사해 받는다. <b>ashmem</b>: mmap 하면 서버와 같은 페이지 — MemoryHeapBase 의 interface_cast 가 FD 수신 + mmap 을 대신 한다.',()=>{show('m_c2');lit('m_c2b','#34d399');}],
+   ['<b>memfd + F_SEAL_WRITE</b>: Client 의 PROT_WRITE mmap 과 ftruncate 가 EPERM — 커널이 봉인을 보장 (실습 11 ③).',()=>lit('m_c2b','#60a5fa')],
+   ['선택 기준. Binder Buffer 1 MB 는 FD 하나만 쓴다. dumpsys meminfo 의 Ashmem / Other mmap / Graphics 가 이 페이지들 (실습 12).',()=>show('m_note')],
+  ]},
+];
+let cur=0, step=-1, timer=null;
+const tabs=$('tabs');
+SCENES.forEach((s,i)=>{const t=document.createElement('div');t.className='tab';t.textContent=s.title;t.onclick=()=>select(i);tabs.appendChild(t);});
+function select(i){stop();cur=i;document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('on',k===i));document.querySelectorAll('.scene').forEach((sc,k)=>sc.classList.toggle('on',k===i));
+  $('pills').innerHTML=SCENES[i].pills.map(p=>`<span class="pill ${p[1]}">${p[0]}</span>`).join('');reset();}
+function reset(){stop();step=-1;SCENES[cur].reset();$('caption').innerHTML='▶ 재생 또는 다음 ▶ 을 눌러 시작합니다.';$('stepTxt').textContent=`0 / ${SCENES[cur].steps.length}`;}
+function next(){const st=SCENES[cur].steps;if(step>=st.length-1){stop();return;}step++;st[step][1]();$('caption').innerHTML=st[step][0];$('stepTxt').textContent=`${step+1} / ${st.length}`;}
+function prev(){if(step<0)return;const target=step-1;SCENES[cur].reset();step=-1;for(let k=0;k<=target;k++)next();if(target<0)reset();}
+function play(){if(timer){stop();return;}$('btnPlay').textContent='❚❚ 일시정지';if(step>=SCENES[cur].steps.length-1)reset();next();timer=setInterval(()=>{next();if(step>=SCENES[cur].steps.length-1)stop();},2600);}
+function stop(){if(timer)clearInterval(timer);timer=null;$('btnPlay').textContent='▶ 재생';}
+$('btnPlay').onclick=play;$('btnNext').onclick=()=>{stop();next();};$('btnPrev').onclick=()=>{stop();prev();};$('btnReset').onclick=reset;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();next();}else if(e.key==='ArrowLeft'){stop();prev();}else if(e.key===' '){e.preventDefault();play();}});
+(function(){var h=parseInt((location.hash||'').replace('#s',''),10);select(isNaN(h)||h<1||h>SCENES.length?0:h-1);})();
+window.addEventListener('hashchange',function(){var h=parseInt((location.hash||'').replace('#s',''),10);if(!isNaN(h)&&h>=1&&h<=SCENES.length)select(h-1);});
+</script>
+</body>
+</html>
