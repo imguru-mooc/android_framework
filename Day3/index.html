@@ -2196,6 +2196,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdio&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cerrno&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;binder/IPCThreadState.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;binder/ProcessState.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;binder/IServiceManager.h&gt;</span>
@@ -2207,6 +2208,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">mFd</span><span class="p">;</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">mSize</span><span class="p">;</span>
 <span class="k">public</span><span class="o">:</span>
 <span class="w">    </span><span class="n">Writer</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mFd</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="n">mSize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">onFirstRef</span><span class="p">()</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;pipe_writer&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// ★ sp 에 담기는 순간 시작 (실습 4 ④)</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">threadLoop</span><span class="p">()</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">chunk</span><span class="p">[</span><span class="mi">64</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="p">];</span><span class="w"> </span><span class="n">memset</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;P&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">chunk</span><span class="p">));</span>
 <span class="w">        </span><span class="kt">size_t</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mSize</span><span class="p">;</span>
@@ -2221,10 +2223,16 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="w">    </span><span class="n">status_t</span><span class="w"> </span><span class="nf">onTransact</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Parcel</span><span class="o">&amp;</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">Parcel</span><span class="o">*</span><span class="w"> </span><span class="n">reply</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">UNKNOWN_TRANSACTION</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">readInt32</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span><span class="w"> </span><span class="n">pipe</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">pipe</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">errno</span><span class="p">;</span>
 <span class="w">        </span><span class="n">reply</span><span class="o">-&gt;</span><span class="n">writeFileDescriptor</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="cm">/*takeOwnership*/</span><span class="p">);</span><span class="w">   </span><span class="c1">// ★ 읽기 쪽 FD 만 Parcel 에</span>
-<span class="w">        </span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Writer</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">size</span><span class="p">))</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">(</span><span class="s">&quot;pipe_writer&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[server] pipe fd[0]=%d fd[1]=%d sent to client pid=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getCallingPid</span><span class="p">());</span>
+
+<span class="w">        </span><span class="n">sp</span><span class="o">&lt;</span><span class="n">Writer</span><span class="o">&gt;</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sp</span><span class="o">&lt;</span><span class="n">Writer</span><span class="o">&gt;::</span><span class="n">make</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">size</span><span class="p">);</span><span class="w">   </span><span class="c1">// ★ 반드시 sp 로 소유 → onFirstRef → run</span>
+<span class="w">        </span><span class="c1">// raw `new Writer(...)-&gt;run()` 은 incStrongRequireStrong 으로 abort — Thread::run 은 sp 소유가 전제</span>
+<span class="w">        </span><span class="c1">// w 가 스코프를 벗어나도 mHoldSelf 로 threadLoop 이 끝날 때까지 살아 있다 (실습 4 마지막 실험)</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[server] pipe fd[0]=%d fd[1]=%d → client pid=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">fd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getCallingPid</span><span class="p">());</span>
+<span class="w">        </span><span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">NO_ERROR</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
@@ -2252,7 +2260,9 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;not found</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="n">Parcel</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">reply</span><span class="p">;</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">writeInt32</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
 <span class="w">    </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">transact</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reply</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup</span><span class="p">(</span><span class="n">reply</span><span class="p">.</span><span class="n">readFileDescriptor</span><span class="p">());</span><span class="w">                           </span><span class="c1">// ★ 서버와 다른 번호 (dup 된 것)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reply</span><span class="p">.</span><span class="n">readFileDescriptor</span><span class="p">();</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[client] no fd — 서버 오류?</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span><span class="w">                                                       </span><span class="c1">// ★ Parcel 소유 fd 를 복제해 내 것으로 · 서버와 다른 번호</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[client] got fd=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fd</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">buf</span><span class="p">[</span><span class="mi">64</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="p">];</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">((</span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">            </span><span class="c1">// ★ 데이터는 복사되어 온다</span>
@@ -2265,7 +2275,8 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_server<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_client<span class="w"> </span>/data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/pipe_server<span class="w"> </span>/data/pipe_client
 adb<span class="w"> </span>shell<span class="w"> </span>/data/pipe_server<span class="w"> </span><span class="p">&amp;</span>
 adb<span class="w"> </span>shell<span class="w"> </span>/data/pipe_client<span class="w"> </span><span class="m">8388608</span>
-<span class="c1"># [server] pipe fd[0]=7 fd[1]=8 sent to client pid=6410</span>
+<span class="c1"># [server] pipe fd[0]=7 fd[1]=8 → client pid=6410</span>
+<span class="c1"># [server] wrote 8388608 bytes via pipe</span>
 <span class="c1"># [client] got fd=5          ← ★ 번호가 다르다 = dup</span>
 <span class="c1"># [client] read 8388608 bytes</span>
 </code></pre></div>
@@ -2476,6 +2487,29 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <li><input type="checkbox"> ② ashmem2: <code>offset=2048 size=1024</code></li>
 <li><input type="checkbox"> ③ seals=0xf, <code>PROT_WRITE</code> mmap 과 <code>ftruncate</code> 가 EPERM</li>
 </ul>
+<h2>트러블슈팅</h2>
+<table>
+<thead>
+<tr>
+<th>증상</th>
+<th>해결</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>서버 <code>incStrongRequireStrong() called on … which isn't already owned</code> → Aborted</td>
+<td><code>Thread::run()</code> 전에 객체를 <code>sp</code> 에 담아야 한다 — <code>sp&lt;Writer&gt;::make()</code> + <code>onFirstRef</code> 패턴. raw <code>new</code> 후 <code>run()</code> 금지</td>
+</tr>
+<tr>
+<td>Client <code>got fd=-1</code>, <code>read 0 bytes</code></td>
+<td>서버가 죽었거나 Transaction 실패 — 서버 터미널 확인 후 재실행</td>
+</tr>
+<tr>
+<td>memfd <code>PROT_WRITE mmap: OK (sealed 아님!)</code></td>
+<td><code>F_ADD_SEALS</code> 가 <code>mmap</code> 이후에 호출됐거나 <code>MFD_ALLOW_SEALING</code> 누락</td>
+</tr>
+</tbody>
+</table>
 <h2>핵심 정리</h2>
 <ul>
 <li>Binder 로 넘어가는 것은 <strong>FD 참조</strong> 하나. pipe · ashmem · memfd · dmabuf 는 그 FD 가 가리키는 커널 객체의 종류만 다르다.</li>
