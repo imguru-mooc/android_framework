@@ -155,7 +155,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 <p><strong>과정:</strong> Android Framework 16 심화 교육 (4일 / 32시간)
 <strong>환경:</strong> Ubuntu 24 빌드 서버 (<code>~/android</code>, AOSP <code>sdk_car_x86_64</code>, 호스트 JDK) + Windows (Android Studio, WinSCP, adb) + 커스텀 Emulator (userdebug, permissive)
 <strong>범위:</strong> libutils 3종 세트(<code>RefBase</code>·<code>sp/wp</code>, <code>Thread</code>, <code>Looper</code>)를 <strong>단계별로 직접 구현</strong> → Binder Thread Pool 에서의 동작 → JNI → SurfaceFlinger Client (VSync + Looper) → 공유 메모리 (pipe · ashmem · memfd · <code>MemoryHeapBase</code>) → Memory / LMKD
-<strong>총 소요시간:</strong> 8시간 (환경·등록 실습 15m / 강의 1h 55m / 실습 5h 15m / 데모·Worksheet 35m)
+<strong>총 소요시간:</strong> 8시간 (환경·등록 실습 15m / 강의 1h 45m / 실습 5h 40m / Worksheet 20m)
 <strong>실습 번호:</strong> 실습 1 ~ 13 (Part 0 부터 연속 번호)</p>
 <hr />
 <h2>학습 목표</h2>
@@ -190,7 +190,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tbody>
 </table>
 <hr />
-<h2>Part 1. 강의 (총 115분)</h2>
+<h2>Part 1. 강의 (총 105분)</h2>
 <h3>Chapter 1. libutils — RefBase · sp/wp · Thread · Looper — 40분</h3>
 <table>
 <thead>
@@ -261,7 +261,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tr>
 </tbody>
 </table>
-<h3>Chapter 3. Graphics — SurfaceFlinger · BufferQueue · VSync — 25분</h3>
+<h3>Chapter 3. Graphics — SurfaceFlinger · BufferQueue · VSync — 20분</h3>
 <table>
 <thead>
 <tr>
@@ -288,7 +288,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tr>
 </tbody>
 </table>
-<h3>Chapter 4. 공유 메모리 · Memory — pipe · ashmem · memfd · 측정 · LMKD — 30분</h3>
+<h3>Chapter 4. 공유 메모리 · Memory — pipe · ashmem · memfd · 측정 · LMKD — 25분</h3>
 <table>
 <thead>
 <tr>
@@ -328,7 +328,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tbody>
 </table>
 <hr />
-<h2>Part 2. 실습 (총 315분)</h2>
+<h2>Part 2. 실습 (총 340분)</h2>
 <table>
 <thead>
 <tr>
@@ -412,15 +412,23 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tr>
 <tr>
 <td>12</td>
-<td>Graphics · Memory 분석 + LMKD — <code>dumpsys SurfaceFlinger</code> · <code>meminfo</code> / <code>procrank</code> / <code>showmap</code> · <code>oom_score_adj</code> · <code>MemHog</code> 로 kill 순서</td>
+<td>Graphics · Memory 분석 + LMKD (따라하기) — <code>dumpsys SurfaceFlinger</code> · <code>meminfo</code> / <code>procrank</code> / <code>showmap</code> · <code>oom_score_adj</code> · <code>MemHog</code> 앱(전체 소스) 으로 kill 순서</td>
 <td>★★☆</td>
 <td>30분</td>
 <td>Ch 3·4</td>
 </tr>
+<tr>
+<td>13</td>
+<td>Perfetto (따라하기) — cfg 작성 · 정상/Jank 두 버전 캡처 · ui.perfetto.dev 트랙 읽기 · <code>--latency</code> 로 숫자 확인</td>
+<td>★★☆</td>
+<td>25분</td>
+<td>Ch 3</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
-<p>실습 2 → 6 은 <strong>libutils 를 밑바닥부터</strong> 쌓는 순서다. 실습 5 에서 만든 <code>Looper + LooperCallback</code> 이 실습 10 의 VSync 핸들러로 그대로 재사용되고, 실습 4 의 <code>Thread</code> 가 실습 6 에서 Binder Thread Pool 의 정체로 드러난다. 실습 11 은 Day 1 실습 11 의 "FD 만 Binder 로" 를 pipe · ashmem · memfd 세 방식으로 Native 에서 다시 만들어, 실습 9·10 의 GraphicBuffer(dmabuf) 도 같은 FD 전달임을 잇는다.  </p>
+<p>실습 12·13 은 전원이 따라 하는 실습이다 (강사 시연 아님). MemHog 앱 소스와 Perfetto cfg 가 문서에 전부 포함되어 있다.<br />
+실습 2 → 6 은 <strong>libutils 를 밑바닥부터</strong> 쌓는 순서다. 실습 5 에서 만든 <code>Looper + LooperCallback</code> 이 실습 10 의 VSync 핸들러로 그대로 재사용되고, 실습 4 의 <code>Thread</code> 가 실습 6 에서 Binder Thread Pool 의 정체로 드러난다. 실습 11 은 Day 1 실습 11 의 "FD 만 Binder 로" 를 pipe · ashmem · memfd 세 방식으로 Native 에서 다시 만들어, 실습 9·10 의 GraphicBuffer(dmabuf) 도 같은 FD 전달임을 잇는다.  </p>
 </blockquote>
 <h3>실습별 요점</h3>
 <p><strong>실습 2. <code>sp&lt;&gt;</code> 직접 구현 4단계 — 25분</strong> (<code>sp_test/sp.cpp</code>, <code>#if</code> 전환)
@@ -469,16 +477,19 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 - ② <strong>ashmem2</strong>: <code>sp&lt;IMemory&gt; base = new MemoryBase(heap, 2048, 1024)</code> — heap 의 offset 2048 부터 1 KB 만 <code>IMemory</code> 로 공개 · Client 의 <code>pointer()</code> 가 offset 반영 · <code>ls -l /proc/&lt;pid&gt;/fd</code> 에서 <code>/dev/ashmem</code> 확인 · <code>ASHMEM_SET_PROT_MASK</code> 로 읽기 전용 강등 실험
 - ③ <strong>memfd</strong>: <code>memfd_create("shared", MFD_ALLOW_SEALING)</code> → <code>ftruncate(4096)</code> → <code>mmap</code> → <code>fcntl(fd, F_ADD_SEALS, F_SEAL_SHRINK|F_SEAL_GROW|F_SEAL_WRITE)</code> → <code>writeFileDescriptor</code> 로 전달 · Client 가 <code>mmap</code> 후 <code>write</code> 시도 → <code>SIGBUS</code>/<code>EPERM</code> 으로 seal 확인 · <code>/proc/&lt;pid&gt;/fd</code> 에 <code>/memfd:shared</code> · Java <code>SharedMemory</code> 의 내부가 이것
 - 비교표 작성: 복사 여부 · 크기 제한 · 임의 접근 · 회수/봉인 · 사용처 (pipe → 로그·스트림 / ashmem·memfd → 버퍼 공유·<code>CursorWindow</code> / dmabuf → GraphicBuffer)</p>
-<p><strong>실습 12. Graphics · Memory 분석 + LMKD — 30분</strong>
-- <code>dumpsys SurfaceFlinger | grep -A20 "My Cpp Surface"</code> · <code>--list</code> · <code>--latency</code>
-- <code>dumpsys meminfo com.android.car</code> 항목 (실습 11 의 ashmem/memfd 가 어느 항목에 잡히는지 — <code>Ashmem</code> / <code>Other mmap</code>) · <code>procrank</code> · <code>showmap &lt;pid&gt;</code> 의 Zygote 공유(shared clean) 페이지
-- <code>/proc/&lt;pid&gt;/oom_score_adj</code> Foreground/Cached 비교 · <code>dumpsys activity oom</code> · <code>MemHog</code> 로 압박 → <code>logcat -s lmkd</code> kill 순서 · <code>/proc/pressure/memory</code></p>
+<p><strong>실습 12. Graphics · Memory 분석 + LMKD — 30분</strong> (따라하기)
+- <code>dumpsys SurfaceFlinger --list</code> / <code>grep -A25 "My Cpp Surface"</code> → <code>activeBuffer=[400x400:448]</code> 의 stride · <code>--latency</code> 16666667 · <code>gfxinfo</code> Janky frames
+- <code>dumpsys meminfo</code> 항목 해석표 (Pss/Private Dirty/Rss · <code>.so mmap</code> Rss≫Pss = Zygote COW · <code>Ashmem</code>/<code>Other mmap</code> 에 실습 11 · <code>Graphics</code> 에 dmabuf) · <code>procrank</code> · <code>showmap</code> 의 shared clean
+- <code>oom_score_adj</code>: Settings 를 열고(0) → 홈으로(900 대) · <code>dumpsys activity oom</code> 상태표
+- <code>MemHog</code> 앱 전체 소스 (<code>byte[50MB]</code> 누적 · 자동 할당 · <code>largeHeap</code>) → <code>logcat -s lmkd</code> 에서 <code>Kill '…' oom_score_adj 985 → 900 → … → 0(자신)</code> 순서 · <code>/proc/pressure/memory</code> · RAM 2 GB AVD 로 재현</p>
+<p><strong>실습 13. Perfetto — 합성 파이프라인 · Jank — 25분</strong> (따라하기, 전원)
+- <code>day3_trace.cfg</code> 전문 (ftrace sched · atrace gfx/view/sf · frametimeline · process_stats) → <code>adb push /data/local/tmp/</code>
+- 정상 버전: <code>sf_vsync_anim</code> 실행 중 <code>perfetto -c … --txt -o /data/misc/perfetto-traces/day3_ok.perfetto-trace</code> → <code>adb pull</code>
+- ui.perfetto.dev: <code>vsync_rect</code> 검색 → Expected/Actual Timeline · <code>handleEvent</code> ≈ 0.1 ms · <code>surfaceflinger</code> <code>onMessageRefresh</code> 16.67 ms 주기 · VSYNC-app 카운터
+- Jank 버전: <code>step()</code> 에 <code>usleep(20000)</code> → <code>m sf_vsync_anim</code> → <code>/data/sf_vsync_anim_jank</code> → 캡처 → 빨간 프레임 <code>App Deadline Missed</code>, <code>handleEvent</code> ≈ 20 ms
+- UI 없이: <code>dumpsys SurfaceFlinger --latency vsync_rect#0</code> 의 <code>actual − desired</code> 로 놓친 프레임 확인 · 원복</p>
 <hr />
-<h2>Part 3. 데모 &amp; 정리 (총 35분)</h2>
-<h3>실습 13 (데모). Perfetto 로 SurfaceFlinger 합성 파이프라인 · Jank — 15분 (강사 시연)</h3>
-<ul>
-<li>실습 10 실행 중 <code>perfetto</code> 캡처 (<code>gfx</code>, <code>sf</code>, frame timeline) → 우리 Layer 의 VSync → <code>onMessageRefresh</code> → HWC · <code>handleEvent</code> 에 <code>usleep(20000)</code> 으로 Jank 재현 → Day 4 SystemUI/Perfetto 로 연결</li>
-</ul>
+<h2>Part 3. 정리 (총 20분)</h2>
 <h3>Day 3 Worksheet — 20분</h3>
 <ul>
 <li>객관식 · 단답형 · 빈칸 · 순번 · 선잇기 20문제, 별도 정답·해설</li>
@@ -509,7 +520,9 @@ oom_score_adj / LMKD / PSI
 - <input type="checkbox"> <code>~/android/day3/Android.bp</code> 완성본 + 빈 소스 트리 (sp_test · thread_test · looper_test · jni_invocation · surface1 · vsync_anim · pipe_test · ashmem1 · ashmem2 · memfd_test · memhog)
 - <input type="checkbox"> 실습 2·4·5 의 <code>#if</code> 단계별 소스 (<code>sp.cpp</code>, <code>thread.cpp</code>, <code>my_thread.cpp</code>, <code>Looper.cpp</code>) 배포본
 - <input type="checkbox"> 빌드 서버에 <code>default-jdk</code> 설치 (실습 7·8) — <code>javac -version</code>
-- <input type="checkbox"> 실습 11 memfd 는 커널 <code>CONFIG_MEMFD_CREATE</code>(GKI 기본 포함), ashmem 은 <code>/dev/ashmem</code> 존재 확인 (<code>ls -l /dev/ashmem</code>) · 실습 12 용 2 GB RAM AVD 안내 · 실습 13 Perfetto config
+- <input type="checkbox"> 실습 11 memfd 는 커널 <code>CONFIG_MEMFD_CREATE</code>(GKI 기본 포함), ashmem 은 <code>/dev/ashmem</code> 존재 확인 (<code>ls -l /dev/ashmem</code>)
+- <input type="checkbox"> 실습 12 용 RAM 2 GB AVD 미리 생성 안내 · <code>adb shell which perfetto procrank showmap</code> 확인
+- <input type="checkbox"> 실습 13 <code>day3_trace.cfg</code> 배포본 (문서 Step 1 과 동일) · 수강생 PC 에서 https://ui.perfetto.dev 접속 가능 확인 (방화벽)
 - <input type="checkbox"> Day 3 Worksheet 인쇄본 + 정답지</p>
 <p><strong>수강생</strong>
 - <input type="checkbox"> Day 2 ctags(<code>android_native_tags</code>) 유지 — 실습 6·8 의 <code>:tag ProcessState::spawnPooledThread</code>, <code>JavaBBinder</code>
@@ -2369,13 +2382,20 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">gFd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memfd_create</span><span class="p">(</span><span class="s">&quot;shared_page&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">MFD_ALLOW_SEALING</span><span class="p">);</span><span class="w">              </span><span class="c1">// ★ 익명 tmpfs 파일</span>
-<span class="w">    </span><span class="n">ftruncate</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="n">mmap</span><span class="p">(</span><span class="nb">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w"> </span><span class="n">PROT_READ</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">PROT_WRITE</span><span class="p">,</span><span class="w"> </span><span class="n">MAP_SHARED</span><span class="p">,</span><span class="w"> </span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">    </span><span class="n">strcpy</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello from memfd (sealed)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">gFd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;memfd_create&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ftruncate</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;ftruncate&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 
-<span class="w">    </span><span class="c1">// ★ 봉인 — 크기 변경 · 쓰기 금지 (서버 자신도 이후 write 불가)</span>
-<span class="w">    </span><span class="n">fcntl</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">F_ADD_SEALS</span><span class="p">,</span><span class="w"> </span><span class="n">F_SEAL_SHRINK</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_GROW</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_WRITE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_SEAL</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;memfd fd=%d seals=0x%x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">fcntl</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">F_GET_SEALS</span><span class="p">));</span><span class="w"> </span><span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="n">mmap</span><span class="p">(</span><span class="nb">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w"> </span><span class="n">PROT_READ</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">PROT_WRITE</span><span class="p">,</span><span class="w"> </span><span class="n">MAP_SHARED</span><span class="p">,</span><span class="w"> </span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MAP_FAILED</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;mmap&quot;</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="n">strcpy</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Hello from memfd (sealed)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">munmap</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">);</span><span class="w">                                                   </span><span class="c1">// ★ 쓰기 매핑 해제 — 남아 있으면 F_SEAL_WRITE 가 EBUSY → seals=0x0</span>
+
+<span class="w">    </span><span class="c1">// ★ 봉인 — 크기 변경 · 쓰기 · 추가 봉인 금지. 원자적: 하나라도 실패하면 아무것도 안 걸린다. 한 번 걸면 아무도(서버 포함) 못 푼다</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fcntl</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">F_ADD_SEALS</span><span class="p">,</span><span class="w"> </span><span class="n">F_SEAL_SHRINK</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_GROW</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_WRITE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">F_SEAL_SEAL</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;F_ADD_SEALS&quot;</span><span class="p">);</span><span class="w">                                         </span><span class="c1">// ★ 실패를 반드시 출력 (EBUSY = 쓰기 매핑 남음)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;memfd fd=%d seals=0x%x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">fcntl</span><span class="p">(</span><span class="n">gFd</span><span class="p">,</span><span class="w"> </span><span class="n">F_GET_SEALS</span><span class="p">));</span><span class="w"> </span><span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span><span class="w">   </span><span class="c1">// 0xf = 네 비트 모두</span>
 
 <span class="w">    </span><span class="n">defaultServiceManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addService</span><span class="p">(</span><span class="n">String16</span><span class="p">(</span><span class="s">&quot;memfd.service&quot;</span><span class="p">),</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MemfdService</span><span class="p">);</span>
 <span class="w">    </span><span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">startThreadPool</span><span class="p">();</span>
@@ -2407,6 +2427,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">rw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mmap</span><span class="p">(</span><span class="nb">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w"> </span><span class="n">PROT_READ</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">PROT_WRITE</span><span class="p">,</span><span class="w"> </span><span class="n">MAP_SHARED</span><span class="p">,</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// ★ F_SEAL_WRITE → EPERM</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[client] PROT_WRITE mmap: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rw</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">MAP_FAILED</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;OK (sealed 아님!)&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ftruncate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="mi">8192</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[client] ftruncate: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span><span class="w">   </span><span class="c1">// F_SEAL_GROW → EPERM</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[client] ftruncate: OK (sealed 아님!)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -2422,7 +2443,51 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <span class="c1"># 3 -&gt; /memfd:shared_page (deleted)</span>
 </code></pre></div>
 
-<p>Android 11+ 의 Java <code>SharedMemory</code> 와 <code>MemoryHeapBase</code> 는 내부적으로 memfd 를 쓴다(<code>ashmem</code> 은 커널에서 제거 추세). <code>F_SEAL_WRITE</code> 로 "받는 쪽이 내용을 못 바꾼다" 를 커널이 보장하므로 신뢰 경계를 넘는 버퍼 공유에 쓴다.</p>
+<p><strong>seal 의 뜻</strong> — memfd 파일에 "이 종류의 변경은 영원히 금지" 를 커널에 거는 플래그. 한 번 걸면 아무도(서버 자신도) 못 풀고, dup 된 모든 fd 에 동일하게 적용된다.</p>
+<table>
+<thead>
+<tr>
+<th>seal</th>
+<th>금지</th>
+<th>막히는 호출</th>
+<th>막는 위험</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>F_SEAL_SHRINK</code> (1)</td>
+<td>줄이기</td>
+<td><code>ftruncate(작게)</code></td>
+<td>받는 쪽이 mmap 중 파일이 줄면 <strong>SIGBUS</strong></td>
+</tr>
+<tr>
+<td><code>F_SEAL_GROW</code> (2)</td>
+<td>늘리기</td>
+<td><code>ftruncate(크게)</code>, <code>fallocate</code></td>
+<td>크기 검증 무효화</td>
+</tr>
+<tr>
+<td><code>F_SEAL_WRITE</code> (4)</td>
+<td>내용 쓰기</td>
+<td><code>write</code>, <code>PROT_WRITE</code>+<code>MAP_SHARED</code> mmap</td>
+<td>검증 후 읽는 사이 바꿔치기 (<strong>TOCTOU</strong>)</td>
+</tr>
+<tr>
+<td><code>F_SEAL_SEAL</code> (8)</td>
+<td>seal 추가</td>
+<td><code>F_ADD_SEALS</code></td>
+<td>나중에 규칙을 바꾸는 것</td>
+</tr>
+<tr>
+<td><code>F_SEAL_FUTURE_WRITE</code></td>
+<td>새 쓰기만</td>
+<td>기존 쓰기 매핑은 유지</td>
+<td>서버는 계속 쓰고 Client 만 읽기 전용</td>
+</tr>
+</tbody>
+</table>
+<p><code>seals=0xf</code> = 1+2+4+8. <code>F_SEAL_WRITE</code> 는 <strong>쓰기 매핑이 살아 있으면 <code>EBUSY</code></strong> 로 실패하고, seal 은 원자적이라 그 순간 네 개 전부 안 걸린다(<code>seals=0x0</code>). 서버는 내용을 쓴 뒤 <code>munmap</code> 하고 걸어야 한다. 서버가 seal 후에도 계속 갱신해야 하면 <code>F_SEAL_WRITE</code> 대신 <code>F_SEAL_FUTURE_WRITE</code> — 기존 매핑은 유지하고 새 쓰기 매핑만 막는다.</p>
+<p>Android 11+ 의 Java <code>SharedMemory</code> (<code>setProtect(PROT_READ)</code> 가 seal) 와 <code>MemoryHeapBase</code> 는 내부적으로 memfd 를 쓴다(<code>ashmem</code> 은 커널에서 제거 추세). ashmem 의 <code>ASHMEM_SET_PROT_MASK</code> 가 비슷한 역할이었지만 전용 ioctl 이었고, seal 은 Linux 표준이다.</p>
 <hr />
 <h2>비교표 (실습 후 작성)</h2>
 <table>
@@ -2505,8 +2570,8 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <td>서버가 죽었거나 Transaction 실패 — 서버 터미널 확인 후 재실행</td>
 </tr>
 <tr>
-<td>memfd <code>PROT_WRITE mmap: OK (sealed 아님!)</code></td>
-<td><code>F_ADD_SEALS</code> 가 <code>mmap</code> 이후에 호출됐거나 <code>MFD_ALLOW_SEALING</code> 누락</td>
+<td>서버 <code>seals=0x0</code> · Client <code>PROT_WRITE mmap: OK (sealed 아님!)</code> · 서버 <code>F_ADD_SEALS: Device or resource busy</code></td>
+<td>서버의 쓰기 매핑이 남은 채 <code>F_SEAL_WRITE</code> 를 걸어 <code>EBUSY</code> → seal 전체 실패. <code>strcpy</code> 후 <code>munmap</code> 하고 seal, 또는 <code>F_SEAL_FUTURE_WRITE</code>. <code>MFD_ALLOW_SEALING</code> 누락도 확인</td>
 </tr>
 </tbody>
 </table>
@@ -2515,22 +2580,52 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <li>Binder 로 넘어가는 것은 <strong>FD 참조</strong> 하나. pipe · ashmem · memfd · dmabuf 는 그 FD 가 가리키는 커널 객체의 종류만 다르다.</li>
 <li><code>MemoryHeapBase</code> = ashmem/memfd + mmap 을 <code>IMemoryHeap</code> Binder 객체로, <code>MemoryBase</code> = 그 일부를 <code>IMemory</code> 로. <code>interface_cast</code> 가 FD 를 받아 mmap 까지 해 준다.</li>
 <li>실습 12 의 <code>dumpsys meminfo</code> 에서 이 페이지들이 <code>Ashmem</code> / <code>Other mmap</code> 항목에 잡힌다.</li>
-</ul><div class="nav"><a href="#lab10">← 이전<span>실습 10 VSync 애니메이션 — DisplayEventReceiver + Looper</span></a><a href="#lab12" style="text-align:right">다음 →<span>실습 12 Graphics · Memory 분석 + LMKD</span></a></div></div></section><section class="page" id="pg-lab12"><div class="wrap"><div class="meta"><b>실습 12</b><span>소요시간 30분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 12. Graphics · Memory 분석 + LMKD 관찰</h1>
+</ul><div class="nav"><a href="#lab10">← 이전<span>실습 10 VSync 애니메이션 — DisplayEventReceiver + Looper</span></a><a href="#lab12" style="text-align:right">다음 →<span>실습 12 Graphics · Memory 분석 + LMKD 따라하기</span></a></div></div></section><section class="page" id="pg-lab12"><div class="wrap"><div class="meta"><b>실습 12</b><span>소요시간 30분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 12. Graphics · Memory 분석 + LMKD 관찰 — 따라하기</h1>
 <blockquote>
 <p><strong>소요시간:</strong> 30분 · <strong>난이도:</strong> ★★☆ · <strong>챕터:</strong> Ch 3·4<br />
-<strong>환경:</strong> Emulator (실습 9~11 프로세스 실행 중이면 더 좋다)  </p>
+<strong>환경:</strong> Emulator (adb root) + Android Studio (MemHog 앱) · 실습 9·11 바이너리가 <code>/data</code> 에 있어야 한다  </p>
 </blockquote>
 <h2>목표</h2>
 <ul>
-<li><code>dumpsys SurfaceFlinger</code> 로 Layer 트리와 BufferQueue 상태를 읽는다.</li>
-<li><code>dumpsys meminfo</code> · <code>procrank</code> · <code>showmap</code> 으로 PSS / USS 를 해석하고 Zygote 공유 페이지, 실습 11 의 ashmem/memfd 항목을 찾는다.</li>
-<li><code>oom_score_adj</code> 와 LMKD 가 캐시된 프로세스를 죽이는 순서를 관찰한다.</li>
+<li><code>dumpsys SurfaceFlinger</code> 에서 내 Layer 를 찾아 z · pos · stride 를 읽는다.</li>
+<li><code>dumpsys meminfo</code> · <code>procrank</code> · <code>showmap</code> 으로 PSS / USS 를 해석하고 실습 11 의 공유 메모리와 Zygote 공유 페이지를 찾는다.</li>
+<li><code>oom_score_adj</code> 가 앱 상태에 따라 바뀌는 것을 보고, <code>MemHog</code> 앱으로 메모리를 압박해 <code>lmkd</code> 가 어떤 순서로 프로세스를 죽이는지 관찰한다.</li>
 </ul>
+<p>모든 명령은 <strong>Windows cmd</strong> 에서 <code>adb shell</code> 로 들어간 뒤 실행한다 (프롬프트 <code>#</code> = Emulator 셸).</p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb shell
+</code></pre></div>
+
 <hr />
-<h2>Step 1. Graphics — Layer 와 BufferQueue</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/surface_client_test<span class="w"> </span><span class="p">&amp;</span><span class="w">          </span><span class="c1"># 실습 9 Layer 띄워 두기</span>
-adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--list<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
-adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-B2<span class="w"> </span>-A25<span class="w"> </span><span class="s1">&#39;&quot;My Cpp Surface&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-40
+<h2>Step 1. Graphics — 내 Layer 찾기 (실습 9 서버 사용)</h2>
+<h3>1-1. 서버 띄우기</h3>
+<div class="codehilite"><pre><span></span><code>/data/surface_client_test<span class="w"> </span><span class="p">&amp;</span>
+<span class="c1"># Surface drawn. Ctrl+C to exit.      ← 빨간 사각형이 화면에 보이면 다음으로</span>
+</code></pre></div>
+
+<h3>1-2. Layer 목록</h3>
+<div class="codehilite"><pre><span></span><code>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--list
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>Display 0 (...)
+  ...
+  com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#0
+  My Cpp Surface#0                                    ← ★ 우리 Layer
+  StatusBar#0
+  ...
+</code></pre></div>
+
+<h3>1-3. Layer 상세</h3>
+<div class="codehilite"><pre><span></span><code>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A25<span class="w"> </span><span class="s1">&#39;&quot;My Cpp Surface&#39;</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>+ Layer 0x... (My Cpp Surface#0)
+      z=2147483647 ...                       ← setLayer(0x7FFFFFFF)
+      pos=(100,100) size=(400,400)           ← setPosition · createSurface
+      crop=... format=RGBA_8888 (1)
+      activeBuffer=[ 400x 400: 448,  1]      ← ★ [width x height : stride, format] — stride 448 ≠ 400
+      queued-frames=0, mRefreshPending=0
+      ...
 </code></pre></div>
 
 <table>
@@ -2543,216 +2638,664 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <tbody>
 <tr>
 <td><code>z=2147483647</code></td>
-<td><code>setLayer</code> 값</td>
+<td>Transaction 의 <code>setLayer</code> 값. 최상위</td>
 </tr>
 <tr>
-<td><code>pos=(100,100)  size=400x400</code></td>
-<td>Transaction 결과</td>
+<td><code>pos=(100,100)</code></td>
+<td><code>setPosition</code></td>
 </tr>
 <tr>
-<td><code>format=RGBA_8888</code> · <code>activeBuffer=[400x400:448, 1]</code></td>
-<td>현재 합성 중인 버퍼 — <code>:448</code> 이 stride (400 아님)</td>
+<td><code>activeBuffer=[400x400:448,1]</code></td>
+<td>현재 합성 중 버퍼. <strong>stride 448</strong> — 실습 9 에서 <code>width</code> 로 계산하면 비뚤어진 이유</td>
 </tr>
 <tr>
-<td><code>mQueuedFrames / mFrameCounter</code></td>
-<td>BufferQueue 에 queue 된 프레임</td>
+<td><code>format=RGBA_8888</code></td>
+<td><code>createSurface</code> 의 픽셀 포맷</td>
 </tr>
 </tbody>
 </table>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--latency<span class="w"> </span><span class="s1">&#39;My Cpp Surface&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5<span class="w">     </span><span class="c1"># VSync 주기 + 프레임 타임스탬프 3열</span>
-adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>gfxinfo<span class="w"> </span>com.android.car.carlauncher<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A12<span class="w"> </span><span class="s2">&quot;Janky&quot;</span><span class="w">   </span><span class="c1"># App 측 프레임 통계</span>
+<h3>1-4. VSync 주기와 App 프레임 통계</h3>
+<div class="codehilite"><pre><span></span><code>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--latency<span class="w"> </span><span class="s1">&#39;My Cpp Surface#0&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<span class="c1"># 16666667                                  ← ★ VSync 주기 (ns) = 60 Hz</span>
+<span class="c1"># &lt;desiredPresent&gt; &lt;actualPresent&gt; &lt;frameReady&gt;   (한 프레임씩 3열)</span>
+
+dumpsys<span class="w"> </span>gfxinfo<span class="w"> </span>com.android.car.carlauncher<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A6<span class="w"> </span><span class="s2">&quot;Janky frames&quot;</span>
+<span class="c1"># Total frames rendered: 312</span>
+<span class="c1"># Janky frames: 4 (1.28%)                   ← 16.67 ms 를 넘긴 프레임</span>
+<span class="c1"># 90th percentile: 9ms</span>
 </code></pre></div>
 
-<h2>Step 2. Memory — PSS / USS</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>meminfo<span class="w"> </span>com.android.car<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-40
+<h3>1-5. 정리</h3>
+<div class="codehilite"><pre><span></span><code><span class="nb">kill</span><span class="w"> </span>%1<span class="w">        </span><span class="c1"># surface_client_test 종료 → 빨간 사각형 사라짐</span>
+dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;My Cpp&quot;</span><span class="w">      </span><span class="c1"># (없음)</span>
+</code></pre></div>
+
+<hr />
+<h2>Step 2. Memory — PSS / USS 읽기</h2>
+<h3>2-1. 앱 하나의 meminfo</h3>
+<div class="codehilite"><pre><span></span><code>dumpsys<span class="w"> </span>meminfo<span class="w"> </span>com.android.car
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>Applications Memory Usage (in Kilobytes):
+** MEMINFO in pid 1177 [com.android.car] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap     8123     8096        0        0     8420    20480    12345     3456   ← malloc (C/C++)
+  Dalvik Heap     4512     4480        0        0     6120    12288     6144     6144   ← Java 객체
+ Dalvik Other     2210     2200        0        0     2330
+        Stack      520      520        0        0      528
+       Ashmem       24        0        0        0      120                                  ← ★ 실습 11 ashmem/memfd
+    Other dev       12        0        4        0       48
+     .so mmap     3891      312     1240        0    18210                                  ← ★ shared clean 큼 = Zygote 공유
+    .jar mmap     1105        0      812        0     6220
+    .apk mmap     2340        0     1980        0     4410
+    .dex mmap      612        8      480        0     3120
+    .oat mmap      430        0      296        0     2210
+    .art mmap     1820     1540      120        0     7810
+   Other mmap      280       16      168        0      640
+     Graphics     2048     2048        0        0     2048                                  ← ★ GraphicBuffer (dmabuf)
+      Unknown      760      748        0        0      810
+        TOTAL    28687    17968     5100        0    63046    32768    18489     9600
 </code></pre></div>
 
 <table>
 <thead>
 <tr>
-<th>항목</th>
-<th>의미</th>
+<th>열 / 행</th>
+<th>읽는 법</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>Native Heap</code></td>
-<td><code>malloc</code> — C/C++ 할당</td>
+<td><code>Pss Total</code></td>
+<td>공유 페이지를 공유 수로 나눠 배분 — <strong>실제 부담</strong>. 프로세스 간 비교·합산은 이 값</td>
 </tr>
 <tr>
-<td><code>Dalvik Heap</code></td>
-<td>Java 객체</td>
+<td><code>Private Dirty</code></td>
+<td>이 프로세스만의 수정된 페이지 — 죽이면 돌아오는 양(≈USS)</td>
 </tr>
 <tr>
-<td><code>.so mmap</code> / <code>.dex mmap</code></td>
-<td>라이브러리 — 대부분 <strong>shared clean</strong> (Zygote 와 공유)</td>
+<td><code>Private Clean</code></td>
+<td>이 프로세스만 매핑한 파일 페이지 (버릴 수 있음)</td>
+</tr>
+<tr>
+<td><code>Rss Total</code></td>
+<td>물리 페이지 전체 (공유분 중복 계산)</td>
+</tr>
+<tr>
+<td><code>.so mmap</code> 의 Rss 18210 vs Pss 3891</td>
+<td>라이브러리가 여러 프로세스에 공유되어 PSS 가 1/5 — <strong>Zygote COW</strong></td>
 </tr>
 <tr>
 <td><code>Ashmem</code> / <code>Other mmap</code></td>
-<td>실습 11 의 공유 메모리 · <code>CursorWindow</code></td>
+<td>실습 11 ② ③ 의 페이지가 잡히는 곳</td>
 </tr>
 <tr>
 <td><code>Graphics</code></td>
-<td>GraphicBuffer (dmabuf) — 실습 9·10</td>
-</tr>
-<tr>
-<td><code>TOTAL PSS</code></td>
-<td>공유 페이지를 공유 수로 나눠 배분한 값 — 실제 부담</td>
+<td>실습 9·10 의 dmabuf. Native Heap 이 아니다</td>
 </tr>
 </tbody>
 </table>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>procrank<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-15<span class="w">          </span><span class="c1"># VSS RSS PSS USS 순 정렬</span>
-adb<span class="w"> </span>shell<span class="w"> </span>showmap<span class="w"> </span><span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>ashmem1_server<span class="k">)</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;ashmem|memfd|TOTAL&quot;</span>
+<h3>2-2. 실습 11 의 공유 메모리가 잡히는지 확인</h3>
+<div class="codehilite"><pre><span></span><code>/data/ashmem1_server<span class="w"> </span><span class="p">&amp;</span>
+/data/memfd_server<span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">1</span>
+dumpsys<span class="w"> </span>meminfo<span class="w"> </span><span class="k">$(</span>pidof<span class="w"> </span>ashmem1_server<span class="k">)</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;Ashmem|Other mmap|TOTAL&quot;</span>
+<span class="c1"># Ashmem        4        4        0        0        4           ← MemoryHeapBase(4096) = 4 KB</span>
+dumpsys<span class="w"> </span>meminfo<span class="w"> </span><span class="k">$(</span>pidof<span class="w"> </span>memfd_server<span class="k">)</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;Ashmem|Other mmap|TOTAL&quot;</span>
+<span class="c1"># Other mmap    4        4        0        0        4           ← memfd 는 Other mmap 에 (또는 Ashmem — 커널 버전에 따라)</span>
 </code></pre></div>
 
-<p>Zygote 공유 확인:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Z</span><span class="o">=</span><span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>zygote64<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="nv">A</span><span class="o">=</span><span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>com.android.car<span class="k">)</span>
-adb<span class="w"> </span>shell<span class="w"> </span>showmap<span class="w"> </span><span class="nv">$Z</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-1<span class="p">;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>showmap<span class="w"> </span><span class="nv">$A</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-1
-<span class="c1"># shared clean 이 크고 private dirty 가 작다 → COW 로 Framework 를 공유</span>
+<h3>2-3. procrank — 전체 프로세스 순위</h3>
+<div class="codehilite"><pre><span></span><code>procrank<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-12
 </code></pre></div>
 
-<table>
-<thead>
-<tr>
-<th>지표</th>
-<th>정의</th>
-<th>언제 보나</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>VSS</td>
-<td>가상 주소 공간 크기</td>
-<td>거의 안 봄</td>
-</tr>
-<tr>
-<td>RSS</td>
-<td>물리 페이지 (공유 포함 중복 계산)</td>
-<td>대략</td>
-</tr>
-<tr>
-<td><strong>PSS</strong></td>
-<td>공유 페이지를 n 분의 1 로 배분</td>
-<td>프로세스 비교·합산</td>
-</tr>
-<tr>
-<td><strong>USS</strong></td>
-<td>이 프로세스만의 페이지</td>
-<td>죽이면 돌아오는 양</td>
-</tr>
-</tbody>
-</table>
-<h2>Step 3. oom_score_adj</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>activity<span class="w"> </span>oom<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;Proc #|oom:&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
-<span class="k">for</span><span class="w"> </span>p<span class="w"> </span><span class="k">in</span><span class="w"> </span>com.android.car.carlauncher<span class="w"> </span>com.android.car.settings<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$p</span><span class="s2">: &quot;</span><span class="p">;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>cat<span class="w"> </span>/proc/<span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span><span class="nv">$p</span><span class="k">)</span>/oom_score_adj<span class="p">;</span><span class="w"> </span><span class="k">done</span>
+<div class="codehilite"><pre><span></span><code>  PID       Vss      Rss      Pss      Uss  cmdline
+ 1234   1234567K  198765K  142310K  120480K  system_server
+ 1177    987654K   98760K   28687K   17968K  com.android.car
+ 2210    876543K   87654K   24120K   14300K  com.android.car.carlauncher
+  668    543210K   54321K   18760K   12100K  /system/bin/surfaceflinger
+  ...
+                          ------   ------  ------
+                          412345K  310200K  TOTAL
+</code></pre></div>
+
+<ul>
+<li><code>Vss</code> 는 거의 안 본다. <code>Pss</code> 로 비교, <code>Uss</code> 로 "죽이면 돌아오는 양".</li>
+<li><code>Pss</code> 합계(412 MB)가 실제 사용량이고 <code>Rss</code> 합계는 공유분이 중복되어 더 크다.</li>
+</ul>
+<h3>2-4. showmap — Zygote 공유 페이지 확인</h3>
+<div class="codehilite"><pre><span></span><code><span class="nv">Z</span><span class="o">=</span><span class="k">$(</span>pidof<span class="w"> </span>zygote64<span class="k">)</span>
+<span class="nv">A</span><span class="o">=</span><span class="k">$(</span>pidof<span class="w"> </span>com.android.car<span class="k">)</span>
+showmap<span class="w"> </span><span class="nv">$Z</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-2
+showmap<span class="w"> </span><span class="nv">$A</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-2
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code># zygote64
+ virtual                     shared   shared  private  private
+    size      RSS      PSS    clean    dirty    clean    dirty     swap  swapPSS   # object
+  ...
+  912345    87654    21200    52100    12300     8100    15154        0        0  TOTAL
+# com.android.car
+  987654    63046    28687    38200     6400     5100    13346        0        0  TOTAL
+</code></pre></div>
+
+<ul>
+<li><code>shared clean</code> 이 크고 <code>private dirty</code> 가 작다 → Framework 코드·리소스를 Zygote 와 <strong>COW 로 공유</strong>하고 있다.</li>
+<li>특정 매핑만 보려면 <code>showmap $A | grep -E "\.so|ashmem|memfd"</code>.</li>
+</ul>
+<h3>2-5. 시스템 전체</h3>
+<div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>/proc/meminfo<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5
+<span class="c1"># MemTotal:        4022560 kB</span>
+<span class="c1"># MemFree:          412340 kB</span>
+<span class="c1"># MemAvailable:    1823400 kB       ← ★ 실제 여유 (캐시 회수 가능분 포함)</span>
+free<span class="w"> </span>-m
+</code></pre></div>
+
+<hr />
+<h2>Step 3. oom_score_adj — 앱 상태에 따라 바뀐다</h2>
+<h3>3-1. 현재 값 읽기</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span><span class="w"> </span>p<span class="w"> </span><span class="k">in</span><span class="w"> </span>com.android.car.carlauncher<span class="w"> </span>com.android.car.settings<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nv">PID</span><span class="o">=</span><span class="k">$(</span>pidof<span class="w"> </span><span class="nv">$p</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PID</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$p</span><span class="s2"> (</span><span class="nv">$PID</span><span class="s2">): </span><span class="k">$(</span>cat<span class="w"> </span>/proc/<span class="nv">$PID</span>/oom_score_adj<span class="k">)</span><span class="s2">&quot;</span>
+<span class="k">done</span>
+<span class="c1"># com.android.car.carlauncher (2210): 0       ← Foreground</span>
+<span class="c1"># com.android.car.settings: (안 떠 있으면 출력 없음)</span>
+</code></pre></div>
+
+<h3>3-2. Settings 를 열어서 → 홈으로 나가서 비교</h3>
+<p>Emulator 화면에서 <strong>Settings</strong> 앱을 연다. 그 상태에서:</p>
+<div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>/proc/<span class="k">$(</span>pidof<span class="w"> </span>com.android.car.settings<span class="k">)</span>/oom_score_adj
+<span class="c1"># 0                                           ← Foreground</span>
+</code></pre></div>
+
+<p><strong>홈 버튼</strong>으로 Launcher 로 돌아간 뒤 (Settings 는 백그라운드):</p>
+<div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>/proc/<span class="k">$(</span>pidof<span class="w"> </span>com.android.car.settings<span class="k">)</span>/oom_score_adj
+<span class="c1"># 900  (또는 905 ~ 999)                        ← ★ Cached — 먼저 죽는 후보</span>
+</code></pre></div>
+
+<h3>3-3. AMS 의 판단 근거</h3>
+<div class="codehilite"><pre><span></span><code>dumpsys<span class="w"> </span>activity<span class="w"> </span>oom<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;Proc #|oom:&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>  Proc # 0: pers  T/ /PER  trm: 0 1234:system_server/1000 (fixed)
+      oom: max=-900 curRaw=-900 setRaw=-900 cur=-900 set=-900
+  Proc # 3: fg    T/A/TOP  trm: 0 2210:com.android.car.carlauncher/u0a120 (top-activity)
+      oom: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+  Proc # 9: cch   B/ /CAC  trm: 0 6720:com.android.car.settings/u0a130 (cch-act)
+      oom: max=1001 curRaw=900 setRaw=900 cur=900 set=900
 </code></pre></div>
 
 <table>
 <thead>
 <tr>
 <th>상태</th>
-<th>oom_score_adj (대략)</th>
+<th>oom_score_adj</th>
+<th>설명</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>system_server</td>
-<td>-900</td>
+<td><code>pers</code></td>
+<td>-900 ~ -800</td>
+<td>system_server · persistent 앱 — 거의 안 죽음</td>
 </tr>
 <tr>
-<td>Persistent (car service)</td>
-<td>-800</td>
-</tr>
-<tr>
-<td>Foreground</td>
+<td><code>fg</code> / <code>TOP</code></td>
 <td>0</td>
+<td>사용자가 보는 앱</td>
 </tr>
 <tr>
-<td>Visible</td>
-<td>100~200</td>
+<td><code>vis</code></td>
+<td>100 ~ 200</td>
+<td>보이지만 포커스 아님</td>
 </tr>
 <tr>
-<td>Service</td>
+<td><code>svc</code></td>
 <td>500</td>
+<td>서비스 실행 중</td>
 </tr>
 <tr>
-<td>Cached / Empty</td>
-<td>900~999 ← <strong>먼저 죽는다</strong></td>
+<td><code>cch</code></td>
+<td>900 ~ 999</td>
+<td>캐시 — <strong>LMKD 가 먼저 죽인다</strong></td>
 </tr>
 </tbody>
 </table>
-<p>Settings 앱을 열었다 홈으로 나가면 값이 0 → 900 대로 바뀐다.</p>
-<h2>Step 4. LMKD 관찰</h2>
-<p>메모리 압박 앱 <code>MemHog</code> (Android Studio 프로젝트, 버튼 1회당 <code>byte[]</code> 50 MB 를 <code>ArrayList</code> 에 보관):</p>
-<div class="codehilite"><pre><span></span><code><span class="n">List</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span><span class="w"> </span><span class="n">hog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span>
-<span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">btn</span><span class="p">).</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">hog</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="kt">byte</span><span class="o">[</span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="o">]</span><span class="p">);</span><span class="w"> </span><span class="n">tv</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">hog</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; MB&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<hr />
+<h2>Step 4. LMKD 관찰 — MemHog 앱으로 압박</h2>
+<h3>4-1. MemHog 앱 만들기 (Android Studio)</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>MemHog</code></td>
+</tr>
+<tr>
+<td>Package</td>
+<td><code>com.example.memhog</code></td>
+</tr>
+<tr>
+<td>Language</td>
+<td>Java · Minimum SDK 28</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>app/src/main/res/layout/activity_main.xml</code></strong></p>
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="nt">&lt;LinearLayout</span><span class="w"> </span><span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span>
+<span class="w">    </span><span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span><span class="w"> </span><span class="na">android:layout_height=</span><span class="s">&quot;match_parent&quot;</span>
+<span class="w">    </span><span class="na">android:orientation=</span><span class="s">&quot;vertical&quot;</span><span class="w"> </span><span class="na">android:padding=</span><span class="s">&quot;24dp&quot;</span><span class="w"> </span><span class="na">android:gravity=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;TextView</span><span class="w"> </span><span class="na">android:id=</span><span class="s">&quot;@+id/info&quot;</span><span class="w"> </span><span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span><span class="w"> </span><span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+<span class="w">        </span><span class="na">android:text=</span><span class="s">&quot;0 MB&quot;</span><span class="w"> </span><span class="na">android:textSize=</span><span class="s">&quot;28sp&quot;</span><span class="w"> </span><span class="na">android:gravity=</span><span class="s">&quot;center&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Button</span><span class="w"> </span><span class="na">android:id=</span><span class="s">&quot;@+id/btnAlloc&quot;</span><span class="w"> </span><span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span><span class="w"> </span><span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+<span class="w">        </span><span class="na">android:text=</span><span class="s">&quot;+50 MB 할당 (유지)&quot;</span><span class="w"> </span><span class="na">android:layout_marginTop=</span><span class="s">&quot;24dp&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Button</span><span class="w"> </span><span class="na">android:id=</span><span class="s">&quot;@+id/btnAuto&quot;</span><span class="w"> </span><span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span><span class="w"> </span><span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+<span class="w">        </span><span class="na">android:text=</span><span class="s">&quot;자동 할당 시작 (1초마다 +50 MB)&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Button</span><span class="w"> </span><span class="na">android:id=</span><span class="s">&quot;@+id/btnFree&quot;</span><span class="w"> </span><span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span><span class="w"> </span><span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+<span class="w">        </span><span class="na">android:text=</span><span class="s">&quot;전부 해제&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/LinearLayout&gt;</span>
 </code></pre></div>
 
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>getprop<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ro.lmk<span class="w">          </span><span class="c1"># lmkd 파라미터 (psi, kill_timeout 등)</span>
-adb<span class="w"> </span>shell<span class="w"> </span>cat<span class="w"> </span>/proc/pressure/memory<span class="w">       </span><span class="c1"># PSI — some/full avg10</span>
-adb<span class="w"> </span>logcat<span class="w"> </span>-s<span class="w"> </span>lmkd<span class="w"> </span><span class="p">&amp;</span>
+<p><strong><code>app/src/main/java/com/example/memhog/MainActivity.java</code></strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.memhog</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.app.ActivityManager</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.content.Context</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.os.Bundle</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.os.Handler</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.os.Looper</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.util.Log</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.Button</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.TextView</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">androidx.appcompat.app.AppCompatActivity</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span>
+
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MainActivity</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AppCompatActivity</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">TAG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MemHog&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">CHUNK_MB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">50</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span><span class="w"> </span><span class="n">hog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">      </span><span class="c1">// ★ 참조를 유지해 GC 되지 않게</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Handler</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Handler</span><span class="p">(</span><span class="n">Looper</span><span class="p">.</span><span class="na">getMainLooper</span><span class="p">());</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">auto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Runnable</span><span class="w"> </span><span class="n">autoAlloc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Runnable</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nd">@Override</span><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">run</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">auto</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="n">alloc</span><span class="p">();</span>
+<span class="w">            </span><span class="n">handler</span><span class="p">.</span><span class="na">postDelayed</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="nd">@Override</span>
+<span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(</span><span class="n">Bundle</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">super</span><span class="p">.</span><span class="na">onCreate</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">setContentView</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">activity_main</span><span class="p">);</span>
+<span class="w">        </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">info</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">btnAlloc</span><span class="p">).</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">alloc</span><span class="p">());</span>
+<span class="w">        </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">btnAuto</span><span class="p">).</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">auto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">auto</span><span class="p">;</span>
+<span class="w">            </span><span class="p">((</span><span class="n">Button</span><span class="p">)</span><span class="w"> </span><span class="n">v</span><span class="p">).</span><span class="na">setText</span><span class="p">(</span><span class="n">auto</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;자동 할당 중지&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s">&quot;자동 할당 시작 (1초마다 +50 MB)&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">auto</span><span class="p">)</span><span class="w"> </span><span class="n">handler</span><span class="p">.</span><span class="na">post</span><span class="p">(</span><span class="n">autoAlloc</span><span class="p">);</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">btnFree</span><span class="p">).</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">v</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">auto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">            </span><span class="n">hog</span><span class="p">.</span><span class="na">clear</span><span class="p">();</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">gc</span><span class="p">();</span>
+<span class="w">            </span><span class="n">update</span><span class="p">();</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="n">update</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">alloc</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">byte</span><span class="o">[]</span><span class="w"> </span><span class="n">chunk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">byte</span><span class="o">[</span><span class="n">CHUNK_MB</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="o">]</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">chunk</span><span class="p">.</span><span class="na">length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">4096</span><span class="p">)</span><span class="w"> </span><span class="n">chunk</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// ★ 실제 페이지를 만지게 (COW → 실제 할당)</span>
+<span class="w">            </span><span class="n">hog</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">chunk</span><span class="p">);</span>
+<span class="w">            </span><span class="n">Log</span><span class="p">.</span><span class="na">i</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;allocated &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">hog</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">CHUNK_MB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; MB&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">OutOfMemoryError</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Log</span><span class="p">.</span><span class="na">e</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;OutOfMemoryError at &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">hog</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">CHUNK_MB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; MB&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">auto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">update</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">update</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ActivityManager</span><span class="w"> </span><span class="n">am</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ActivityManager</span><span class="p">)</span><span class="w"> </span><span class="n">getSystemService</span><span class="p">(</span><span class="n">Context</span><span class="p">.</span><span class="na">ACTIVITY_SERVICE</span><span class="p">);</span>
+<span class="w">        </span><span class="n">ActivityManager</span><span class="p">.</span><span class="na">MemoryInfo</span><span class="w"> </span><span class="n">mi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ActivityManager</span><span class="p">.</span><span class="na">MemoryInfo</span><span class="p">();</span>
+<span class="w">        </span><span class="n">am</span><span class="p">.</span><span class="na">getMemoryInfo</span><span class="p">(</span><span class="n">mi</span><span class="p">);</span>
+<span class="w">        </span><span class="n">info</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="s">&quot;보유 %d MB\n시스템 여유 %d MB / lowMemory=%b&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">hog</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">CHUNK_MB</span><span class="p">,</span><span class="w"> </span><span class="n">mi</span><span class="p">.</span><span class="na">availMem</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="n">mi</span><span class="p">.</span><span class="na">lowMemory</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 
-<p>MemHog 버튼을 계속 누르면:</p>
-<div class="codehilite"><pre><span></span><code>I lmkd: Kill &#39;com.android.car.settings&#39; (6720), uid 1000, oom_score_adj 985 to free 48212kB rss ...
-I lmkd: Kill &#39;com.android.car.messenger&#39; (6644), uid 1000, oom_score_adj 900 ...
+<p><strong><code>AndroidManifest.xml</code></strong> 의 <code>&lt;application&gt;</code> 에 추가 — Java 힙 상한을 올린다:</p>
+<div class="codehilite"><pre><span></span><code>android:largeHeap=&quot;true&quot;
 </code></pre></div>
 
-<p>캐시된(점수 높은) 프로세스부터 죽고, 계속 누르면 MemHog 자신(Foreground, 0) 이 마지막에 죽거나 OOM 이 난다. Emulator RAM 을 2 GB 로 줄이면 빨리 재현된다.</p>
+<p>Run → Emulator 에 설치·실행.</p>
+<h3>4-2. 관찰 준비 (터미널 2개)</h3>
+<p>터미널 ① — lmkd 로그:</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>logcat<span class="w"> </span>-c
+adb<span class="w"> </span>logcat<span class="w"> </span>-s<span class="w"> </span>lmkd:I<span class="w"> </span>MemHog:I<span class="w"> </span>ActivityManager:I
+</code></pre></div>
+
+<p>터미널 ② — 압박 지표:</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+getprop<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ro.lmk
+<span class="c1"># [ro.lmk.use_psi]: [true]</span>
+<span class="c1"># [ro.lmk.critical]: [0]  [ro.lmk.medium]: [800] ...</span>
+watch<span class="w"> </span>-n1<span class="w"> </span><span class="s1">&#39;cat /proc/pressure/memory; grep -E &quot;MemFree|MemAvailable&quot; /proc/meminfo&#39;</span>
+</code></pre></div>
+
+<h3>4-3. 백그라운드 앱을 몇 개 만들어 두기</h3>
+<p>Emulator 에서 <strong>Settings</strong>, <strong>Maps(있으면)</strong>, 실습 앱(BinderLab 등) 을 차례로 열었다가 홈으로 나간다. <code>dumpsys activity oom | grep cch</code> 로 <code>cch</code> 프로세스가 3~4개 보이면 준비 끝.</p>
+<h3>4-4. 압박 시작</h3>
+<p>MemHog 에서 <strong>자동 할당 시작</strong> 을 누른다. 터미널 ① 을 본다.</p>
+<div class="codehilite"><pre><span></span><code>I MemHog: allocated 50 MB
+I MemHog: allocated 100 MB
+...
+I MemHog: allocated 800 MB
+I lmkd: Kill &#39;com.android.car.settings&#39; (6720), uid 1000, oom_score_adj 985 to free 48212kB rss, 40120kB swap; reason: low watermark is breached and swap is low
+I ActivityManager: Process com.android.car.settings (pid 6720) has died: cch  CAC
+I MemHog: allocated 850 MB
+I lmkd: Kill &#39;com.example.binderlab&#39; (6810), uid 10150, oom_score_adj 900 to free 31240kB rss
+I MemHog: allocated 1000 MB
+I lmkd: Kill &#39;com.android.car.messenger&#39; (6644), uid 1000, oom_score_adj 700 ...
+I MemHog: allocated 1300 MB
+I lmkd: Kill &#39;com.example.memhog&#39; (7110), uid 10160, oom_score_adj 0 ...      ← ★ Foreground 인 MemHog 자신이 마지막
+</code></pre></div>
+
+<p>터미널 ② 의 <code>/proc/pressure/memory</code> 는 <code>some avg10=…</code> <code>full avg10=…</code> 이 0 에서 올라가고, <code>MemAvailable</code> 이 급감한다.</p>
+<table>
+<thead>
+<tr>
+<th>관찰</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>oom_score_adj 985</code> 부터 kill</td>
+<td>캐시(cch) 가 가장 먼저</td>
+</tr>
+<tr>
+<td><code>900 → 700 → …</code> 내림차순</td>
+<td>점수 순서</td>
+</tr>
+<tr>
+<td>MemHog(0) 이 맨 마지막</td>
+<td>Foreground 는 최후. 대신 OOM 이 날 수도 있다</td>
+</tr>
+<tr>
+<td><code>reason:</code></td>
+<td>PSI(<code>use_psi</code>) 임계 · low watermark 등 lmkd 가 판단한 이유</td>
+</tr>
+</tbody>
+</table>
+<h3>4-5. 복구</h3>
+<p>MemHog 가 죽었으면 다시 실행 → <strong>전부 해제</strong> (또는 앱 종료). <code>dumpsys activity oom</code> 으로 죽은 프로세스가 목록에서 사라진 것을 확인.</p>
+<h3>4-6. 재현이 안 될 때</h3>
+<p>Emulator RAM 이 4 GB 이상이면 압박까지 오래 걸린다. <strong>Device Manager → AVD 편집 → Show Advanced Settings → RAM 2048 MB</strong> 로 줄인 AVD 를 하나 더 만들어 두면 30초 안에 재현된다.</p>
 <hr />
 <h2>확인 포인트</h2>
 <ul>
-<li><input type="checkbox"> <code>dumpsys SurfaceFlinger</code> 에서 내 Layer 의 z · pos · stride 확인</li>
-<li><input type="checkbox"> <code>meminfo</code> 의 <code>Ashmem</code>/<code>Other mmap</code> 에 실습 11 페이지, <code>.so mmap</code> 이 shared clean</li>
-<li><input type="checkbox"> Foreground 0 → 백그라운드 900 대로 <code>oom_score_adj</code> 변화</li>
-<li><input type="checkbox"> <code>logcat -s lmkd</code> 에 <code>Kill '…' oom_score_adj 9xx</code> 순서</li>
+<li><input type="checkbox"> <code>activeBuffer=[400x400:448,1]</code> — stride 448 확인</li>
+<li><input type="checkbox"> <code>--latency</code> 첫 줄 16666667</li>
+<li><input type="checkbox"> <code>meminfo</code> 에서 <code>.so mmap</code> 의 Rss ≫ Pss (Zygote 공유), <code>Ashmem</code>/<code>Other mmap</code> 에 실습 11 의 4 KB</li>
+<li><input type="checkbox"> <code>showmap</code> 의 shared clean &gt; private dirty</li>
+<li><input type="checkbox"> Settings: Foreground 0 → 홈으로 나가면 900 대</li>
+<li><input type="checkbox"> <code>lmkd: Kill</code> 이 <code>oom_score_adj</code> 높은 순, MemHog 자신이 마지막</li>
 </ul>
 <h2>핵심 정리</h2>
 <ul>
-<li>PSS 로 비교하고 USS 로 회수량을 본다. Zygote COW 덕에 App 의 PSS 는 작다.</li>
-<li>공유 메모리(ashmem/memfd/dmabuf) 는 <code>meminfo</code> 의 별도 항목 — Native Heap 이 아니다.</li>
-<li>LMKD 는 <code>oom_score_adj</code> 가 높은 캐시 프로세스부터, PSI 압박 시점에 죽인다. Foreground 는 마지막.</li>
-</ul><div class="nav"><a href="#lab11">← 이전<span>실습 11 공유 메모리 3단계 — pipe · ashmem · memfd</span></a><a href="#lab13" style="text-align:right">다음 →<span>실습 13 (데모) Perfetto — 합성 파이프라인 · Jank</span></a></div></div></section><section class="page" id="pg-lab13"><div class="wrap"><div class="meta"><b>실습 13 (데모)</b><span>소요시간 15분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 13 (데모). Perfetto 로 SurfaceFlinger 합성 파이프라인 · Jank 보기</h1>
+<li><strong>PSS 로 비교, USS(Private Dirty) 로 회수량</strong>. Zygote COW 덕에 App 의 PSS 는 RSS 보다 훨씬 작다.</li>
+<li>공유 메모리(ashmem/memfd/dmabuf) 는 <code>meminfo</code> 의 <strong>별도 항목</strong> — Native Heap 이 아니다.</li>
+<li><code>oom_score_adj</code> 는 AMS 가 Process 상태로 정하고, LMKD 는 PSI 압박 시 <strong>점수 높은 캐시부터</strong> 죽인다. Foreground 는 마지막.</li>
+</ul>
+<h2>트러블슈팅</h2>
+<table>
+<thead>
+<tr>
+<th>증상</th>
+<th>해결</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>procrank: not found</code> / <code>showmap: not found</code></td>
+<td>userdebug 에는 있다. <code>getprop ro.build.type</code> 확인</td>
+</tr>
+<tr>
+<td><code>lmkd</code> 로그가 안 나옴</td>
+<td><code>logcat -s lmkd:I</code> 태그 확인 · 압박이 부족 — RAM 2 GB AVD 사용</td>
+</tr>
+<tr>
+<td>MemHog 가 <code>OutOfMemoryError</code> 로 먼저 멈춤</td>
+<td><code>largeHeap="true"</code> 확인. 그래도 Java 힙 상한(수백 MB)에 걸리면 앱을 여러 개 띄워 병렬 압박</td>
+</tr>
+<tr>
+<td><code>dumpsys meminfo</code> 에 Ashmem 0</td>
+<td>서버가 떠 있는지, <code>pidof</code> 가 맞는 PID 인지 확인</td>
+</tr>
+</tbody>
+</table><div class="nav"><a href="#lab11">← 이전<span>실습 11 공유 메모리 3단계 — pipe · ashmem · memfd</span></a><a href="#lab13" style="text-align:right">다음 →<span>실습 13 Perfetto — 합성 파이프라인 · Jank 따라하기</span></a></div></div></section><section class="page" id="pg-lab13"><div class="wrap"><div class="meta"><b>실습 13</b><span>소요시간 25분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 13. Perfetto 로 SurfaceFlinger 합성 파이프라인 · Jank 보기 — 따라하기</h1>
 <blockquote>
-<p><strong>소요시간:</strong> 15분 (강사 시연) · <strong>난이도:</strong> ★★☆<br />
-<strong>환경:</strong> Emulator + 실습 10 <code>sf_vsync_anim</code> + https://ui.perfetto.dev  </p>
+<p><strong>소요시간:</strong> 25분 · <strong>난이도:</strong> ★★☆ · <strong>챕터:</strong> Ch 3 Graphics<br />
+<strong>환경:</strong> Emulator (adb root) + 실습 10 <code>sf_vsync_anim</code> + 브라우저(https://ui.perfetto.dev) · 빌드 서버 (Jank 버전 재빌드)  </p>
 </blockquote>
 <h2>목표</h2>
 <ul>
-<li>VSync → <code>handleEvent</code> → <code>Transaction.apply</code> → SurfaceFlinger <code>onMessageRefresh</code> → HWC 합성이 시간축에서 어떻게 이어지는지 본다.</li>
-<li>일부러 프레임 예산(16.67 ms) 을 넘겨 Jank 가 frame timeline 에 어떻게 표시되는지 본다.</li>
+<li>VSync → <code>handleEvent</code> → <code>Transaction.apply</code> → SurfaceFlinger 합성 → HWC 가 시간축에서 어떻게 이어지는지 <strong>직접 캡처</strong>해서 본다.</li>
+<li>프레임 예산 16.67 ms 를 일부러 넘긴 버전을 캡처해 frame timeline 의 <strong>빨간 Jank 프레임</strong>을 확인한다.</li>
+<li>Perfetto 명령 없이도 확인할 수 있게 <code>dumpsys SurfaceFlinger --latency</code> 와 비교한다.</li>
 </ul>
 <hr />
-<h2>Step 1. 트레이스 캡처</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/sf_vsync_anim<span class="w"> </span><span class="p">&amp;</span>
-adb<span class="w"> </span>shell<span class="w"> </span>perfetto<span class="w"> </span>-c<span class="w"> </span>-<span class="w"> </span>--txt<span class="w"> </span>-o<span class="w"> </span>/data/misc/perfetto-traces/day3.perfetto-trace<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
-<span class="s">buffers: { size_kb: 65536 fill_policy: RING_BUFFER }</span>
-<span class="s">data_sources: { config { name: &quot;linux.ftrace&quot; ftrace_config {</span>
-<span class="s">  ftrace_events: &quot;sched/sched_switch&quot; ftrace_events: &quot;sched/sched_wakeup&quot;</span>
-<span class="s">  atrace_categories: &quot;gfx&quot; atrace_categories: &quot;view&quot; atrace_categories: &quot;sf&quot;</span>
-<span class="s">  atrace_apps: &quot;*&quot; } } }</span>
-<span class="s">data_sources: { config { name: &quot;android.surfaceflinger.frametimeline&quot; } }</span>
-<span class="s">duration_ms: 6000</span>
-<span class="s">EOF</span>
-adb<span class="w"> </span>pull<span class="w"> </span>/data/misc/perfetto-traces/day3.perfetto-trace<span class="w"> </span>.
+<h2>Step 1. 트레이스 설정 파일 만들기 (Windows)</h2>
+<p>메모장으로 <code>C:\aosp16\day3_trace.cfg</code> 를 만든다. 내용 그대로:</p>
+<div class="codehilite"><pre><span></span><code>buffers: {
+  size_kb: 65536
+  fill_policy: RING_BUFFER
+}
+data_sources: {
+  config {
+    name: &quot;linux.ftrace&quot;
+    ftrace_config {
+      ftrace_events: &quot;sched/sched_switch&quot;
+      ftrace_events: &quot;sched/sched_wakeup&quot;
+      ftrace_events: &quot;power/suspend_resume&quot;
+      atrace_categories: &quot;gfx&quot;
+      atrace_categories: &quot;view&quot;
+      atrace_categories: &quot;sf&quot;
+      atrace_categories: &quot;binder_driver&quot;
+      atrace_apps: &quot;*&quot;
+    }
+  }
+}
+data_sources: {
+  config {
+    name: &quot;android.surfaceflinger.frametimeline&quot;
+  }
+}
+data_sources: {
+  config {
+    name: &quot;linux.process_stats&quot;
+    process_stats_config { scan_all_processes_on_start: true }
+  }
+}
+duration_ms: 6000
 </code></pre></div>
 
-<h2>Step 2. UI 에서 보기</h2>
+<p>Emulator 로 올린다:</p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\day3_trace.cfg /data/local/tmp/day3_trace.cfg
+</code></pre></div>
+
+<h2>Step 2. 정상 버전 캡처</h2>
+<p>터미널 ① — 애니메이션 실행 (10초 동안 움직인다):</p>
+<div class="codehilite"><pre><span></span><code>adb shell /data/sf_vsync_anim
+</code></pre></div>
+
+<p>터미널 ② — 애니메이션이 움직이는 <strong>동안</strong> 6초 캡처:</p>
+<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;perfetto -c /data/local/tmp/day3_trace.cfg --txt -o /data/misc/perfetto-traces/day3_ok.perfetto-trace&quot;</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>[perfetto] Connected to the Perfetto traced service, TTL: 6s
+[perfetto] Wrote 3241 bytes into /data/misc/perfetto-traces/day3_ok.perfetto-trace
+</code></pre></div>
+
+<blockquote>
+<p><code>perfetto</code> 가 없다고 나오면 <code>adb shell setprop persist.traced.enable 1</code> 후 재시도. 권한 오류는 출력 경로를 <code>/data/misc/perfetto-traces/</code> 로 (다른 경로는 SELinux 차단).  </p>
+</blockquote>
+<p>Windows 로 가져온다:</p>
+<div class="codehilite"><pre><span></span><code>adb pull /data/misc/perfetto-traces/day3_ok.perfetto-trace C:\aosp16\
+</code></pre></div>
+
+<h2>Step 3. Perfetto UI 에서 보기</h2>
 <ol>
-<li>https://ui.perfetto.dev → Open trace file</li>
-<li>검색 <code>vsync_rect</code> → 우리 Layer 의 <strong>Actual Timeline / Expected Timeline</strong> 트랙</li>
-<li><code>surfaceflinger</code> 프로세스 → <code>onMessageRefresh</code> · <code>composite</code> · <code>HWC</code> 슬라이스 — 각 VSync 마다 반복</li>
-<li><code>sf_vsync_anim</code> 프로세스 → main Thread 의 <code>handleEvent</code> 가 VSync 직후 짧게 실행 → <code>Transaction.apply</code></li>
+<li>브라우저에서 <strong>https://ui.perfetto.dev</strong> → 왼쪽 <strong>Open trace file</strong> → <code>day3_ok.perfetto-trace</code></li>
+<li>상단 검색창(또는 <code>Ctrl+F</code>) 에 <code>vsync_rect</code> 입력 → Enter</li>
+<li>화면에 다음 트랙이 잡힌다. 없으면 왼쪽 프로세스 목록에서 <code>sf_vsync_anim</code> 과 <code>surfaceflinger</code> 를 핀(📌) 한다.</li>
 </ol>
-<h2>Step 3. Jank 재현</h2>
-<p><code>vsync_anim.cpp</code> 의 <code>step()</code> 에 <code>usleep(20000)</code> 을 넣고 재빌드 후 다시 캡처.</p>
+<table>
+<thead>
+<tr>
+<th>트랙</th>
+<th>위치</th>
+<th>보는 것</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Expected Timeline</strong> / <strong>Actual Timeline</strong> (vsync_rect)</td>
+<td><code>sf_vsync_anim</code> 프로세스 안</td>
+<td>프레임마다 막대 하나. 초록 = 예산 안, <strong>빨강/주황 = Jank</strong></td>
+</tr>
+<tr>
+<td><code>sf_vsync_anim</code> main Thread</td>
+<td>같은 프로세스</td>
+<td><code>handleEvent</code> 슬라이스가 VSync 직후 아주 짧게(≈0.1 ms) 반복</td>
+</tr>
+<tr>
+<td><code>surfaceflinger</code> → <code>app</code> / <code>sf</code> Thread</td>
+<td><code>surfaceflinger</code> 프로세스</td>
+<td><code>onMessageRefresh</code> · <code>composite</code> · <code>HWC</code> 가 16.67 ms 마다 반복</td>
+</tr>
+<tr>
+<td><strong>VSYNC-app / VSYNC-sf</strong> 카운터</td>
+<td><code>surfaceflinger</code> 최상단</td>
+<td>0/1 로 토글되는 VSync 신호</td>
+</tr>
+</tbody>
+</table>
+<ol start="4">
+<li>마우스 휠 + <code>W</code>/<code>S</code> 로 확대, <code>A</code>/<code>D</code> 로 이동. 한 프레임 구간(16.67 ms)을 화면에 꽉 채운다.</li>
+<li>Actual Timeline 의 막대 하나를 클릭 → 하단 패널에 <code>Present Type: On time</code>, <code>Jank Type: None</code>, <code>Layer: vsync_rect</code> 가 보인다.</li>
+<li><code>handleEvent</code> 슬라이스를 클릭 → Duration 이 수십~수백 µs. 그 직후 <code>surfaceflinger</code> 의 <code>onMessageRefresh</code> 가 시작되는지 확인한다.</li>
+</ol>
+<blockquote>
+<p>이 순서 — VSync 신호 → <code>handleEvent</code>(Looper 콜백) → Transaction → 다음 VSync 에 SF 합성 → HWC — 가 실습 10 코드가 실제로 도는 모습이다.  </p>
+</blockquote>
+<h2>Step 4. Jank 버전 만들기 (빌드 서버)</h2>
+<p><code>vsync_anim.cpp</code> 의 <code>step()</code> 에 한 줄을 추가한다:</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="c1">          // 파일 상단 include 에 추가</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">step</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">usleep</span><span class="p">(</span><span class="mi">20000</span><span class="p">);</span><span class="w">                                               </span><span class="c1">// ★ 20 ms — 16.67 ms 예산 초과</span>
+<span class="w">        </span><span class="n">mX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">mX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">mScreenW</span><span class="p">;</span>
+<span class="w">        </span><span class="n">mTx</span><span class="p">.</span><span class="n">setPosition</span><span class="p">(</span><span class="n">mSurface</span><span class="p">,</span><span class="w"> </span><span class="n">mX</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">).</span><span class="n">apply</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>m<span class="w"> </span>sf_vsync_anim
+adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim<span class="w"> </span>/data/sf_vsync_anim_jank
+adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim_jank
+</code></pre></div>
+
+<p>(빌드 서버에 adb 가 없으면 WinSCP → <code>adb push</code> — Day 1 실습 4 절차)</p>
+<h2>Step 5. Jank 버전 캡처</h2>
+<p>터미널 ①:</p>
+<div class="codehilite"><pre><span></span><code>adb shell /data/sf_vsync_anim_jank
+</code></pre></div>
+
+<p>화면의 초록 사각형이 <strong>툭툭 끊기며</strong> 움직이고 속도도 느려진다 (한 프레임에 4 px 씩이지만 2~3 VSync 에 한 번만 갱신).</p>
+<p>터미널 ②:</p>
+<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;perfetto -c /data/local/tmp/day3_trace.cfg --txt -o /data/misc/perfetto-traces/day3_jank.perfetto-trace&quot;</span>
+adb pull /data/misc/perfetto-traces/day3_jank.perfetto-trace C:\aosp16\
+</code></pre></div>
+
+<h2>Step 6. Jank 트레이스 읽기</h2>
+<p><code>day3_jank.perfetto-trace</code> 를 열고 같은 방법으로 <code>vsync_rect</code> 를 찾는다.</p>
+<table>
+<thead>
+<tr>
+<th>관찰</th>
+<th>정상 버전과 다른 점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actual Timeline</td>
+<td>막대가 <strong>빨강/주황</strong>, 클릭하면 <code>Jank Type: App Deadline Missed</code> (또는 <code>Buffer Stuffing</code>)</td>
+</tr>
+<tr>
+<td><code>handleEvent</code> 슬라이스</td>
+<td>Duration ≈ <strong>20 ms</strong> — 다음 VSync 선을 넘어간다</td>
+</tr>
+<tr>
+<td>Expected vs Actual</td>
+<td>Expected 는 16.67 ms 간격, Actual 은 2~3 배 간격으로 띄엄띄엄</td>
+</tr>
+<tr>
+<td><code>surfaceflinger</code></td>
+<td>여전히 매 VSync 합성하지만 새 Transaction 이 없는 프레임은 같은 위치 → 화면 정지</td>
+</tr>
+</tbody>
+</table>
+<p>두 파일을 탭 두 개로 나란히 열어 <code>handleEvent</code> 길이(0.1 ms vs 20 ms)를 비교하면 원인이 한눈에 보인다.</p>
+<h2>Step 7. Perfetto 없이 확인 — dumpsys --latency</h2>
+<p>UI 를 못 쓰는 환경을 위해 숫자로도 본다. 애니메이션 실행 중:</p>
+<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;dumpsys SurfaceFlinger --latency vsync_rect#0 | head -8&quot;</span>
+</code></pre></div>
+
+<p>정상:</p>
+<div class="codehilite"><pre><span></span><code>16666667                                        ← VSync 주기
+ 12345678901  12345695567  12345678120          ← desiredPresent · actualPresent · frameReady
+ 12345695568  12345712234  12345695010          ← 16.67 ms 간격
+ ...
+</code></pre></div>
+
+<p>Jank:</p>
+<div class="codehilite"><pre><span></span><code>16666667
+ 12345678901  12345712234  12345698900          ← actual 이 desired 보다 한 VSync(16.67 ms) 이상 늦음
+ 12345712235  12345745568  12345732100
+</code></pre></div>
+
+<p><code>actualPresent − desiredPresent</code> 가 0 에 가까우면 정상, 16667000 이상이면 그 프레임은 놓친 것이다.</p>
+<h2>Step 8. 정리</h2>
+<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;rm /data/sf_vsync_anim_jank&quot;</span>
+</code></pre></div>
+
+<p><code>vsync_anim.cpp</code> 의 <code>usleep</code> 줄을 지우고 <code>m sf_vsync_anim</code> 으로 원복한다.</p>
+<hr />
+<h2>확인 포인트</h2>
 <ul>
-<li>Actual Timeline 에 <strong>빨간 프레임</strong> (App Deadline Missed / Buffer Stuffing)</li>
-<li><code>handleEvent</code> 슬라이스가 16.67 ms 를 넘어 다음 VSync 를 침범 → 프레임 드롭</li>
-<li>SurfaceFlinger 는 제때 합성하지만 새 Transaction 이 없어 같은 위치 → 화면이 툭툭 끊김</li>
+<li><input type="checkbox"> <code>day3_ok.perfetto-trace</code> 에서 <code>vsync_rect</code> Actual Timeline 이 초록, <code>handleEvent</code> ≈ 0.1 ms</li>
+<li><input type="checkbox"> <code>surfaceflinger</code> 의 <code>onMessageRefresh</code> 가 16.67 ms 마다 반복</li>
+<li><input type="checkbox"> Jank 버전: 빨간 프레임 + <code>App Deadline Missed</code>, <code>handleEvent</code> ≈ 20 ms</li>
+<li><input type="checkbox"> <code>--latency</code> 로 <code>actual − desired</code> 차이 확인</li>
 </ul>
-<h2>정리</h2>
+<h2>핵심 정리</h2>
 <table>
 <thead>
 <tr>
@@ -2763,26 +3306,60 @@ adb<span class="w"> </span>pull<span class="w"> </span>/data/misc/perfetto-trace
 </thead>
 <tbody>
 <tr>
-<td>App (UI Thread → RenderThread)</td>
-<td>~16.67 ms − SF 시간</td>
-<td>App Jank (빨강)</td>
+<td>App (Looper 콜백 → Transaction / Java 는 UI Thread → RenderThread)</td>
+<td>≈ 16.67 ms − SF 시간</td>
+<td><strong>App Jank</strong> — Actual Timeline 빨강</td>
 </tr>
 <tr>
-<td>SurfaceFlinger 합성</td>
+<td>SurfaceFlinger 합성 (<code>onMessageRefresh</code> → <code>composite</code>)</td>
 <td>수 ms</td>
 <td>SF Jank</td>
 </tr>
 <tr>
 <td>HWC / Display</td>
 <td>VSync 경계</td>
-<td>프레임 표시 지연</td>
+<td>표시 지연</td>
 </tr>
 </tbody>
 </table>
-<p>Day 4 SystemUI 실습에서 같은 방법으로 Java App(<code>com.android.systemui</code>) 의 UI Thread / RenderThread Jank 를 분석한다.</p><div class="nav"><a href="#lab12">← 이전<span>실습 12 Graphics · Memory 분석 + LMKD</span></a><span></span></div></div></section></div>
+<ul>
+<li>실습 10 의 <code>handleEvent</code> 가 곧 "App 의 프레임 작업" 이다. 여기서 20 ms 를 쓰면 다음 VSync 를 놓친다.</li>
+<li>Java App 도 같다 — <code>Choreographer</code> 콜백 → UI Thread <code>measure/layout/draw</code> → RenderThread 가 이 구간. Day 4 SystemUI 실습에서 같은 cfg 로 <code>com.android.systemui</code> 를 본다.</li>
+</ul>
+<h2>트러블슈팅</h2>
+<table>
+<thead>
+<tr>
+<th>증상</th>
+<th>해결</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>perfetto: not found</code> / <code>Connection refused</code></td>
+<td><code>adb shell setprop persist.traced.enable 1</code> → 재시도</td>
+</tr>
+<tr>
+<td><code>Permission denied</code> (출력 파일)</td>
+<td>출력 경로는 <code>/data/misc/perfetto-traces/</code> 만 허용</td>
+</tr>
+<tr>
+<td>UI 에서 <code>vsync_rect</code> 검색 결과 없음</td>
+<td>캡처 중에 애니메이션이 실행 중이었는지 확인 (6초 안에 끝났으면 다시)</td>
+</tr>
+<tr>
+<td>Actual Timeline 트랙이 없음</td>
+<td>cfg 의 <code>android.surfaceflinger.frametimeline</code> 데이터 소스 확인</td>
+</tr>
+<tr>
+<td>트레이스가 너무 큼 / 느림</td>
+<td><code>duration_ms</code> 를 3000 으로, <code>atrace_apps: "*"</code> 를 <code>"sf_vsync_anim"</code> 로</td>
+</tr>
+</tbody>
+</table><div class="nav"><a href="#lab12">← 이전<span>실습 12 Graphics · Memory 분석 + LMKD 따라하기</span></a><span></span></div></div></section></div>
 </main>
 <script>
-var ITEMS=[{"k": "curriculum", "num": "Day 3 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 3 환경 점검 · Android.bp 일괄 등록 · JDK", "d": "15분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "sp<> 직접 구현 4단계 — RefBase 로", "d": "25분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Android RefBase · wp · promote · 순환 참조", "d": "20분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Thread 단계별 — pthread → android::Thread", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Looper 단계별 — pollOnce → addFd → MessageHandler", "d": "40분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "Binder 에서의 동작 — PoolThread · joinThreadPool · Handler", "d": "20분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "JNI Native Method — First · Second · RegisterNatives", "d": "35분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "JNI Invocation API + Framework JNI 읽기", "d": "25분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "SurfaceFlinger Client — Transaction · ANativeWindow", "d": "30분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "VSync 애니메이션 — DisplayEventReceiver + Looper", "d": "30분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "공유 메모리 3단계 — pipe · ashmem · memfd", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "Graphics · Memory 분석 + LMKD", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13 (데모)", "t": "Perfetto — 합성 파이프라인 · Jank", "d": "15분", "g": "demo"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
+var ITEMS=[{"k": "curriculum", "num": "Day 3 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 3 환경 점검 · Android.bp 일괄 등록 · JDK", "d": "15분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "sp<> 직접 구현 4단계 — RefBase 로", "d": "25분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Android RefBase · wp · promote · 순환 참조", "d": "20분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Thread 단계별 — pthread → android::Thread", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Looper 단계별 — pollOnce → addFd → MessageHandler", "d": "40분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "Binder 에서의 동작 — PoolThread · joinThreadPool · Handler", "d": "20분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "JNI Native Method — First · Second · RegisterNatives", "d": "35분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "JNI Invocation API + Framework JNI 읽기", "d": "25분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "SurfaceFlinger Client — Transaction · ANativeWindow", "d": "30분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "VSync 애니메이션 — DisplayEventReceiver + Looper", "d": "30분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "공유 메모리 3단계 — pipe · ashmem · memfd", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "Graphics · Memory 분석 + LMKD 따라하기", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13", "t": "Perfetto — 합성 파이프라인 · Jank 따라하기", "d": "25분", "g": "lab"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
 var done={}; try{done=JSON.parse(localStorage.getItem('day3done')||'{}')}catch(e){}
 var nav=document.getElementById('nav');
 GROUPS.forEach(function(g){
