@@ -153,7 +153,8 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
   <div class="bar"><span id="cur"></span></div>
   <div id="content"><section class="page" id="pg-curriculum"><div class="wrap"><div class="meta"><b>Day 3 커리큘럼</b><span>Android Framework 16 심화 · Day 3</span></div><h1>Day 3 — sp/wp · Thread · Looper · JNI · Graphics · SurfaceFlinger · 공유 메모리 · Memory</h1>
 <p><strong>과정:</strong> Android Framework 16 심화 교육 (4일 / 32시간)
-<strong>환경:</strong> Ubuntu 24 빌드 서버 (<code>~/android</code>, AOSP <code>sdk_car_x86_64</code>, 호스트 JDK) + Windows (Android Studio, WinSCP, adb) + 커스텀 Emulator (userdebug, permissive)
+<strong>환경:</strong> Ubuntu 24 빌드 서버 (<code>~/android</code>, AOSP <code>sdk_car_x86_64</code>, 호스트 JDK) + Windows 11 (Android Studio, WinSCP, adb) + 커스텀 Emulator (userdebug, permissive)
+<strong>배포 절차:</strong> 빌드 서버 <code>m &lt;모듈명&gt;</code> → WinSCP 로 <code>$OUT/system/bin/&lt;모듈명&gt;</code> 을 <code>C:\aosp16\bin\</code> 로 다운로드 → Windows cmd <code>adb push</code> → <code>adb shell</code> 에서 <code>chmod 755</code> 후 실행 (모든 실습 공통)
 <strong>범위:</strong> libutils 3종 세트(<code>RefBase</code>·<code>sp/wp</code>, <code>Thread</code>, <code>Looper</code>)를 <strong>단계별로 직접 구현</strong> → Binder Thread Pool 에서의 동작 → JNI → SurfaceFlinger Client (VSync + Looper) → 공유 메모리 (pipe · ashmem · memfd · <code>MemoryHeapBase</code>) → Memory / LMKD
 <strong>총 소요시간:</strong> 8시간 (환경·등록 실습 15m / 강의 1h 45m / 실습 5h 40m / Worksheet 20m)
 <strong>실습 번호:</strong> 실습 1 ~ 13 (Part 0 부터 연속 번호)</p>
@@ -419,7 +420,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 </tr>
 <tr>
 <td>13</td>
-<td>Perfetto (따라하기) — cfg 작성 · 정상/Jank 두 버전 캡처 · ui.perfetto.dev 트랙 읽기 · <code>--latency</code> 로 숫자 확인</td>
+<td>Perfetto (따라하기) — cfg 작성 · 캡처 · <strong>VSync 제어 흐름</strong>(VSYNC-app → handleEvent → SF 합성) · <strong>Binder 호출 흐름</strong>(transaction ─flow→ reply) · Jank · SQL 질의</td>
 <td>★★☆</td>
 <td>25분</td>
 <td>Ch 3</td>
@@ -482,12 +483,13 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
 - <code>dumpsys meminfo</code> 항목 해석표 (Pss/Private Dirty/Rss · <code>.so mmap</code> Rss≫Pss = Zygote COW · <code>Ashmem</code>/<code>Other mmap</code> 에 실습 11 · <code>Graphics</code> 에 dmabuf) · <code>procrank</code> · <code>showmap</code> 의 shared clean
 - <code>oom_score_adj</code>: Settings 를 열고(0) → 홈으로(900 대) · <code>dumpsys activity oom</code> 상태표
 - <code>MemHog</code> 앱 전체 소스 (<code>byte[50MB]</code> 누적 · 자동 할당 · <code>largeHeap</code>) → <code>logcat -s lmkd</code> 에서 <code>Kill '…' oom_score_adj 985 → 900 → … → 0(자신)</code> 순서 · <code>/proc/pressure/memory</code> · RAM 2 GB AVD 로 재현</p>
-<p><strong>실습 13. Perfetto — 합성 파이프라인 · Jank — 25분</strong> (따라하기, 전원)
-- <code>day3_trace.cfg</code> 전문 (ftrace sched · atrace gfx/view/sf · frametimeline · process_stats) → <code>adb push /data/local/tmp/</code>
-- 정상 버전: <code>sf_vsync_anim</code> 실행 중 <code>perfetto -c … --txt -o /data/misc/perfetto-traces/day3_ok.perfetto-trace</code> → <code>adb pull</code>
-- ui.perfetto.dev: <code>vsync_rect</code> 검색 → Expected/Actual Timeline · <code>handleEvent</code> ≈ 0.1 ms · <code>surfaceflinger</code> <code>onMessageRefresh</code> 16.67 ms 주기 · VSYNC-app 카운터
-- Jank 버전: <code>step()</code> 에 <code>usleep(20000)</code> → <code>m sf_vsync_anim</code> → <code>/data/sf_vsync_anim_jank</code> → 캡처 → 빨간 프레임 <code>App Deadline Missed</code>, <code>handleEvent</code> ≈ 20 ms
-- UI 없이: <code>dumpsys SurfaceFlinger --latency vsync_rect#0</code> 의 <code>actual − desired</code> 로 놓친 프레임 확인 · 원복</p>
+<p><strong>실습 13. Perfetto — VSync 흐름 · Binder 흐름 · Jank — 25분</strong> (따라하기, 전원)
+- <code>day3_trace.cfg</code> 전문 (sched · <code>binder/binder_transaction*</code> · atrace gfx/sf/binder_driver/aidl · frametimeline) → Windows 에서 push · <code>setprop persist.traced.enable 1</code>
+- 한 트레이스에 애니메이션(실습 10, <code>ATRACE_CALL</code> 포함) + Day 2 <code>my_client_test_4</code> 3회 실행을 함께 캡처 → <code>adb pull</code>
+- UI: 프로세스 핀 → <strong>VSync 제어 흐름</strong> 7단계 (<code>VSYNC-app</code> 토글 → <code>handleEvent</code> → <code>step:…</code> → SF <code>binder reply</code> flow → <code>onMessageRefresh</code> → HWC → Actual Timeline) · <code>M</code>/<code>Shift+M</code> 측정
+- <strong>Binder 호출 흐름</strong>: <code>binder transaction</code> ─화살표→ <code>binder reply</code>(<code>binder:PID_1</code>) · Flow events 탭 · <code>binder_transaction</code> ftrace 점 · <code>sched_waking</code> 으로 Thread 깨어남
+- Jank 버전(<code>usleep(20000)</code>) 캡처 → 정상과 비교표 (<code>handleEvent</code> 0.1 vs 20 ms · <code>App Deadline Missed</code>)
+- SQL 질의 4개 (<code>handleEvent</code> 통계 · <code>actual_frame_timeline_slice</code> · Binder 쌍 · VSync 주기) · <code>--latency</code> 로 UI 없이 확인 · 원복</p>
 <hr />
 <h2>Part 3. 정리 (총 20분)</h2>
 <h3>Day 3 Worksheet — 20분</h3>
@@ -522,7 +524,7 @@ oom_score_adj / LMKD / PSI
 - <input type="checkbox"> 빌드 서버에 <code>default-jdk</code> 설치 (실습 7·8) — <code>javac -version</code>
 - <input type="checkbox"> 실습 11 memfd 는 커널 <code>CONFIG_MEMFD_CREATE</code>(GKI 기본 포함), ashmem 은 <code>/dev/ashmem</code> 존재 확인 (<code>ls -l /dev/ashmem</code>)
 - <input type="checkbox"> 실습 12 용 RAM 2 GB AVD 미리 생성 안내 · <code>adb shell which perfetto procrank showmap</code> 확인
-- <input type="checkbox"> 실습 13 <code>day3_trace.cfg</code> 배포본 (문서 Step 1 과 동일) · 수강생 PC 에서 https://ui.perfetto.dev 접속 가능 확인 (방화벽)
+- <input type="checkbox"> 실습 13 <code>day3_trace.cfg</code> 배포본 (문서 Step 1 과 동일) · 수강생 PC 에서 https://ui.perfetto.dev 접속 가능 확인 (방화벽) · Day 2 <code>my_server_test_4</code>/<code>my_client_test_4</code> 가 Emulator <code>/data</code> 에 남아 있는지
 - <input type="checkbox"> Day 3 Worksheet 인쇄본 + 정답지</p>
 <p><strong>수강생</strong>
 - <input type="checkbox"> Day 2 ctags(<code>android_native_tags</code>) 유지 — 실습 6·8 의 <code>:tag ProcessState::spawnPooledThread</code>, <code>JavaBBinder</code>
@@ -546,10 +548,12 @@ lunch<span class="w"> </span>sdk_car_x86_64-aosp_current-userdebug
 <span class="nb">echo</span><span class="w"> </span><span class="nv">$OUT</span>
 </code></pre></div>
 
-<div class="codehilite"><pre><span></span><code>adb root
-adb shell getenforce                REM Permissive
-adb shell ls -l /dev/ashmem         REM 실습 11 ashmem
-adb shell <span class="s2">&quot;grep memfd /proc/kallsyms | head -1&quot;</span>   REM 실습 11 memfd (커널 지원)
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>root
+adb<span class="w"> </span>shell
+getenforce<span class="w">                          </span><span class="c1"># Permissive</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/dev/ashmem<span class="w">                   </span><span class="c1"># 실습 11 ashmem</span>
+grep<span class="w"> </span>memfd<span class="w"> </span>/proc/kallsyms<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="w"> </span><span class="c1"># 실습 11 memfd (커널 지원)</span>
+<span class="nb">exit</span>
 </code></pre></div>
 
 <h2>Step 2. 호스트 JDK (실습 7·8)</h2>
@@ -592,7 +596,7 @@ cc_binary {
 cc_binary {
     name: &quot;sf_vsync_anim&quot;,
     srcs: [&quot;vsync_anim/vsync_anim.cpp&quot;],
-    shared_libs: [&quot;libgui&quot;,&quot;libui&quot;,&quot;libutils&quot;,&quot;liblog&quot;,&quot;libbinder&quot;,&quot;libandroid&quot;],
+    shared_libs: [&quot;libgui&quot;,&quot;libui&quot;,&quot;libutils&quot;,&quot;liblog&quot;,&quot;libbinder&quot;,&quot;libandroid&quot;,&quot;libcutils&quot;],   // libcutils: ATRACE (실습 13 Perfetto)
     cflags: [&quot;-Wall&quot;,&quot;-Werror&quot;],
 }
 
@@ -607,7 +611,34 @@ cc_binary { name: &quot;memfd_server&quot;,  srcs: [&quot;memfd_test/memfd_serve
 cc_binary { name: &quot;memfd_client&quot;,  srcs: [&quot;memfd_test/memfd_client.cpp&quot;], shared_libs: [&quot;libbinder&quot;,&quot;libutils&quot;,&quot;liblog&quot;] }
 </code></pre></div>
 
-<h2>Step 5. Soong 분석 1회</h2>
+<h2>Step 5. 배포 규칙 (Day 1·2 와 동일)</h2>
+<p>모든 실습의 실행 절차는 세 단계다. 문서마다 반복되므로 여기서 한 번 정리한다.</p>
+<table>
+<thead>
+<tr>
+<th>어디서</th>
+<th>무엇을</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>빌드 서버 (PuTTY)</strong></td>
+<td><code>m &lt;모듈명&gt;</code> → <code>ls $OUT/system/bin/&lt;모듈명&gt;</code></td>
+</tr>
+<tr>
+<td><strong>WinSCP</strong></td>
+<td><code>out/target/product/emulator_car64_x86_64/system/bin/&lt;모듈명&gt;</code> 을 <code>C:\aosp16\bin\</code> 로 다운로드 (없으면 폴더 생성)</td>
+</tr>
+<tr>
+<td><strong>Windows cmd</strong></td>
+<td><code>adb root</code> → <code>adb push C:\aosp16\bin\&lt;모듈명&gt; /data</code> → <code>adb shell</code> → <code>chmod 755 /data/&lt;모듈명&gt;</code> → 실행</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><code><span class="k">mkdir</span> C:\aosp16\bin
+</code></pre></div>
+
+<h2>Step 6. Soong 분석 1회</h2>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>sp_test<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-3<span class="w">      </span><span class="c1"># 분석 5~6분 → 빈 .cpp 링크 오류는 정상</span>
 </code></pre></div>
 
@@ -615,7 +646,7 @@ cc_binary { name: &quot;memfd_client&quot;,  srcs: [&quot;memfd_test/memfd_clien
 <hr />
 <h2>확인 포인트</h2>
 <ul>
-<li><input type="checkbox"> <code>adb shell getenforce</code> = Permissive, <code>/dev/ashmem</code> 존재</li>
+<li><input type="checkbox"> <code>adb shell</code> 에서 <code>getenforce</code> = Permissive, <code>/dev/ashmem</code> 존재</li>
 <li><input type="checkbox"> <code>javac -version</code> 출력</li>
 <li><input type="checkbox"> <code>m sp_test</code> 에서 <code>analyzing Android.bp</code> 통과</li>
 <li><input type="checkbox"> <code>vim</code> 에서 <code>:tag Looper::pollOnce</code> 로 이동 (Day 2 tags 유지)</li>
@@ -781,11 +812,22 @@ after
 
 <h2>빌드 · 실행</h2>
 <p>각 단계를 <code>#if 1 … #endif</code> 로 감싸 한 번에 하나만 활성화한다.</p>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>sp_test
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sp_test<span class="w"> </span>/data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sp_test<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/sp_test
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sp_test
 </code></pre></div>
 
-<p>(WinSCP 경유가 번거로우면 빌드 서버에 adb 가 있을 때 위처럼 직접 push 해도 된다.)</p>
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>sp_test</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\sp_test /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sp_test
+/data/sp_test
+</code></pre></div>
+
 <hr />
 <h2>확인 포인트</h2>
 <ul>
@@ -944,8 +986,20 @@ after
 </code></pre></div>
 
 <h2>빌드 · 실행</h2>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>my_sp_test
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/my_sp_test<span class="w"> </span>/data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/my_sp_test<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/my_sp_test
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/my_sp_test
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>my_sp_test</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\my_sp_test /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/my_sp_test
+/data/my_sp_test
 </code></pre></div>
 
 <hr />
@@ -1132,9 +1186,21 @@ parent
 </code></pre></div>
 
 <h2>빌드 · 실행</h2>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>thread_test<span class="w"> </span>my_thread_test
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/thread_test<span class="w"> </span><span class="nv">$OUT</span>/system/bin/my_thread_test<span class="w"> </span>/data
-adb<span class="w"> </span>shell<span class="w"> </span><span class="s2">&quot;chmod 755 /data/thread_test /data/my_thread_test; /data/my_thread_test&quot;</span>
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/thread_test<span class="w"> </span><span class="nv">$OUT</span>/system/bin/my_thread_test
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>thread_test</code>, <code>my_thread_test</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\thread_test C:\aosp16\bin\my_thread_test /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/thread_test<span class="w"> </span>/data/my_thread_test
+/data/thread_test<span class="w">      </span><span class="c1"># Ctrl+C 로 종료</span>
+/data/my_thread_test
 </code></pre></div>
 
 <h2>실험 — Thread 가 RefBase 인 이유</h2>
@@ -1371,8 +1437,20 @@ POLL_CALLBACK
 
 <p><code>sendMessage</code> 는 메시지를 큐(<code>mMessageEnvelopes</code>)에 넣고 <code>wake()</code> 한다. <code>pollOnce</code> 는 fd 이벤트를 처리한 뒤 만기된 메시지를 <code>handleMessage</code> 로 보낸다. Java <code>Handler.sendMessageDelayed</code> 의 실체다.</p>
 <h2>빌드 · 실행</h2>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>looper_test
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/looper_test<span class="w"> </span>/data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/looper_test<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/looper_test
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/looper_test
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>looper_test</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\looper_test /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/looper_test
+/data/looper_test
 </code></pre></div>
 
 <hr />
@@ -1502,13 +1580,14 @@ vim<span class="w"> </span>ProcessState.cpp
 </table>
 <h2>Step 3. startThreadPool 유무 실험 (Emulator)</h2>
 <p>Day 2 <code>my_server_test_4</code> 를 그대로 쓴다.</p>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>/data/my_server_test_4<span class="w"> </span><span class="p">&amp;</span>
-<span class="nv">SPID</span><span class="o">=</span><span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>my_server_test_4<span class="k">)</span>
-adb<span class="w"> </span>shell<span class="w"> </span><span class="s2">&quot;ps -T -p </span><span class="nv">$SPID</span><span class="s2">&quot;</span><span class="w">                      </span><span class="c1"># binder:&lt;pid&gt;_1, _2 … Thread 이름 = Thread::run(name)</span>
-adb<span class="w"> </span>shell<span class="w"> </span><span class="s2">&quot;cat /dev/binderfs/binder_logs/proc/</span><span class="nv">$SPID</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^  thread&quot;</span>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+/data/my_server_test_4<span class="w"> </span><span class="p">&amp;</span>
+<span class="nv">SPID</span><span class="o">=</span><span class="k">$(</span>pidof<span class="w"> </span>my_server_test_4<span class="k">)</span>
+ps<span class="w"> </span>-T<span class="w"> </span>-p<span class="w"> </span><span class="nv">$SPID</span><span class="w">  </span><span class="c1"># binder:&lt;pid&gt;_1, _2 … Thread 이름 = Thread::run(name)</span>
+cat<span class="w"> </span>/dev/binderfs/binder_logs/proc/<span class="nv">$SPID</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^  thread&quot;</span>
 
 <span class="c1"># 동시 호출 3개 → 서버 로그의 tid 가 달라진다 (Thread Pool)</span>
-<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/my_client_test_4<span class="w"> </span><span class="nv">$i</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="k">done</span><span class="p">;</span><span class="w"> </span><span class="nb">wait</span>
+<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>/data/my_client_test_4<span class="w"> </span><span class="nv">$i</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="k">done</span><span class="p">;</span><span class="w"> </span><span class="nb">wait</span>
 </code></pre></div>
 
 <p><code>my_server.cpp</code> 에서 <code>startThreadPool()</code> 줄을 주석 처리하고 다시 빌드·실행하면 main 하나만 <code>joinThreadPool</code> 에 있어 tid 가 모두 같고 순차 처리된다.</p>
@@ -1950,16 +2029,27 @@ vim<span class="w"> </span>app_main.cpp
 </code></pre></div>
 
 <h2>Step 2. 빌드 · 실행</h2>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>surface_client_test
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/surface_client_test<span class="w"> </span>/data
-adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/surface_client_test
-adb<span class="w"> </span>shell<span class="w"> </span>/data/surface_client_test
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/surface_client_test
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>surface_client_test</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\surface_client_test /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/surface_client_test
+/data/surface_client_test
 </code></pre></div>
 
 <p>Emulator 화면 (100,100) 에 빨간 400×400 사각형이 Car Launcher <strong>위에</strong> 나타난다. <code>Ctrl+C</code> 로 종료하면 사라진다.</p>
 <h2>Step 3. 관찰</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;My Cpp&quot;</span>
-adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A25<span class="w"> </span><span class="s2">&quot;My Cpp Surface&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-40
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;My Cpp&quot;</span>
+dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A25<span class="w"> </span><span class="s2">&quot;My Cpp Surface&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-40
 <span class="c1"># z=2147483647  pos=(100,100)  size=400x400  format=RGBA_8888  activeBuffer=[400x400:...]</span>
 </code></pre></div>
 
@@ -2047,6 +2137,8 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <h2>Step 1. 소스</h2>
 <p><strong><code>vsync_anim/vsync_anim.cpp</code></strong></p>
 <div class="codehilite"><pre><span></span><code><span class="cp">#define LOG_TAG &quot;sf_vsync_anim&quot;</span>
+<span class="cp">#define ATRACE_TAG ATRACE_TAG_GRAPHICS          </span><span class="c1">// ★ Perfetto &quot;gfx&quot; 카테고리에 우리 슬라이스를 싣는다 (실습 13)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;utils/Trace.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;gui/SurfaceComposerClient.h&gt;</span>
@@ -2066,6 +2158,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="n">mSurface</span><span class="p">(</span><span class="n">sc</span><span class="p">),</span><span class="w"> </span><span class="n">mReceiver</span><span class="p">(</span><span class="n">recv</span><span class="p">),</span><span class="w"> </span><span class="n">mScreenW</span><span class="p">(</span><span class="n">screenW</span><span class="p">),</span><span class="w"> </span><span class="n">mTx</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">handleEvent</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="cm">/*fd*/</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="cm">/*events*/</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="cm">/*data*/</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ATRACE_CALL</span><span class="p">();</span><span class="w">                                               </span><span class="c1">// ★ &quot;handleEvent&quot; 슬라이스</span>
 <span class="w">        </span><span class="n">DisplayEventReceiver</span><span class="o">::</span><span class="n">Event</span><span class="w"> </span><span class="n">ev</span><span class="p">;</span>
 <span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">mReceiver</span><span class="o">-&gt;</span><span class="n">getEvents</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ev</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                  </span><span class="c1">// fd 에서 이벤트 읽기</span>
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ev</span><span class="p">.</span><span class="n">header</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">DisplayEventReceiver</span><span class="o">::</span><span class="n">DISPLAY_EVENT_VSYNC</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2077,6 +2170,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="w">    </span><span class="p">}</span>
 <span class="k">private</span><span class="o">:</span>
 <span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">step</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ATRACE_NAME</span><span class="p">(</span><span class="s">&quot;step:setPosition+apply&quot;</span><span class="p">);</span><span class="w">                       </span><span class="c1">// ★ 이름 지정 슬라이스 (실습 13)</span>
 <span class="w">        </span><span class="n">mX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">mX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">mScreenW</span><span class="p">;</span><span class="w">                                    </span><span class="c1">// 60 fps × 4 px = 240 px/s</span>
 <span class="w">        </span><span class="n">mTx</span><span class="p">.</span><span class="n">setPosition</span><span class="p">(</span><span class="n">mSurface</span><span class="p">,</span><span class="w"> </span><span class="n">mX</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">).</span><span class="n">apply</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
@@ -2129,16 +2223,27 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 </code></pre></div>
 
 <h2>Step 2. 빌드 · 실행</h2>
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>sf_vsync_anim
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim<span class="w"> </span>/data
-adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim
-adb<span class="w"> </span>shell<span class="w"> </span>/data/sf_vsync_anim
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>sf_vsync_anim</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\sf_vsync_anim /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim
+/data/sf_vsync_anim
 </code></pre></div>
 
 <p>초록 사각형이 10초 동안 왼쪽 → 오른쪽으로 움직이다 종료된다.</p>
 <h2>Step 3. 관찰</h2>
-<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--latency<span class="w"> </span>vsync_rect<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w">      </span><span class="c1"># VSync 주기(ns) 와 프레임 타임스탬프</span>
-adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> </span>display<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;refreshRate|mode&quot;</span><span class="w">            </span><span class="c1"># 60 Hz → 16666667 ns</span>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--latency<span class="w"> </span>vsync_rect<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w">      </span><span class="c1"># VSync 주기(ns) 와 프레임 타임스탬프</span>
+dumpsys<span class="w"> </span>display<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;refreshRate|mode&quot;</span><span class="w">            </span><span class="c1"># 60 Hz → 16666667 ns</span>
 </code></pre></div>
 
 <h2>Step 4. 실험</h2>
@@ -2186,6 +2291,7 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <li><code>Looper::addFd(fd, …, LooperCallback)</code> — 실습 5 ④ 그대로. <code>handleEvent</code> 가 Looper Thread(여기선 main) 에서 실행된다.</li>
 <li><code>requestNextVsync()</code> 는 1회성 — 매 프레임 다시 요청. Java <code>Choreographer.postFrameCallback</code> 의 실체.</li>
 <li><code>sp&lt;SurfaceControl&gt;</code> vs <code>unique_ptr&lt;DisplayEventReceiver&gt;</code> — <code>RefBase</code> 를 상속했는가로 결정.</li>
+<li><code>ATRACE_CALL()</code> / <code>ATRACE_NAME()</code> (<code>utils/Trace.h</code>, <code>libcutils</code> 링크) — 함수 구간을 Perfetto 슬라이스로 기록. <code>ATRACE_TAG</code> 카테고리(gfx)가 켜졌을 때만 동작해 평소 비용은 0 에 가깝다. 실습 13 에서 이 슬라이스를 본다.</li>
 </ul><div class="nav"><a href="#lab9">← 이전<span>실습 9 SurfaceFlinger Client — Transaction · ANativeWindow</span></a><a href="#lab11" style="text-align:right">다음 →<span>실습 11 공유 메모리 3단계 — pipe · ashmem · memfd</span></a></div></div></section><section class="page" id="pg-lab11"><div class="wrap"><div class="meta"><b>실습 11</b><span>소요시간 30분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 11. 공유 메모리 3단계 — pipe → ashmem(MemoryHeapBase/MemoryBase) → memfd + F_SEAL</h1>
 <blockquote>
 <p><strong>소요시간:</strong> 30분 · <strong>난이도:</strong> ★★★ · <strong>챕터:</strong> Ch 4 공유 메모리<br />
@@ -2284,10 +2390,21 @@ adb<span class="w"> </span>shell<span class="w"> </span>dumpsys<span class="w"> 
 <span class="p">}</span>
 </code></pre></div>
 
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>pipe_server<span class="w"> </span>pipe_client
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_server<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_client<span class="w"> </span>/data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/pipe_server<span class="w"> </span>/data/pipe_client
-adb<span class="w"> </span>shell<span class="w"> </span>/data/pipe_server<span class="w"> </span><span class="p">&amp;</span>
-adb<span class="w"> </span>shell<span class="w"> </span>/data/pipe_client<span class="w"> </span><span class="m">8388608</span>
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_server<span class="w"> </span><span class="nv">$OUT</span>/system/bin/pipe_client
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>pipe_server</code>, <code>pipe_client</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\pipe_server C:\aosp16\bin\pipe_client /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/pipe_server<span class="w"> </span>/data/pipe_client
+/data/pipe_server<span class="w"> </span><span class="p">&amp;</span>
+/data/pipe_client<span class="w"> </span><span class="m">8388608</span>
 <span class="c1"># [server] pipe fd[0]=7 fd[1]=8 → client pid=6410</span>
 <span class="c1"># [server] wrote 8388608 bytes via pipe</span>
 <span class="c1"># [client] got fd=5          ← ★ 번호가 다르다 = dup</span>
@@ -2332,11 +2449,23 @@ adb<span class="w"> </span>shell<span class="w"> </span>/data/pipe_client<span c
 <span class="p">}</span>
 </code></pre></div>
 
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>ashmem1_server<span class="w"> </span>ashmem1_client
-adb<span class="w"> </span>push<span class="w"> </span>…<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/ashmem1_server<span class="w"> </span><span class="p">&amp;</span>
-adb<span class="w"> </span>shell<span class="w"> </span>/data/ashmem1_client
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/ashmem1_server<span class="w"> </span><span class="nv">$OUT</span>/system/bin/ashmem1_client
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>ashmem1_server</code>, <code>ashmem1_client</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\ashmem1_server C:\aosp16\bin\ashmem1_client /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/ashmem1_server<span class="w"> </span>/data/ashmem1_client
+/data/ashmem1_server<span class="w"> </span><span class="p">&amp;</span>
+/data/ashmem1_client
 <span class="c1"># [client] base=0x7c1e...  : Hello Client !!  (server pid 6501)</span>
-adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </span>-l<span class="w"> </span>/proc/<span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>ashmem1_server<span class="k">)</span>/fd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;ashmem|memfd&quot;</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/proc/<span class="k">$(</span>pidof<span class="w"> </span>ashmem1_server<span class="k">)</span>/fd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;ashmem|memfd&quot;</span>
 <span class="c1"># lrwx------ ... 4 -&gt; /dev/ashmem     (또는 /memfd:MemoryHeapBase)</span>
 </code></pre></div>
 
@@ -2432,14 +2561,26 @@ adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </spa
 <span class="p">}</span>
 </code></pre></div>
 
+<p><strong>빌드 서버 (PuTTY)</strong></p>
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>memfd_server<span class="w"> </span>memfd_client
-adb<span class="w"> </span>push<span class="w"> </span>…<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>/data/memfd_server<span class="w"> </span><span class="p">&amp;</span>
-adb<span class="w"> </span>shell<span class="w"> </span>/data/memfd_client
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/memfd_server<span class="w"> </span><span class="nv">$OUT</span>/system/bin/memfd_client
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>out/target/product/emulator_car64_x86_64/system/bin/</code> 에서 <code>memfd_server</code>, <code>memfd_client</code> 를 <code>C:\aosp16\bin\</code> 로 다운로드</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb root
+adb push C:\aosp16\bin\memfd_server C:\aosp16\bin\memfd_client /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/memfd_server<span class="w"> </span>/data/memfd_client
+/data/memfd_server<span class="w"> </span><span class="p">&amp;</span>
+/data/memfd_client
 <span class="c1"># [client] fd=5 seals=0xf</span>
 <span class="c1"># [client] read: Hello from memfd (sealed)</span>
 <span class="c1"># [client] PROT_WRITE mmap: Operation not permitted</span>
 <span class="c1"># [client] ftruncate: Operation not permitted</span>
-adb<span class="w"> </span>shell<span class="w"> </span>ls<span class="w"> </span>-l<span class="w"> </span>/proc/<span class="k">$(</span>adb<span class="w"> </span>shell<span class="w"> </span>pidof<span class="w"> </span>memfd_server<span class="k">)</span>/fd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>memfd
+ls<span class="w"> </span>-l<span class="w"> </span>/proc/<span class="k">$(</span>pidof<span class="w"> </span>memfd_server<span class="k">)</span>/fd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>memfd
 <span class="c1"># 3 -&gt; /memfd:shared_page (deleted)</span>
 </code></pre></div>
 
@@ -3089,22 +3230,62 @@ I lmkd: Kill &#39;com.example.memhog&#39; (7110), uid 10160, oom_score_adj 0 ...
 <td>서버가 떠 있는지, <code>pidof</code> 가 맞는 PID 인지 확인</td>
 </tr>
 </tbody>
-</table><div class="nav"><a href="#lab11">← 이전<span>실습 11 공유 메모리 3단계 — pipe · ashmem · memfd</span></a><a href="#lab13" style="text-align:right">다음 →<span>실습 13 Perfetto — 합성 파이프라인 · Jank 따라하기</span></a></div></div></section><section class="page" id="pg-lab13"><div class="wrap"><div class="meta"><b>실습 13</b><span>소요시간 25분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 13. Perfetto 로 SurfaceFlinger 합성 파이프라인 · Jank 보기 — 따라하기</h1>
+</table><div class="nav"><a href="#lab11">← 이전<span>실습 11 공유 메모리 3단계 — pipe · ashmem · memfd</span></a><a href="#lab13" style="text-align:right">다음 →<span>실습 13 Perfetto — VSync 흐름 · Binder 흐름 · Jank</span></a></div></div></section><section class="page" id="pg-lab13"><div class="wrap"><div class="meta"><b>실습 13</b><span>소요시간 25분</span><span>Android Framework 16 심화 · Day 3</span></div><h1>실습 13. Perfetto — VSync 제어 흐름 · Binder 호출 흐름 · Jank 따라하기</h1>
 <blockquote>
-<p><strong>소요시간:</strong> 25분 · <strong>난이도:</strong> ★★☆ · <strong>챕터:</strong> Ch 3 Graphics<br />
-<strong>환경:</strong> Emulator (adb root) + 실습 10 <code>sf_vsync_anim</code> + 브라우저(https://ui.perfetto.dev) · 빌드 서버 (Jank 버전 재빌드)  </p>
+<p><strong>소요시간:</strong> 25분 · <strong>난이도:</strong> ★★☆ · <strong>챕터:</strong> Ch 3 Graphics ↔ Day 2 Binder<br />
+<strong>환경:</strong> 빌드 서버(PuTTY, <code>m</code>) → WinSCP → Windows 11 cmd(<code>adb</code>) → Emulator · 브라우저 https://ui.perfetto.dev<br />
+<strong>준비물:</strong> 실습 10 <code>sf_vsync_anim</code> (ATRACE 포함 버전), Day 2 <code>my_server_test_4</code> / <code>my_client_test_4</code> 가 <code>/data</code> 에 있어야 한다  </p>
 </blockquote>
 <h2>목표</h2>
 <ul>
-<li>VSync → <code>handleEvent</code> → <code>Transaction.apply</code> → SurfaceFlinger 합성 → HWC 가 시간축에서 어떻게 이어지는지 <strong>직접 캡처</strong>해서 본다.</li>
-<li>프레임 예산 16.67 ms 를 일부러 넘긴 버전을 캡처해 frame timeline 의 <strong>빨간 Jank 프레임</strong>을 확인한다.</li>
-<li>Perfetto 명령 없이도 확인할 수 있게 <code>dumpsys SurfaceFlinger --latency</code> 와 비교한다.</li>
+<li>Perfetto 를 <strong>cfg 작성 → 캡처 → pull → UI 열기 → 트랙 찾기 → 슬라이스 읽기</strong> 순서로 한 번 끝까지 해 본다.</li>
+<li><strong>VSync 제어 흐름</strong>: SurfaceFlinger 의 VSync 신호 → 우리 <code>handleEvent</code>(Looper 콜백) → <code>Transaction.apply</code> → SF 합성 → HWC 를 시간축에서 잇는다.</li>
+<li><strong>Binder 호출 흐름</strong>: Day 2 client → server 의 <code>transact</code> 가 Perfetto 에서 화살표(flow)로 어떻게 보이는지 본다.</li>
+<li>프레임 예산 16.67 ms 를 넘긴 <strong>Jank</strong> 를 만들고 frame timeline 의 빨간 프레임으로 확인한다.</li>
+<li>UI 의 <strong>SQL 질의</strong>로 같은 것을 숫자로 뽑는다.</li>
 </ul>
 <hr />
-<h2>Step 1. 트레이스 설정 파일 만들기 (Windows)</h2>
-<p>메모장으로 <code>C:\aosp16\day3_trace.cfg</code> 를 만든다. 내용 그대로:</p>
+<h2>Step 0. 용어 한 장</h2>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>뜻</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>트랙(track)</strong></td>
+<td>가로줄 하나. 프로세스 → Thread 마다 하나, 카운터(VSYNC 등)도 트랙</td>
+</tr>
+<tr>
+<td><strong>슬라이스(slice)</strong></td>
+<td>트랙 위의 막대. 시작·끝이 있는 구간 (<code>ATRACE_CALL</code> 이 만드는 것)</td>
+</tr>
+<tr>
+<td><strong>카운터(counter)</strong></td>
+<td>값이 변하는 선 그래프 (VSYNC-app 0/1, 메모리 등)</td>
+</tr>
+<tr>
+<td><strong>flow</strong></td>
+<td>슬라이스 사이의 화살표 — "이 요청이 저기서 처리됐다" (Binder transact ↔ reply)</td>
+</tr>
+<tr>
+<td><strong>frame timeline</strong></td>
+<td>Expected(예산) / Actual(실제) 두 트랙 — 프레임마다 막대, 색으로 Jank 표시</td>
+</tr>
+<tr>
+<td><strong>ftrace / atrace</strong></td>
+<td>커널 이벤트(sched, binder) / 사용자 공간 슬라이스(gfx, sf …) 카테고리</td>
+</tr>
+</tbody>
+</table>
+<p>키보드: <code>W</code>/<code>S</code> 확대·축소, <code>A</code>/<code>D</code> 좌우 이동, 클릭 후 <code>F</code> 로 그 슬라이스에 맞춤, <code>M</code> 으로 구간 표시(측정), <code>Ctrl+F</code> 검색, <code>Esc</code> 선택 해제.</p>
+<hr />
+<h2>Step 1. 트레이스 설정 파일 (Windows)</h2>
+<p>메모장으로 <strong><code>C:\aosp16\day3_trace.cfg</code></strong> 를 만든다. 내용 그대로 저장 (다른 이름으로 저장 → 파일 형식 "모든 파일").</p>
 <div class="codehilite"><pre><span></span><code>buffers: {
-  size_kb: 65536
+  size_kb: 131072
   fill_policy: RING_BUFFER
 }
 data_sources: {
@@ -3113,11 +3294,15 @@ data_sources: {
     ftrace_config {
       ftrace_events: &quot;sched/sched_switch&quot;
       ftrace_events: &quot;sched/sched_wakeup&quot;
-      ftrace_events: &quot;power/suspend_resume&quot;
+      ftrace_events: &quot;sched/sched_waking&quot;
+      ftrace_events: &quot;binder/binder_transaction&quot;
+      ftrace_events: &quot;binder/binder_transaction_received&quot;
+      ftrace_events: &quot;binder/binder_transaction_alloc_buf&quot;
       atrace_categories: &quot;gfx&quot;
       atrace_categories: &quot;view&quot;
       atrace_categories: &quot;sf&quot;
       atrace_categories: &quot;binder_driver&quot;
+      atrace_categories: &quot;aidl&quot;
       atrace_apps: &quot;*&quot;
     }
   }
@@ -3133,84 +3318,277 @@ data_sources: {
     process_stats_config { scan_all_processes_on_start: true }
   }
 }
-duration_ms: 6000
+duration_ms: 8000
 </code></pre></div>
 
-<p>Emulator 로 올린다:</p>
-<div class="codehilite"><pre><span></span><code>adb root
-adb push C:\aosp16\day3_trace.cfg /data/local/tmp/day3_trace.cfg
-</code></pre></div>
-
-<h2>Step 2. 정상 버전 캡처</h2>
-<p>터미널 ① — 애니메이션 실행 (10초 동안 움직인다):</p>
-<div class="codehilite"><pre><span></span><code>adb shell /data/sf_vsync_anim
-</code></pre></div>
-
-<p>터미널 ② — 애니메이션이 움직이는 <strong>동안</strong> 6초 캡처:</p>
-<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;perfetto -c /data/local/tmp/day3_trace.cfg --txt -o /data/misc/perfetto-traces/day3_ok.perfetto-trace&quot;</span>
-</code></pre></div>
-
-<div class="codehilite"><pre><span></span><code>[perfetto] Connected to the Perfetto traced service, TTL: 6s
-[perfetto] Wrote 3241 bytes into /data/misc/perfetto-traces/day3_ok.perfetto-trace
-</code></pre></div>
-
-<blockquote>
-<p><code>perfetto</code> 가 없다고 나오면 <code>adb shell setprop persist.traced.enable 1</code> 후 재시도. 권한 오류는 출력 경로를 <code>/data/misc/perfetto-traces/</code> 로 (다른 경로는 SELinux 차단).  </p>
-</blockquote>
-<p>Windows 로 가져온다:</p>
-<div class="codehilite"><pre><span></span><code>adb pull /data/misc/perfetto-traces/day3_ok.perfetto-trace C:\aosp16\
-</code></pre></div>
-
-<h2>Step 3. Perfetto UI 에서 보기</h2>
-<ol>
-<li>브라우저에서 <strong>https://ui.perfetto.dev</strong> → 왼쪽 <strong>Open trace file</strong> → <code>day3_ok.perfetto-trace</code></li>
-<li>상단 검색창(또는 <code>Ctrl+F</code>) 에 <code>vsync_rect</code> 입력 → Enter</li>
-<li>화면에 다음 트랙이 잡힌다. 없으면 왼쪽 프로세스 목록에서 <code>sf_vsync_anim</code> 과 <code>surfaceflinger</code> 를 핀(📌) 한다.</li>
-</ol>
 <table>
 <thead>
 <tr>
-<th>트랙</th>
-<th>위치</th>
-<th>보는 것</th>
+<th>항목</th>
+<th>왜</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Expected Timeline</strong> / <strong>Actual Timeline</strong> (vsync_rect)</td>
-<td><code>sf_vsync_anim</code> 프로세스 안</td>
-<td>프레임마다 막대 하나. 초록 = 예산 안, <strong>빨강/주황 = Jank</strong></td>
+<td><code>binder/binder_transaction*</code></td>
+<td>Binder 호출 흐름(flow 화살표) — Day 1 실습 6 의 ftrace 와 같은 이벤트</td>
 </tr>
 <tr>
-<td><code>sf_vsync_anim</code> main Thread</td>
-<td>같은 프로세스</td>
-<td><code>handleEvent</code> 슬라이스가 VSync 직후 아주 짧게(≈0.1 ms) 반복</td>
+<td><code>atrace_categories: gfx</code></td>
+<td>실습 10 의 <code>ATRACE_CALL</code> (ATRACE_TAG_GRAPHICS) 과 SF 의 그래픽 슬라이스</td>
 </tr>
 <tr>
-<td><code>surfaceflinger</code> → <code>app</code> / <code>sf</code> Thread</td>
-<td><code>surfaceflinger</code> 프로세스</td>
-<td><code>onMessageRefresh</code> · <code>composite</code> · <code>HWC</code> 가 16.67 ms 마다 반복</td>
+<td><code>sf</code></td>
+<td>SurfaceFlinger 내부 (<code>onMessageRefresh</code> · <code>composite</code> · HWC)</td>
 </tr>
 <tr>
-<td><strong>VSYNC-app / VSYNC-sf</strong> 카운터</td>
-<td><code>surfaceflinger</code> 최상단</td>
-<td>0/1 로 토글되는 VSync 신호</td>
+<td><code>binder_driver</code> · <code>aidl</code></td>
+<td>libbinder 의 <code>binder transaction</code> / <code>binder reply</code> 슬라이스, AIDL 생성 코드의 Method 이름</td>
+</tr>
+<tr>
+<td><code>frametimeline</code></td>
+<td>Expected / Actual Timeline 트랙</td>
+</tr>
+<tr>
+<td><code>duration_ms: 8000</code></td>
+<td>8초 캡처. 애니메이션이 10초이므로 충분</td>
 </tr>
 </tbody>
 </table>
-<ol start="4">
-<li>마우스 휠 + <code>W</code>/<code>S</code> 로 확대, <code>A</code>/<code>D</code> 로 이동. 한 프레임 구간(16.67 ms)을 화면에 꽉 채운다.</li>
-<li>Actual Timeline 의 막대 하나를 클릭 → 하단 패널에 <code>Present Type: On time</code>, <code>Jank Type: None</code>, <code>Layer: vsync_rect</code> 가 보인다.</li>
-<li><code>handleEvent</code> 슬라이스를 클릭 → Duration 이 수십~수백 µs. 그 직후 <code>surfaceflinger</code> 의 <code>onMessageRefresh</code> 가 시작되는지 확인한다.</li>
-</ol>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">mkdir</span> C:\aosp16\trace
+adb root
+adb push C:\aosp16\day3_trace.cfg /data/local/tmp/day3_trace.cfg
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+setprop<span class="w"> </span>persist.traced.enable<span class="w"> </span><span class="m">1</span><span class="w">      </span><span class="c1"># traced 데몬 활성화 (한 번만)</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/data/local/tmp/day3_trace.cfg
+which<span class="w"> </span>perfetto<span class="w">                        </span><span class="c1"># /system/bin/perfetto</span>
+<span class="nb">exit</span>
+</code></pre></div>
+
+<hr />
+<h2>Step 2. 정상 버전 캡처 — VSync 흐름 + Binder 흐름을 한 트레이스에</h2>
+<p><strong>빌드 서버</strong> — 실습 10 소스에 <code>ATRACE_CALL()</code> 이 들어간 버전인지 확인하고 빌드 (실습 10 문서의 최종 코드):</p>
+<div class="codehilite"><pre><span></span><code>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;ATRACE&quot;</span><span class="w"> </span>~/android/day3/vsync_anim/vsync_anim.cpp
+m<span class="w"> </span>sf_vsync_anim
+ls<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim
+</code></pre></div>
+
+<p><strong>WinSCP</strong> — <code>system/bin/sf_vsync_anim</code> → <code>C:\aosp16\bin\</code></p>
+<p><strong>Windows cmd ①</strong> — 애니메이션 + Day 2 Binder 서버 실행</p>
+<div class="codehilite"><pre><span></span><code>adb push C:\aosp16\bin\sf_vsync_anim /data
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim
+/data/my_server_test_4<span class="w"> </span><span class="p">&amp;</span><span class="w">            </span><span class="c1"># Day 2 Binder 서버 (백그라운드)</span>
+/data/sf_vsync_anim<span class="w">                 </span><span class="c1"># 10초 동안 초록 사각형이 움직인다</span>
+</code></pre></div>
+
+<p><strong>Windows cmd ②</strong> — 애니메이션이 움직이는 <strong>동안</strong> (시작 후 1초 안에) 캡처 시작</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+perfetto<span class="w"> </span>-c<span class="w"> </span>/data/local/tmp/day3_trace.cfg<span class="w"> </span>--txt<span class="w"> </span>-o<span class="w"> </span>/data/misc/perfetto-traces/day3_ok.perfetto-trace
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>[perfetto] Connected to the Perfetto traced service, TTL: 8s
+[perfetto] Wrote 4123456 bytes into /data/misc/perfetto-traces/day3_ok.perfetto-trace
+</code></pre></div>
+
+<p><strong>Windows cmd ③</strong> — 캡처가 도는 8초 동안 Binder 호출을 세 번 발생시킨다</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+/data/my_client_test_4<span class="w"> </span><span class="m">10</span>
+/data/my_client_test_4<span class="w"> </span><span class="m">20</span>
+/data/my_client_test_4<span class="w"> </span><span class="m">30</span>
+<span class="nb">exit</span>
+</code></pre></div>
+
+<p>캡처가 끝나면 (cmd ② 에 <code>Wrote …</code> 출력) Windows 로 가져온다:</p>
+<div class="codehilite"><pre><span></span><code>adb pull /data/misc/perfetto-traces/day3_ok.perfetto-trace C:\aosp16\trace\
+</code></pre></div>
+
 <blockquote>
-<p>이 순서 — VSync 신호 → <code>handleEvent</code>(Looper 콜백) → Transaction → 다음 VSync 에 SF 합성 → HWC — 가 실습 10 코드가 실제로 도는 모습이다.  </p>
+<p>순서가 중요하다: ① 애니메이션 시작 → ② 캡처 시작 → ③ client 3회 → 캡처 종료 → pull. 애니메이션이 캡처보다 먼저 끝나면 <code>vsync_rect</code> 가 안 잡히므로 ①②는 연달아 실행한다.  </p>
 </blockquote>
-<h2>Step 4. Jank 버전 만들기 (빌드 서버)</h2>
-<p><code>vsync_anim.cpp</code> 의 <code>step()</code> 에 한 줄을 추가한다:</p>
-<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="c1">          // 파일 상단 include 에 추가</span>
+<hr />
+<h2>Step 3. UI 열기와 프로세스 찾기</h2>
+<ol>
+<li>브라우저 <strong>https://ui.perfetto.dev</strong> → 왼쪽 <strong>Open trace file</strong> → <code>C:\aosp16\trace\day3_ok.perfetto-trace</code></li>
+<li>로딩 후 왼쪽에 프로세스 목록이 세로로 나열된다. 너무 많으므로 <strong>핀</strong>으로 세 개만 고정한다:
+   - 상단 검색창에 <code>sf_vsync_anim</code> 입력 → Enter → 해당 프로세스 헤더로 이동 → 헤더 왼쪽의 📌 클릭
+   - 같은 방법으로 <code>surfaceflinger</code>, <code>my_server_test_4</code> 를 핀</li>
+<li>핀 된 프로세스가 화면 맨 위에 모인다. 각 프로세스 헤더를 클릭하면 Thread 트랙이 펼쳐진다.</li>
+</ol>
+<p>프로세스 안에서 보이는 트랙:</p>
+<table>
+<thead>
+<tr>
+<th>프로세스</th>
+<th>트랙</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sf_vsync_anim</code></td>
+<td><code>sf_vsync_anim</code> (main Thread)</td>
+<td><code>handleEvent</code> → 안에 <code>step:setPosition+apply</code> (실습 10 의 ATRACE)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>Expected Timeline</code> / <code>Actual Timeline</code></td>
+<td>frame timeline — Layer <code>vsync_rect</code> 의 프레임 막대</td>
+</tr>
+<tr>
+<td><code>surfaceflinger</code></td>
+<td><code>VSYNC-app</code>, <code>VSYNC-sf</code> (카운터)</td>
+<td>0/1 토글 — VSync 신호 자체</td>
+</tr>
+<tr>
+<td></td>
+<td><code>surfaceflinger</code> (main)</td>
+<td><code>onMessageInvalidate</code> · <code>onMessageRefresh</code> · <code>composite</code> · <code>postComposition</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>binder:668_N</code></td>
+<td>우리 Transaction 을 받는 Binder Thread</td>
+</tr>
+<tr>
+<td><code>my_server_test_4</code></td>
+<td><code>binder:&lt;pid&gt;_1</code></td>
+<td><code>binder reply</code> — Day 2 서버가 처리하는 슬라이스</td>
+</tr>
+<tr>
+<td><code>my_client_test_4</code> (3개, 짧게 존재)</td>
+<td>main</td>
+<td><code>binder transaction</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Step 4. VSync 제어 흐름 따라가기</h2>
+<p>한 프레임을 확대해 순서대로 클릭한다.</p>
+<h3>4-1. 한 프레임만 보이게 확대</h3>
+<p><code>surfaceflinger</code> 의 <strong><code>VSYNC-app</code></strong> 카운터 트랙에서 값이 0→1 로 바뀌는 지점 하나를 클릭 → <code>F</code> → <code>W</code> 를 몇 번 눌러 이웃 VSync 까지(약 16.67 ms)만 화면에 오게 한다.</p>
+<h3>4-2. 순서 읽기 (화면 위→아래, 시간 왼→오)</h3>
+<table>
+<thead>
+<tr>
+<th>순서</th>
+<th>어디</th>
+<th>무엇</th>
+<th>클릭하면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td><code>surfaceflinger</code> <code>VSYNC-app</code></td>
+<td>카운터가 토글</td>
+<td>Value 0→1, 시각 T0</td>
+</tr>
+<tr>
+<td>②</td>
+<td><code>sf_vsync_anim</code> main</td>
+<td><strong><code>handleEvent</code></strong> 슬라이스가 T0 직후(수십 µs 뒤) 시작</td>
+<td>Duration ≈ 50~200 µs. 이것이 Looper 가 VSync fd 로 깨어난 순간 (실습 5 ③④)</td>
+</tr>
+<tr>
+<td>③</td>
+<td>같은 슬라이스 안쪽</td>
+<td><strong><code>step:setPosition+apply</code></strong> 자식 슬라이스</td>
+<td>Transaction.apply — 안에 <code>binder transaction</code> 이 있으면 SF 로 가는 Binder</td>
+</tr>
+<tr>
+<td>④</td>
+<td><code>surfaceflinger</code> <code>binder:668_N</code></td>
+<td><code>binder reply</code> — <code>setTransactionState</code></td>
+<td>③ 의 Transaction 을 받는 SF Binder Thread. ③ 을 클릭하면 여기로 <strong>화살표(flow)</strong> 가 그려진다</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td><code>surfaceflinger</code> main</td>
+<td><code>onMessageInvalidate</code> → <strong><code>onMessageRefresh</code></strong> → <code>composite</code></td>
+<td>다음 VSync-sf 에 Layer 들을 합성</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td><code>surfaceflinger</code> main 안쪽</td>
+<td><code>HWC …</code> / <code>postComposition</code></td>
+<td>HWC 에 넘김</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td><code>sf_vsync_anim</code> <code>Actual Timeline</code></td>
+<td>이 프레임 막대 (초록)</td>
+<td>클릭 → <code>Present Type: On time</code>, <code>Jank Type: None</code>, <code>Layer: vsync_rect</code></td>
+</tr>
+</tbody>
+</table>
+<p>②→③→④→⑤→⑥ 이 왼쪽에서 오른쪽으로 한 VSync 안에 끝나면 정상이다. 다음 VSync 에서 ①부터 반복된다.</p>
+<h3>4-3. 측정해 보기</h3>
+<ul>
+<li><code>handleEvent</code> 클릭 → 하단 패널 <strong>Duration</strong>. 수십~수백 µs.</li>
+<li>② 시작점에서 <code>M</code> 을 누르고 ⑥ 끝점에서 <code>Shift+M</code> → 상단에 구간 길이가 표시된다. 16.67 ms 보다 훨씬 작다 — 예산에 여유가 있다.</li>
+<li><code>Actual Timeline</code> 막대 여러 개를 드래그로 선택 → 하단 <strong>Frames</strong> 탭에 프레임 수 · Jank 수 요약.</li>
+</ul>
+<h3>4-4. 왜 60 fps 인가</h3>
+<p><code>VSYNC-app</code> 카운터 토글 두 개 사이를 <code>M</code>/<code>Shift+M</code> 으로 재면 <strong>16.67 ms</strong>. <code>dumpsys SurfaceFlinger --latency</code> 첫 줄의 16666667 ns 와 같다.</p>
+<hr />
+<h2>Step 5. Binder 호출 흐름 따라가기</h2>
+<h3>5-1. client 찾기</h3>
+<p>검색창에 <code>my_client_test_4</code> → Enter. 짧게 살았다 사라진 프로세스가 3개 나온다(각 실행). 하나를 핀 하고 펼친다.</p>
+<h3>5-2. 화살표 따라가기</h3>
+<table>
+<thead>
+<tr>
+<th>순서</th>
+<th>어디</th>
+<th>무엇</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td><code>my_client_test_4</code> main</td>
+<td><strong><code>binder transaction</code></strong> 슬라이스 (aidl 카테고리가 켜져 있으면 이름에 <code>ILedService::ledOn</code> 이 붙는다)</td>
+</tr>
+<tr>
+<td>②</td>
+<td>클릭</td>
+<td>슬라이스에서 <strong>화살표</strong>가 <code>my_server_test_4</code> 의 <code>binder:&lt;pid&gt;_1</code> 트랙으로 뻗는다 — Driver 가 이 Thread 를 깨움</td>
+</tr>
+<tr>
+<td>③</td>
+<td><code>my_server_test_4</code> <code>binder:&lt;pid&gt;_1</code></td>
+<td><strong><code>binder reply</code></strong> 슬라이스 — 서버의 <code>onTransact</code> → <code>ledOn</code> 실행 구간</td>
+</tr>
+<tr>
+<td>④</td>
+<td>같은 트랙</td>
+<td><code>binder reply</code> 끝에서 다시 client 로 화살표 — reply 전달</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td><code>my_client_test_4</code> main</td>
+<td><code>binder transaction</code> 이 끝난다 = Client 가 블로킹에서 풀림</td>
+</tr>
+</tbody>
+</table>
+<p>하단 패널의 <strong>Flow events</strong> 탭을 열면 ①→③→⑤ 의 화살표를 목록으로 볼 수 있고, 클릭하면 해당 슬라이스로 점프한다.</p>
+<h3>5-3. 커널 이벤트로 같은 것 보기</h3>
+<p>트랙 목록에서 <code>Ftrace Events</code> 또는 client Thread 의 작은 마커를 보면 <code>binder_transaction</code> / <code>binder_transaction_received</code> 이벤트가 점으로 찍혀 있다. Day 1 실습 6 의 <code>trace_pipe</code> 한 줄이 여기 점 하나다. 클릭하면 <code>to_proc</code>, <code>code=1</code>, <code>reply</code> 필드가 그대로 보인다.</p>
+<h3>5-4. 스케줄링까지</h3>
+<p><code>my_server_test_4</code> 의 <code>binder:&lt;pid&gt;_1</code> 트랙 위 <strong>Thread 상태 줄</strong>(색 띠)을 보면 <code>Sleeping</code>(회색) → <code>Runnable</code>(파랑) → <code>Running</code>(초록) 으로 바뀐다. <code>sched_waking</code> 이벤트가 client 의 transact 직후에 찍힌다 — "Driver 가 Binder Thread 를 깨운다" 를 스케줄러 수준에서 보는 것이다.</p>
+<hr />
+<h2>Step 6. Jank 버전 만들기</h2>
+<p><strong>빌드 서버</strong> — <code>vsync_anim.cpp</code> 의 <code>step()</code> 에 한 줄 추가</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="c1">          // 상단 include 에 추가</span>
 
 <span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">step</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ATRACE_NAME</span><span class="p">(</span><span class="s">&quot;step:setPosition+apply&quot;</span><span class="p">);</span>
 <span class="w">        </span><span class="n">usleep</span><span class="p">(</span><span class="mi">20000</span><span class="p">);</span><span class="w">                                               </span><span class="c1">// ★ 20 ms — 16.67 ms 예산 초과</span>
 <span class="w">        </span><span class="n">mX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">mX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">mScreenW</span><span class="p">;</span>
 <span class="w">        </span><span class="n">mTx</span><span class="p">.</span><span class="n">setPosition</span><span class="p">(</span><span class="n">mSurface</span><span class="p">,</span><span class="w"> </span><span class="n">mX</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">).</span><span class="n">apply</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
@@ -3218,113 +3596,172 @@ adb push C:\aosp16\day3_trace.cfg /data/local/tmp/day3_trace.cfg
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code>m<span class="w"> </span>sf_vsync_anim
-adb<span class="w"> </span>push<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim<span class="w"> </span>/data/sf_vsync_anim_jank
-adb<span class="w"> </span>shell<span class="w"> </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim_jank
+ls<span class="w"> </span>-l<span class="w"> </span><span class="nv">$OUT</span>/system/bin/sf_vsync_anim
 </code></pre></div>
 
-<p>(빌드 서버에 adb 가 없으면 WinSCP → <code>adb push</code> — Day 1 실습 4 절차)</p>
-<h2>Step 5. Jank 버전 캡처</h2>
-<p>터미널 ①:</p>
-<div class="codehilite"><pre><span></span><code>adb shell /data/sf_vsync_anim_jank
+<p><strong>WinSCP</strong> — <code>system/bin/sf_vsync_anim</code> → <code>C:\aosp16\bin\sf_vsync_anim_jank</code> (다운로드 후 이름 변경)</p>
+<p><strong>Windows cmd</strong></p>
+<div class="codehilite"><pre><span></span><code>adb push C:\aosp16\bin\sf_vsync_anim_jank /data
 </code></pre></div>
 
-<p>화면의 초록 사각형이 <strong>툭툭 끊기며</strong> 움직이고 속도도 느려진다 (한 프레임에 4 px 씩이지만 2~3 VSync 에 한 번만 갱신).</p>
-<p>터미널 ②:</p>
-<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;perfetto -c /data/local/tmp/day3_trace.cfg --txt -o /data/misc/perfetto-traces/day3_jank.perfetto-trace&quot;</span>
-adb pull /data/misc/perfetto-traces/day3_jank.perfetto-trace C:\aosp16\
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/data/sf_vsync_anim_jank
+<span class="nb">exit</span>
 </code></pre></div>
 
-<h2>Step 6. Jank 트레이스 읽기</h2>
-<p><code>day3_jank.perfetto-trace</code> 를 열고 같은 방법으로 <code>vsync_rect</code> 를 찾는다.</p>
+<h2>Step 7. Jank 버전 캡처</h2>
+<p>cmd ①:</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+/data/sf_vsync_anim_jank<span class="w">          </span><span class="c1"># 초록 사각형이 툭툭 끊기며 느리게 이동</span>
+</code></pre></div>
+
+<p>cmd ② (바로 이어서):</p>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+perfetto<span class="w"> </span>-c<span class="w"> </span>/data/local/tmp/day3_trace.cfg<span class="w"> </span>--txt<span class="w"> </span>-o<span class="w"> </span>/data/misc/perfetto-traces/day3_jank.perfetto-trace
+<span class="nb">exit</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code>adb pull /data/misc/perfetto-traces/day3_jank.perfetto-trace C:\aosp16\trace\
+</code></pre></div>
+
+<h2>Step 8. Jank 읽기</h2>
+<p>새 탭에서 <code>day3_jank.perfetto-trace</code> 를 열고 Step 3 과 같이 핀 한다.</p>
 <table>
 <thead>
 <tr>
-<th>관찰</th>
-<th>정상 버전과 다른 점</th>
+<th>어디</th>
+<th>정상 (day3_ok)</th>
+<th>Jank (day3_jank)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Actual Timeline</td>
-<td>막대가 <strong>빨강/주황</strong>, 클릭하면 <code>Jank Type: App Deadline Missed</code> (또는 <code>Buffer Stuffing</code>)</td>
+<td><code>handleEvent</code> Duration</td>
+<td>≈ 0.1 ms</td>
+<td><strong>≈ 20 ms</strong> — <code>step:setPosition+apply</code> 가 거의 전부</td>
 </tr>
 <tr>
-<td><code>handleEvent</code> 슬라이스</td>
-<td>Duration ≈ <strong>20 ms</strong> — 다음 VSync 선을 넘어간다</td>
+<td><code>handleEvent</code> 위치</td>
+<td>VSync 직후 끝남</td>
+<td>다음 <code>VSYNC-app</code> 토글을 <strong>넘어간다</strong></td>
 </tr>
 <tr>
-<td>Expected vs Actual</td>
-<td>Expected 는 16.67 ms 간격, Actual 은 2~3 배 간격으로 띄엄띄엄</td>
+<td><code>Actual Timeline</code></td>
+<td>초록, 16.67 ms 간격</td>
+<td><strong>빨강/주황</strong>, 33~50 ms 간격. 클릭 → <code>Jank Type: App Deadline Missed</code></td>
 </tr>
 <tr>
-<td><code>surfaceflinger</code></td>
-<td>여전히 매 VSync 합성하지만 새 Transaction 이 없는 프레임은 같은 위치 → 화면 정지</td>
+<td><code>Expected</code> vs <code>Actual</code></td>
+<td>거의 일치</td>
+<td>Actual 이 한두 VSync 뒤로 밀림</td>
+</tr>
+<tr>
+<td><code>surfaceflinger</code> <code>onMessageRefresh</code></td>
+<td>매 VSync</td>
+<td>매 VSync 돌지만 새 Transaction 이 없는 프레임은 같은 위치 → 화면 정지</td>
 </tr>
 </tbody>
 </table>
-<p>두 파일을 탭 두 개로 나란히 열어 <code>handleEvent</code> 길이(0.1 ms vs 20 ms)를 비교하면 원인이 한눈에 보인다.</p>
-<h2>Step 7. Perfetto 없이 확인 — dumpsys --latency</h2>
-<p>UI 를 못 쓰는 환경을 위해 숫자로도 본다. 애니메이션 실행 중:</p>
-<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;dumpsys SurfaceFlinger --latency vsync_rect#0 | head -8&quot;</span>
+<p>두 탭을 번갈아 보며 <code>handleEvent</code> 를 클릭해 Duration 만 비교해도 원인이 나온다.</p>
+<hr />
+<h2>Step 9. SQL 로 숫자 뽑기 (UI → 왼쪽 <strong>Query (SQL)</strong>)</h2>
+<p>같은 것을 표로 얻는다. 아래를 복사해 실행(<code>Ctrl+Enter</code>).</p>
+<p><strong>① handleEvent 길이 통계</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span><span class="p">,</span>
+<span class="w">       </span><span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="n">dur</span><span class="p">)</span><span class="o">/</span><span class="mi">1</span><span class="n">e6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">avg_ms</span><span class="p">,</span><span class="w"> </span><span class="n">ROUND</span><span class="p">(</span><span class="k">MAX</span><span class="p">(</span><span class="n">dur</span><span class="p">)</span><span class="o">/</span><span class="mi">1</span><span class="n">e6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">max_ms</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">slice</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;handleEvent&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;step:setPosition+apply&#39;</span><span class="p">)</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
 </code></pre></div>
 
-<p>정상:</p>
+<p>정상: <code>avg_ms ≈ 0.1</code>, Jank: <code>≈ 20</code>.</p>
+<p><strong>② 프레임 Jank 목록</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">ts</span><span class="p">,</span><span class="w"> </span><span class="n">dur</span><span class="o">/</span><span class="mi">1</span><span class="n">e6</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">dur_ms</span><span class="p">,</span><span class="w"> </span><span class="n">jank_type</span><span class="p">,</span><span class="w"> </span><span class="n">present_type</span><span class="p">,</span><span class="w"> </span><span class="n">layer_name</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">actual_frame_timeline_slice</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">layer_name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;%vsync_rect%&#39;</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">ts</span><span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+</code></pre></div>
+
+<p>Jank 트레이스에서 <code>jank_type</code> 이 <code>App Deadline Missed</code> 인 행이 나온다.</p>
+<p><strong>③ Binder 호출 목록 (client → server)</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ts</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">dur</span><span class="o">/</span><span class="mi">1</span><span class="n">e3</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">dur_us</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">thread</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">process</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">slice</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">thread_track</span><span class="w"> </span><span class="n">tt</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">track_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tt</span><span class="p">.</span><span class="n">id</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">thread</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="k">USING</span><span class="p">(</span><span class="n">utid</span><span class="p">)</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">process</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">USING</span><span class="p">(</span><span class="n">upid</span><span class="p">)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;binder%&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;%my_client%&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;%my_server%&#39;</span><span class="p">)</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ts</span><span class="p">;</span>
+</code></pre></div>
+
+<p><code>binder transaction</code>(client) 과 <code>binder reply</code>(server <code>binder:PID_1</code>) 가 쌍으로 나온다. <code>dur_us</code> 가 Day 2 실습 13 에서 잰 왕복 비용이다.</p>
+<p><strong>④ VSync 주기</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">ROUND</span><span class="p">((</span><span class="k">MAX</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span><span class="o">-</span><span class="k">MIN</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1</span><span class="n">e6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">vsync_ms</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">counter</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">counter_track</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">track_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;VSYNC-app&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre></div>
+
+<p><code>16.667</code> 이 나오면 60 Hz.</p>
+<hr />
+<h2>Step 10. Perfetto 없이 숫자로 — dumpsys --latency</h2>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+dumpsys<span class="w"> </span>SurfaceFlinger<span class="w"> </span>--latency<span class="w"> </span>vsync_rect#0<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-8
+</code></pre></div>
+
 <div class="codehilite"><pre><span></span><code>16666667                                        ← VSync 주기
  12345678901  12345695567  12345678120          ← desiredPresent · actualPresent · frameReady
- 12345695568  12345712234  12345695010          ← 16.67 ms 간격
- ...
+ 12345695568  12345712234  12345695010
 </code></pre></div>
 
-<p>Jank:</p>
-<div class="codehilite"><pre><span></span><code>16666667
- 12345678901  12345712234  12345698900          ← actual 이 desired 보다 한 VSync(16.67 ms) 이상 늦음
- 12345712235  12345745568  12345732100
+<p><code>actualPresent − desiredPresent</code> 가 0 에 가까우면 정상, 16667000 이상이면 놓친 프레임. Jank 버전에서는 한두 VSync 만큼 늦는다.</p>
+<h2>Step 11. 원복</h2>
+<div class="codehilite"><pre><span></span><code>adb<span class="w"> </span>shell
+rm<span class="w"> </span>/data/sf_vsync_anim_jank
+<span class="nb">exit</span>
 </code></pre></div>
 
-<p><code>actualPresent − desiredPresent</code> 가 0 에 가까우면 정상, 16667000 이상이면 그 프레임은 놓친 것이다.</p>
-<h2>Step 8. 정리</h2>
-<div class="codehilite"><pre><span></span><code>adb shell <span class="s2">&quot;rm /data/sf_vsync_anim_jank&quot;</span>
-</code></pre></div>
-
-<p><code>vsync_anim.cpp</code> 의 <code>usleep</code> 줄을 지우고 <code>m sf_vsync_anim</code> 으로 원복한다.</p>
+<p>빌드 서버에서 <code>usleep</code> 줄을 지우고 <code>m sf_vsync_anim</code> 으로 원복한다.</p>
 <hr />
 <h2>확인 포인트</h2>
 <ul>
-<li><input type="checkbox"> <code>day3_ok.perfetto-trace</code> 에서 <code>vsync_rect</code> Actual Timeline 이 초록, <code>handleEvent</code> ≈ 0.1 ms</li>
-<li><input type="checkbox"> <code>surfaceflinger</code> 의 <code>onMessageRefresh</code> 가 16.67 ms 마다 반복</li>
-<li><input type="checkbox"> Jank 버전: 빨간 프레임 + <code>App Deadline Missed</code>, <code>handleEvent</code> ≈ 20 ms</li>
-<li><input type="checkbox"> <code>--latency</code> 로 <code>actual − desired</code> 차이 확인</li>
+<li><input type="checkbox"> <code>day3_ok</code>: <code>VSYNC-app</code> 토글 → <code>handleEvent</code> → <code>step:…</code> → SF <code>binder reply</code> (flow 화살표) → <code>onMessageRefresh</code> → Actual Timeline 초록</li>
+<li><input type="checkbox"> <code>my_client_test_4</code> 의 <code>binder transaction</code> 에서 <code>my_server_test_4</code> <code>binder:PID_1</code> 의 <code>binder reply</code> 로 화살표</li>
+<li><input type="checkbox"> <code>day3_jank</code>: <code>handleEvent</code> ≈ 20 ms, Actual Timeline 빨강 <code>App Deadline Missed</code></li>
+<li><input type="checkbox"> SQL ① 의 <code>avg_ms</code> 가 두 트레이스에서 0.1 vs 20</li>
+<li><input type="checkbox"> <code>--latency</code> 의 <code>actual − desired</code> 차이</li>
 </ul>
 <h2>핵심 정리</h2>
 <table>
 <thead>
 <tr>
-<th>구간</th>
-<th>예산</th>
-<th>넘기면</th>
+<th>흐름</th>
+<th>Perfetto 에서 보는 곳</th>
+<th>실습 연결</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>App (Looper 콜백 → Transaction / Java 는 UI Thread → RenderThread)</td>
-<td>≈ 16.67 ms − SF 시간</td>
-<td><strong>App Jank</strong> — Actual Timeline 빨강</td>
+<td>VSync 제어</td>
+<td><code>VSYNC-app</code> 카운터 → App <code>handleEvent</code> → SF <code>onMessageRefresh</code> → HWC</td>
+<td>실습 5 Looper::addFd · 실습 10</td>
 </tr>
 <tr>
-<td>SurfaceFlinger 합성 (<code>onMessageRefresh</code> → <code>composite</code>)</td>
-<td>수 ms</td>
-<td>SF Jank</td>
+<td>Binder 호출</td>
+<td><code>binder transaction</code> ─flow→ <code>binder reply</code> (Binder Thread) · <code>sched_waking</code></td>
+<td>Day 1 실습 6 ftrace · Day 2 실습 13 strace</td>
 </tr>
 <tr>
-<td>HWC / Display</td>
-<td>VSync 경계</td>
-<td>표시 지연</td>
+<td>프레임 예산</td>
+<td>Expected / Actual Timeline · <code>Jank Type</code></td>
+<td>16.67 ms · 실습 13 Step 8</td>
+</tr>
+<tr>
+<td>우리 코드의 구간</td>
+<td><code>ATRACE_CALL()</code> / <code>ATRACE_NAME()</code> 슬라이스</td>
+<td>실습 10</td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li>실습 10 의 <code>handleEvent</code> 가 곧 "App 의 프레임 작업" 이다. 여기서 20 ms 를 쓰면 다음 VSync 를 놓친다.</li>
-<li>Java App 도 같다 — <code>Choreographer</code> 콜백 → UI Thread <code>measure/layout/draw</code> → RenderThread 가 이 구간. Day 4 SystemUI 실습에서 같은 cfg 로 <code>com.android.systemui</code> 를 본다.</li>
+<li>Perfetto 는 커널 ftrace(sched · binder)와 사용자 공간 atrace(gfx · sf · binder_driver)를 <strong>한 시간축</strong>에 놓는다. Day 1 의 <code>trace_pipe</code>, Day 2 의 <code>strace</code> 가 각각 따로 보여 주던 것이 여기서 합쳐진다.</li>
+<li>Java App 도 같다 — <code>Choreographer#doFrame</code> → <code>measure/layout/draw</code> → <code>RenderThread</code> 가 이 자리. Day 4 SystemUI 실습에서 같은 cfg 로 <code>com.android.systemui</code> 를 본다.</li>
 </ul>
 <h2>트러블슈팅</h2>
 <table>
@@ -3337,29 +3774,41 @@ adb pull /data/misc/perfetto-traces/day3_jank.perfetto-trace C:\aosp16\
 <tbody>
 <tr>
 <td><code>perfetto: not found</code> / <code>Connection refused</code></td>
-<td><code>adb shell setprop persist.traced.enable 1</code> → 재시도</td>
+<td><code>adb shell</code> 에서 <code>setprop persist.traced.enable 1</code> 후 재시도</td>
 </tr>
 <tr>
-<td><code>Permission denied</code> (출력 파일)</td>
-<td>출력 경로는 <code>/data/misc/perfetto-traces/</code> 만 허용</td>
+<td>출력 파일 <code>Permission denied</code></td>
+<td>경로는 <code>/data/misc/perfetto-traces/</code> 만 (SELinux)</td>
 </tr>
 <tr>
-<td>UI 에서 <code>vsync_rect</code> 검색 결과 없음</td>
-<td>캡처 중에 애니메이션이 실행 중이었는지 확인 (6초 안에 끝났으면 다시)</td>
+<td><code>handleEvent</code> 슬라이스가 없음</td>
+<td>실습 10 코드에 <code>ATRACE_CALL()</code> 이 있는지, <code>Android.bp</code> 에 <code>libcutils</code> 가 있는지, cfg 에 <code>atrace_categories: "gfx"</code> 가 있는지</td>
 </tr>
 <tr>
-<td>Actual Timeline 트랙이 없음</td>
+<td><code>vsync_rect</code> 검색 결과 없음</td>
+<td>캡처 중에 애니메이션이 돌고 있었는지 (① 시작 후 바로 ②)</td>
+</tr>
+<tr>
+<td>Binder 화살표(flow)가 안 보임</td>
+<td>cfg 의 <code>binder/binder_transaction*</code> 이벤트와 <code>binder_driver</code> 카테고리 확인 · client 가 캡처 중에 실행됐는지</td>
+</tr>
+<tr>
+<td><code>my_client_test_4</code> 프로세스가 목록에 없음</td>
+<td>짧게 살다 죽은 프로세스는 검색으로만 찾힌다 — 검색창에 이름 입력 후 Enter</td>
+</tr>
+<tr>
+<td>SQL 에서 <code>actual_frame_timeline_slice</code> 없음</td>
 <td>cfg 의 <code>android.surfaceflinger.frametimeline</code> 데이터 소스 확인</td>
 </tr>
 <tr>
-<td>트레이스가 너무 큼 / 느림</td>
-<td><code>duration_ms</code> 를 3000 으로, <code>atrace_apps: "*"</code> 를 <code>"sf_vsync_anim"</code> 로</td>
+<td>UI 가 느림 / 파일이 큼</td>
+<td><code>duration_ms</code> 5000, <code>atrace_apps: "*"</code> → 삭제, <code>buffers.size_kb</code> 65536</td>
 </tr>
 </tbody>
 </table><div class="nav"><a href="#lab12">← 이전<span>실습 12 Graphics · Memory 분석 + LMKD 따라하기</span></a><span></span></div></div></section></div>
 </main>
 <script>
-var ITEMS=[{"k": "curriculum", "num": "Day 3 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 3 환경 점검 · Android.bp 일괄 등록 · JDK", "d": "15분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "sp<> 직접 구현 4단계 — RefBase 로", "d": "25분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Android RefBase · wp · promote · 순환 참조", "d": "20분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Thread 단계별 — pthread → android::Thread", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Looper 단계별 — pollOnce → addFd → MessageHandler", "d": "40분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "Binder 에서의 동작 — PoolThread · joinThreadPool · Handler", "d": "20분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "JNI Native Method — First · Second · RegisterNatives", "d": "35분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "JNI Invocation API + Framework JNI 읽기", "d": "25분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "SurfaceFlinger Client — Transaction · ANativeWindow", "d": "30분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "VSync 애니메이션 — DisplayEventReceiver + Looper", "d": "30분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "공유 메모리 3단계 — pipe · ashmem · memfd", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "Graphics · Memory 분석 + LMKD 따라하기", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13", "t": "Perfetto — 합성 파이프라인 · Jank 따라하기", "d": "25분", "g": "lab"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
+var ITEMS=[{"k": "curriculum", "num": "Day 3 커리큘럼", "t": "전체 개요", "d": "", "g": "overview"}, {"k": "lab1", "num": "실습 1", "t": "Day 3 환경 점검 · Android.bp 일괄 등록 · JDK", "d": "15분", "g": "env"}, {"k": "lab2", "num": "실습 2", "t": "sp<> 직접 구현 4단계 — RefBase 로", "d": "25분", "g": "lab"}, {"k": "lab3", "num": "실습 3", "t": "Android RefBase · wp · promote · 순환 참조", "d": "20분", "g": "lab"}, {"k": "lab4", "num": "실습 4", "t": "Thread 단계별 — pthread → android::Thread", "d": "30분", "g": "lab"}, {"k": "lab5", "num": "실습 5", "t": "Looper 단계별 — pollOnce → addFd → MessageHandler", "d": "40분", "g": "lab"}, {"k": "lab6", "num": "실습 6", "t": "Binder 에서의 동작 — PoolThread · joinThreadPool · Handler", "d": "20분", "g": "lab"}, {"k": "lab7", "num": "실습 7", "t": "JNI Native Method — First · Second · RegisterNatives", "d": "35분", "g": "lab"}, {"k": "lab8", "num": "실습 8", "t": "JNI Invocation API + Framework JNI 읽기", "d": "25분", "g": "lab"}, {"k": "lab9", "num": "실습 9", "t": "SurfaceFlinger Client — Transaction · ANativeWindow", "d": "30분", "g": "lab"}, {"k": "lab10", "num": "실습 10", "t": "VSync 애니메이션 — DisplayEventReceiver + Looper", "d": "30분", "g": "lab"}, {"k": "lab11", "num": "실습 11", "t": "공유 메모리 3단계 — pipe · ashmem · memfd", "d": "30분", "g": "lab"}, {"k": "lab12", "num": "실습 12", "t": "Graphics · Memory 분석 + LMKD 따라하기", "d": "30분", "g": "lab"}, {"k": "lab13", "num": "실습 13", "t": "Perfetto — VSync 흐름 · Binder 흐름 · Jank", "d": "25분", "g": "lab"}], GROUPS=[["overview", "개요"], ["env", "Part 0 · 환경·등록 실습"], ["lab", "Part 2 · 실습"], ["demo", "Part 3 · 데모"]];
 var done={}; try{done=JSON.parse(localStorage.getItem('day3done')||'{}')}catch(e){}
 var nav=document.getElementById('nav');
 GROUPS.forEach(function(g){
