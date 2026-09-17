@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 4 Worksheet — Android Framework 16 심화</title><style>
+:root{--ink:#1C242C;--ink2:#4A5560;--line:#DCE1E6;--panel:#F3F5F7;--green:#1F7A4D;--green2:#E3F3EA;--red:#B42318;--red2:#FDECEC}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+.wrap{max-width:840px;margin:0 auto;padding:36px 32px 90px}
+.meta{display:flex;gap:18px;align-items:baseline;color:var(--ink2);font-size:.9rem;border-bottom:2px solid var(--green);padding-bottom:10px}
+.meta b{color:var(--green);font-size:1rem}
+h1{font-size:1.7rem;margin:.5em 0 .2em}
+h2{font-size:1.1rem;margin:2em 0 .8em;padding-left:10px;border-left:4px solid var(--green)}
+.lead{color:var(--ink2);margin:0 0 6px}
+.name{margin:18px 0 6px;display:flex;gap:10px;align-items:center;font-size:.95rem}
+.name input{border:0;border-bottom:1px solid var(--ink);width:180px;font-size:1rem;padding:4px;outline:none;font-family:inherit}
+.q{border:1px solid var(--line);border-radius:10px;padding:16px 18px 12px;margin:0 0 14px;background:#fff}
+.q .t{font-weight:600;margin-bottom:10px}
+.q .t span{color:var(--green);margin-right:8px}
+.q .t small{font-weight:400;color:var(--ink2);margin-left:8px;font-size:.8rem}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:6px;cursor:pointer;border:1px solid transparent}
+.opt:hover{background:var(--panel)}
+.opt input{margin-top:4px;accent-color:var(--green)}
+.opt .k{color:var(--ink2);width:1.2em;flex:none}
+.q.ok{border-color:var(--green)} .q.ng{border-color:var(--red)}
+.opt.correct{background:var(--green2);border-color:var(--green)}
+.opt.wrong{background:var(--red2);border-color:var(--red)}
+input.txt{font:inherit;font-size:.95rem;padding:6px 10px;border:1px solid var(--line);border-radius:6px;width:100%;max-width:420px;outline:none}
+input.txt:focus{border-color:var(--green)}
+input.txt.ok{border-color:var(--green);background:var(--green2)} input.txt.ng{border-color:var(--red);background:var(--red2)}
+.fb input.txt{display:inline-block;width:200px;margin:4px 10px 4px 0}
+.fb .lbl{color:var(--ink2);font-size:.9rem;margin-right:4px}
+.ord .row,.match .row{display:flex;gap:12px;align-items:center;padding:6px 4px}
+select{font:inherit;font-size:.92rem;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+select.ok{border-color:var(--green);background:var(--green2)} select.ng{border-color:var(--red);background:var(--red2)}
+.match .row .l{min-width:140px;font-weight:600}
+.match .row .arrow{color:var(--ink2)}
+.exp{display:none;margin-top:10px;padding:10px 12px;background:var(--panel);border-left:3px solid var(--green);border-radius:0 6px 6px 0;font-size:.92rem;white-space:pre-line}
+.exp.show{display:block}
+.exp b{color:var(--green)}
+code{font-family:'Cascadia Code',Consolas,monospace;font-size:.88em;background:#F0F2F5;padding:1px 5px;border-radius:4px}
+.bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 0;display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+button{white-space:nowrap;background:var(--green);color:#fff;border:0;padding:9px 16px;border-radius:6px;font-size:.92rem;cursor:pointer;font-family:inherit}
+button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+#score{margin-left:auto;font-weight:600;font-size:1rem}
+#score.good{color:var(--green)} #score.bad{color:var(--red)}
+.hint{font-size:.82rem;color:var(--ink2)}
+@media print{.bar,.hint{display:none}.q{break-inside:avoid}.exp{display:none!important}input.txt,select{border:0;border-bottom:1px solid #999;border-radius:0;background:none!important}.opt.correct,.opt.wrong{background:none;border-color:transparent}.q.ok,.q.ng{border-color:var(--line)} body.printkey .exp{display:block!important} body.printkey .opt.correct{background:var(--green2)}}
+</style></head><body>
+<div class="wrap">
+<div class="meta"><b>Worksheet</b><span>소요시간 25분</span><span>Android Framework 16 심화 · Day 4</span></div>
+<h1>Day 4 Worksheet</h1>
+<p class="lead">객관식 8 · 단답형 5 · 빈칸 채우기 4 · 순번 지정 2 · 선잇기 1 — 총 20문제</p>
+<div class="name">이름 <input type="text" placeholder="            "></div>
+<div id="qs"></div>
+<div class="bar">
+  <button id="btnGrade">채점하기</button>
+  <button id="btnKey" class="ghost">정답·해설 모두 보기</button>
+  <button id="btnReset" class="ghost">다시 풀기</button>
+  <button id="btnPrint" class="ghost">인쇄 (문제만)</button>
+  <button id="btnPrintKey" class="ghost">인쇄 (정답 포함)</button>
+  <span id="score"></span>
+</div>
+<p class="hint">단답형·빈칸은 대소문자와 공백을 무시하고 채점합니다. 순번은 1부터 번호를 고르고, 선잇기는 오른쪽 목록에서 알맞은 역할을 선택하세요.</p>
+</div>
+<script>
+const QS=[{"t": "mc", "q": "APEX 모듈의 <code>file_contexts</code> 파일이 있어야 하는 위치는?", "opts": ["APEX 모듈 디렉토리 안", "system/sepolicy/apex/<name>-file_contexts", "/system/etc/selinux/", "apex_manifest.json 과 같은 폴더"], "a": 1, "exp": "Soong 은 file_contexts 를 system/sepolicy/apex/{APEX 이름}-file_contexts 에서만 찾는다. 모듈 안에 두면 \"should be under system/sepolicy\" 오류."}, {"t": "mc", "q": "RRO 가 타겟 앱의 리소스를 덮어쓰려면 타겟 앱이 반드시 해야 하는 것은? (Android 11+)", "opts": ["android:hasCode=\"false\" 선언", "<overlayable> 로 허용 리소스 선언", "priority 를 0 으로 설정", "APK 를 /system/app 에 설치"], "a": 1, "exp": "타겟이 overlayable.xml 의 <policy type=\"public\"> 에 넣은 리소스만 사용자 설치 RRO 가 덮을 수 있다. 목록 밖 리소스는 무시된다."}, {"t": "mc", "q": "<code>cmd overlay list</code> 에서 <code>---</code> 표시의 의미는?", "opts": ["활성화됨", "비활성 · 활성화 가능", "매칭 실패 (idmap 없음) · 활성화 불가", "설치 중"], "a": 2, "exp": "[x] 활성, [ ] 매칭 성공·비활성, --- 매칭 실패(STATE_NO_IDMAP). targetName 불일치나 overlayable 미선언이 원인이다."}, {"t": "mc", "q": "Car SystemUI 오버레이를 <code>adb install</code> 로 설치하면 <code>---</code> 가 되는 이유는?", "opts": ["minSdk 가 높아서", "Car SystemUI 가 <overlayable> 을 선언하지 않아 사용자(public) 정책 오버레이가 매칭되지 않기 때문", "APK 서명이 달라서", "SystemUI 가 실행 중이라서"], "a": 1, "exp": "사용자 설치 오버레이는 policy public 이라 overlayable 이 필수다. /system/app 에 설치하면 policy system 이 되어 overlayable 없이도 매칭된다."}, {"t": "mc", "q": "<code>/system</code> 에 파일을 쓰기 위한 올바른 절차는?", "opts": ["adb root 한 번", "adb remount 한 번", "adb root → adb remount → adb reboot → adb root → adb remount (remount succeeded)", "adb push 만 하면 된다"], "a": 2, "exp": "1차 remount 는 verity 해제·overlayfs 설정(재부팅 필요), 재부팅 후 2차 remount 가 실제 쓰기 마운트다. 2차를 빼면 Read-only file system."}, {"t": "mc", "q": "SystemUI 에 QS 타일 클래스를 만들었는데 패널에 안 보이고 SystemUI 가 크래시한다. 가장 먼저 의심할 것은?", "opts": ["아이콘 drawable 크기", "Dagger @Binds @IntoMap @StringKey 등록 누락", "APK 서명", "minSdk"], "a": 1, "exp": "QSFactory 는 Dagger 맵으로 spec → 타일을 만든다. 등록이 빠지면 config.xml 의 spec 을 생성하지 못해 예외가 난다. logcat -s AndroidRuntime 에서 spec 이름을 찾는다."}, {"t": "mc", "q": "다른 앱 위에 떠 있는 창(<code>TYPE_APPLICATION_OVERLAY</code>)에 필요한 권한과 검사 위치는?", "opts": ["INTERNET · 앱 내부", "SYSTEM_ALERT_WINDOW · WindowManagerService(system_server)", "WRITE_SETTINGS · SurfaceFlinger", "권한 불필요"], "a": 1, "exp": "WMS 의 addWindow 가 호출자 uid 의 SYSTEM_ALERT_WINDOW 를 검사한다. 없으면 BadTokenException. Emulator 는 appops set … allow 로 준다."}, {"t": "mc", "q": "Android Automotive 에서 App 이 차량 속성을 읽을 때 실제 경로는?", "opts": ["App → VHAL 직접", "App → CarPropertyManager → CarService(CarPropertyService) → VHAL(IVehicle)", "App → Kernel 드라이버", "App → SystemUI → VHAL"], "a": 1, "exp": "App 은 CarService(uid system) 만 본다. CarPropertyService 가 권한을 검사하고 PropertyHalService 가 AIDL HAL IVehicle 을 부른다. Day 2 의 HAL 규칙 그대로다."}, {"t": "sa", "q": "APEX 가 부팅 시 마운트되는 경로의 형식은? (<code>/apex/</code> 뒤에 이름과 버전이 붙는 형태를 쓰시오, 예: 이름 com.example.simple 버전 1)", "a": ["/apex/com.example.simple@1", "com.example.simple@1", "/apex/com.example.simple@1/"], "show": "/apex/com.example.simple@1", "exp": "apexd 가 /apex/<name>@<version> 에 loop mount 하고 /apex/<name> 심볼릭 링크를 만든다."}, {"t": "sa", "q": "RRO APK 의 AndroidManifest 에서 \"코드가 없는 패키지\" 임을 나타내는 <code>&lt;application&gt;</code> 속성은?", "a": ["hascode=\"false\"", "android:hascode=\"false\"", "hascode=false", "hascode"], "show": "android:hasCode=\"false\"", "exp": "RRO 는 리소스만 담는다. hasCode=\"false\" 로 Activity·코드 없이 설치된다."}, {"t": "sa", "q": "Car SystemUI APK 에서 실제 리소스 이름(예: system_bar_clock_text_color)을 추출할 때 쓰는 명령은? (도구 이름 + 서브커맨드)", "a": ["aaptdumpresources", "aaptdump", "aapt"], "show": "aapt dump resources", "exp": "aapt dump resources CarSystemUI.apk | findstr color 로 Car 전용 이름을 뽑는다. Phone SystemUI 와 이름이 달라 추측하면 안 바뀐다."}, {"t": "sa", "q": "Automotive 에서 차량 없이 CarService 에 이벤트를 주입하거나 주간/야간 모드를 바꾸는 셸 명령의 앞부분은? (예: <code>____ day-night-mode night</code>)", "a": ["cmdcar_service", "adbshellcmdcar_service", "car_service"], "show": "cmd car_service", "exp": "cmd car_service inject-vhal-event / day-night-mode / get-property-value / inject-key — CarService 의 onShellCommand 다."}, {"t": "sa", "q": "Emulator 의 VHAL 값을 직접 바꾸는 <code>dumpsys</code> 대상 서비스 이름은? (<code>android.hardware.automotive.vehicle.____/default</code>)", "a": ["ivehicle", "android.hardware.automotive.vehicle.ivehicle/default", "ivehicle/default"], "show": "IVehicle", "exp": "dumpsys android.hardware.automotive.vehicle.IVehicle/default --set <propId> -a <areaId> -f <value>. HAL 인스턴스 이름 규칙 <pkg>.<Interface>/<instance> 그대로다."}, {"t": "fb", "q": "APEX 는 <b>[1]</b> 키(.pem/.avbpubkey)로 이미지를 검증하고 <b>[2]</b> 키(.pk8/.x509.pem)로 패키지를 서명한다 — 두 벌이 모두 필요하다.", "a": [["avb", "avb키", "androidverifiedboot"], ["apk", "apk키", "인증서", "android_app_certificate"]], "show": ["AVB", "APK"], "exp": "apex_key 가 AVB(부팅 검증), android_app_certificate 가 APK 서명이다."}, {"t": "fb", "q": "RRO 의 <code>&lt;overlay&gt;</code> 에서 <b>[1]</b> 은 덮을 앱 패키지, <b>[2]</b> 는 그 앱의 overlayable 이름과 일치해야 한다. 같은 리소스를 두 RRO 가 덮으면 <b>priority</b> 가 높은 것이 이긴다.", "a": [["targetpackage", "android:targetpackage"], ["targetname", "android:targetname"]], "show": ["targetPackage", "targetName"], "exp": "Car SystemUI 처럼 overlayable 이 없으면 targetName 을 제거하고 /system/app 에 설치한다."}, {"t": "fb", "q": "Java App 의 한 프레임은 UI Thread 의 <b>[1]</b>(measure/layout/draw) 와 <b>[2]</b> 의 DrawFrames 두 Thread 로 처리되어 BufferQueue 를 거쳐 SurfaceFlinger 로 간다.", "a": [["choreographer#doframe", "choreographer", "doframe", "choreographer.doframe"], ["renderthread", "renderthread"]], "show": ["Choreographer#doFrame", "RenderThread"], "exp": "Perfetto 에서 두 트랙으로 Jank 원인을 가른다. Day 3 의 Native 예제는 Thread 하나였다."}, {"t": "fb", "q": "<code>CarPropertyManager.setProperty(Float.class, VehiclePropertyIds.HVAC_TEMPERATURE_SET, <b>[1]</b>, 22.5f)</code> 의 세 번째 인자는 좌석 등 구역을 뜻하며 <b>[2]</b>() 로 지원 값을 먼저 읽어야 한다.", "a": [["areaid", "areaid", "areaid"], ["getcarpropertyconfig", "getcarpropertyconfig()"]], "show": ["areaId", "getCarPropertyConfig"], "exp": "Emulator 의 HVAC 온도 areaId 는 좌석 그룹 49/68 이다. 잘못된 areaId 나 범위 밖 값은 IllegalArgumentException."}, {"t": "ord", "q": "Car SystemUI 색을 RRO 로 바꾸는 순서를 매기시오.", "items": ["cmd overlay enable → killall com.android.systemui", "aapt dump resources 로 실제 리소스 이름 추출", "2단계 remount 후 /system/app/<Overlay>/ 에 push → reboot", "targetName 없는 <overlay> + colors.xml 로 APK 생성", "cmd overlay list 에서 --- 와 mTargetOverlayableName: null 확인"], "a": [5, 2, 4, 3, 1], "exp": "--- 확인 → aapt 로 이름 → targetName 없는 APK → /system/app 설치·reboot → enable·killall."}, {"t": "ord", "q": "HvacSimulator 의 온도 버튼 한 번이 화면에 반영되기까지 순서를 매기시오.", "items": ["CarPropertyService 가 권한 검사 후 IVehicle.setValues 호출", "VHAL 이 값을 바꾸고 onPropertyEvent 로 CarService 에 통지", "App 이 ICarProperty.setProperty Binder 호출", "onChangeEvent(Binder Thread) → runOnUiThread → Choreographer#doFrame → SF", "CarService 가 subscriber(App) 에 onEvent 전달"], "a": [2, 3, 1, 5, 4], "exp": "App → CarService(권한·HAL 호출) → VHAL → 역방향 통지 → App 콜백 → UI Thread → SF. 실습 13 의 Perfetto flow 와 같다."}, {"t": "match", "q": "바꾸려는 것과 필요한 배포 절차를 알맞게 연결하시오.", "left": ["Native 바이너리 / .so", "SystemUI 색·문자열", "SystemUI 코드 (QS 타일)", "독립 배포 모듈", "커널 · VHAL 속성 추가"], "right": ["m emu_img_zip + Emulator 재시작", "m + adb push /data", "APEX (.apex push + reboot)", "RRO (APK + cmd overlay enable)", "m SystemUI + APK push + killall"], "a": [1, 3, 4, 2, 0], "exp": "델타 배포 판단표. 이미지를 다시 굽는 것은 커널·기본 탑재 RRO·VHAL 속성 추가뿐이다."}];
+const K=['①','②','③','④'];
+const SEC={mc:'객관식',sa:'단답형',fb:'빈칸 채우기',ord:'순번 지정',match:'선잇기'};
+const norm=s=>(s||'').toLowerCase().replace(/\s+/g,'');
+const root=document.getElementById('qs');
+let lastT=null;
+QS.forEach((q,i)=>{
+  const n=i+1;
+  if(q.t!==lastT){const h=document.createElement('h2');h.textContent=SEC[q.t];root.appendChild(h);lastT=q.t;}
+  const d=document.createElement('div');d.className='q '+q.t;d.id='q'+n;
+  let body='';
+  if(q.t==='mc') body=q.opts.map((o,j)=>'<label class="opt"><input type="radio" name="q'+n+'" value="'+j+'"><span class="k">'+K[j]+'</span><span>'+o+'</span></label>').join('');
+  else if(q.t==='sa') body='<input class="txt" type="text" placeholder="답을 입력하세요">';
+  else if(q.t==='fb') body=q.show.map((_,j)=>'<span class="lbl">('+(j+1)+')</span><input class="txt" type="text" data-i="'+j+'">').join('');
+  else if(q.t==='ord'){const N=q.items.length;body=q.items.map((it,j)=>'<div class="row"><select data-i="'+j+'"><option value="">–</option>'+Array.from({length:N},(_,k)=>'<option value="'+(k+1)+'">'+(k+1)+'</option>').join('')+'</select><span>'+it+'</span></div>').join('');}
+  else if(q.t==='match'){const order=[...q.right.keys()].sort(()=>Math.random()-.5);body=q.left.map((l,j)=>'<div class="row"><span class="l">'+l+'</span><span class="arrow">→</span><select data-i="'+j+'"><option value="">선택</option>'+order.map(k=>'<option value="'+k+'">'+q.right[k]+'</option>').join('')+'</select></div>').join('');}
+  let ansTxt;
+  if(q.t==='mc')ansTxt=K[q.a];else if(q.t==='sa')ansTxt=q.show;else if(q.t==='fb')ansTxt=q.show.map((s,j)=>'('+(j+1)+') '+s).join('  ');
+  else if(q.t==='ord')ansTxt=q.a.map((v,j)=>[v,q.items[j]]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]).join(' → ');
+  else ansTxt=q.left.map((l,j)=>l+' ↔ '+q.right[q.a[j]]).join('\n');
+  d.innerHTML='<div class="t"><span>Q'+n+'.</span>'+q.q+(q.t==='fb'?'<small>빈칸에 알맞은 말을 쓰시오</small>':'')+'</div>'+body+'<div class="exp"><b>정답</b> '+ansTxt+'\n'+q.exp+'</div>';
+  root.appendChild(d);
+});
+function check(q,d){
+  if(q.t==='mc'){const s=d.querySelector('input:checked');if(!s)return null;const v=+s.value;const opts=d.querySelectorAll('.opt');opts[q.a].classList.add('correct');if(v!==q.a)opts[v].classList.add('wrong');return v===q.a;}
+  if(q.t==='sa'){const i=d.querySelector('input.txt');if(!i.value.trim())return null;const ok=q.a.includes(norm(i.value));i.classList.add(ok?'ok':'ng');return ok;}
+  if(q.t==='fb'){const ins=[...d.querySelectorAll('input.txt')];if(ins.every(i=>!i.value.trim()))return null;let ok=true;ins.forEach((i,j)=>{const g=q.a[j].includes(norm(i.value));i.classList.add(g?'ok':'ng');if(!g)ok=false;});return ok;}
+  const sels=[...d.querySelectorAll('select')];if(sels.every(s=>!s.value))return null;let ok=true;
+  sels.forEach((s,j)=>{const g=s.value!==''&&+s.value===q.a[j];s.classList.add(g?'ok':'ng');if(!g)ok=false;});return ok;
+}
+function clearMarks(d){d.classList.remove('ok','ng');d.querySelectorAll('.opt,.txt,select').forEach(e=>e.classList.remove('correct','wrong','ok','ng'));d.querySelector('.exp').classList.remove('show');}
+function grade(showAll){
+  let n=0,ans=0;
+  QS.forEach((q,i)=>{const d=document.getElementById('q'+(i+1));clearMarks(d);const r=check(q,d);
+    if(r!==null){ans++;if(r){n++;d.classList.add('ok');}else d.classList.add('ng');}
+    if(r!==null||showAll){d.querySelector('.exp').classList.add('show');if(q.t==='mc')d.querySelectorAll('.opt')[q.a].classList.add('correct');}
+  });
+  const s=document.getElementById('score');
+  if(showAll&&ans===0){s.textContent='정답·해설 표시';s.className='';return;}
+  s.textContent=n+' / '+QS.length+' 정답'+(ans<QS.length?' (미응답 '+(QS.length-ans)+')':'');s.className=n>=16?'good':'bad';
+}
+document.getElementById('btnGrade').onclick=()=>grade(false);
+document.getElementById('btnKey').onclick=()=>grade(true);
+document.getElementById('btnReset').onclick=()=>{QS.forEach((q,i)=>{const d=document.getElementById('q'+(i+1));clearMarks(d);d.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false);d.querySelectorAll('input.txt').forEach(x=>x.value='');d.querySelectorAll('select').forEach(x=>x.value='');});document.getElementById('score').textContent='';window.scrollTo(0,0);};
+document.getElementById('btnPrint').onclick=()=>{document.body.classList.remove('printkey');window.print();};
+document.getElementById('btnPrintKey').onclick=()=>{grade(true);document.body.classList.add('printkey');window.print();document.body.classList.remove('printkey');};
+</script></body></html>

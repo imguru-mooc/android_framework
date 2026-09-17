@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Android Framework 16 심화 — Day 4 애니메이션</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2b;--line:#22304a;--ink:#dbe4f0;--muted:#8a9bb5;--amber:#f5b942;--teal:#2dd4bf;--blue:#60a5fa;--green:#34d399;--red:#f87171;--violet:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:1.05rem;color:var(--amber);font-weight:600}
+header span{color:var(--muted);font-size:.85rem}
+.tabs{display:flex;gap:6px;padding:12px 24px 0;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.9rem}
+.tab.on{color:var(--amber);border-bottom-color:var(--panel);background:#15203a}
+main{padding:0 24px 24px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px;min-height:520px}
+.scene{display:none}.scene.on{display:block}
+svg{width:100%;height:auto;display:block}
+.svgtext{font-family:inherit;font-size:14px;fill:var(--ink)}
+.mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;font-size:12px;fill:var(--muted)}
+.box{fill:#0f1728;stroke:var(--line);stroke-width:1.5;rx:8}
+.hid{opacity:0;transition:opacity .45s}
+.vis{opacity:1}
+.glow{transition:stroke .3s,fill .3s}
+.pkt{transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .3s}
+.controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{background:#15203a;border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:.88rem}
+button:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#062a26;border-color:var(--teal);font-weight:600}
+.step{color:var(--muted);font-size:.85rem;margin-left:auto}
+.caption{margin-top:12px;padding:12px 16px;background:#0f1728;border-left:3px solid var(--amber);border-radius:0 6px 6px 0;min-height:56px;font-size:.95rem}
+.caption b{color:var(--amber)}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.78rem;color:var(--muted)}
+.pill.teal{color:var(--teal);border-color:var(--teal)}.pill.amber{color:var(--amber);border-color:var(--amber)}.pill.blue{color:var(--blue);border-color:var(--blue)}.pill.green{color:var(--green);border-color:var(--green)}.pill.red{color:var(--red);border-color:var(--red)}
+.bar{transition:width .6s linear}
+@media (prefers-reduced-motion:reduce){.hid,.pkt,.bar,.glow{transition:none}}
+</style>
+</head>
+<body>
+<header><h1>Android Framework 16 심화 · Day 4 애니메이션</h1><span>델타 배포 · APEX · RRO 매칭 · Car SystemUI RRO · SystemUI 프레임/QS · WMS 창 → Layer · Automotive 계층 · 버튼 한 번의 flow</span></header>
+<div class="tabs" id="tabs"></div>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a9bb5"/></marker></defs></svg>
+<main>
+<div class="stage">
+
+
+
+
+<!-- ===== Scene 1: 델타 배포 ===== -->
+<div class="scene" id="s1">
+<svg viewBox="0 0 960 480">
+  <text class="svgtext" x="20" y="35" fill="#f5b942">무엇을 바꾸는가 → 무엇이 필요한가</text>
+  <g id="d_r1" class="hid"><rect class="box glow" id="d_r1b" x="20" y="50" width="300" height="54"/><text class="svgtext" x="32" y="72" fill="#dbe4f0">Native 바이너리 · .so</text><text class="mono" x="32" y="94" fill="#8a9bb5">Day 2·3 의 서비스, hello_server</text>
+    <rect class="box" x="340" y="50" width="600" height="54"/><text class="mono" x="352" y="72" fill="#34d399">m &lt;모듈&gt; → adb push /data → 실행</text><text class="mono" x="352" y="94" fill="#8a9bb5">이미지 재빌드 없음 · 수십 초</text></g>
+  <g id="d_r2" class="hid"><rect class="box glow" id="d_r2b" x="20" y="114" width="300" height="54"/><text class="svgtext" x="32" y="136" fill="#dbe4f0">Java 리소스 (색 · 문자열 · drawable)</text><text class="mono" x="32" y="158" fill="#8a9bb5">SystemUI 테마, 앱 브랜딩</text>
+    <rect class="box" x="340" y="114" width="600" height="54"/><text class="mono" x="352" y="136" fill="#34d399">RRO — APK 하나 설치 + cmd overlay enable</text><text class="mono" x="352" y="158" fill="#8a9bb5">코드 재빌드 없음 · Car SystemUI 는 /system/app</text></g>
+  <g id="d_r3" class="hid"><rect class="box glow" id="d_r3b" x="20" y="178" width="300" height="54"/><text class="svgtext" x="32" y="200" fill="#dbe4f0">시스템 앱 코드 (SystemUI · Settings)</text><text class="mono" x="32" y="222" fill="#8a9bb5">QS 타일, 상태바 뷰</text>
+    <rect class="box" x="340" y="178" width="600" height="54"/><text class="mono" x="352" y="200" fill="#34d399">m SystemUI → APK push (remount) → killall</text><text class="mono" x="352" y="222" fill="#8a9bb5">수 분 · 이미지 재빌드 없음</text></g>
+  <g id="d_r4" class="hid"><rect class="box glow" id="d_r4b" x="20" y="242" width="300" height="54"/><text class="svgtext" x="32" y="264" fill="#dbe4f0">독립 배포 모듈 (바이너리 + 라이브러리)</text><text class="mono" x="32" y="286" fill="#8a9bb5">따로 버전 관리·업데이트</text>
+    <rect class="box" x="340" y="242" width="600" height="54"/><text class="mono" x="352" y="264" fill="#34d399">APEX — m com.example.x → .apex push → reboot</text><text class="mono" x="352" y="286" fill="#8a9bb5">/apex/&lt;name&gt;@&lt;ver&gt; 마운트</text></g>
+  <g id="d_r5" class="hid"><rect class="box glow" id="d_r5b" x="20" y="306" width="300" height="54"/><text class="svgtext" x="32" y="328" fill="#dbe4f0">Native Service 등록 · init.rc · sepolicy</text><text class="mono" x="32" y="350" fill="#8a9bb5">Day 2 실습 9</text>
+    <rect class="box" x="340" y="306" width="600" height="54"/><text class="mono" x="352" y="328" fill="#f5b942">init_rc 는 push + reboot · .te 는 sepolicy 리빌드</text><text class="mono" x="352" y="350" fill="#8a9bb5">경계선 — 여기부터 이미지가 필요해진다</text></g>
+  <g id="d_r6" class="hid"><rect class="box glow" id="d_r6b" x="20" y="370" width="300" height="54"/><text class="svgtext" x="32" y="392" fill="#dbe4f0">커널 · 기본 탑재 RRO · VHAL 속성 추가</text><text class="mono" x="32" y="414" fill="#8a9bb5">Day 1 실습 13 · Vehicle Property 추가</text>
+    <rect class="box" x="340" y="370" width="600" height="54"/><text class="mono" x="352" y="392" fill="#f87171">m emu_img_zip → WinSCP → Emulator 재시작</text><text class="mono" x="352" y="414" fill="#8a9bb5">수십 분 · 이것만 "이미지를 다시 굽는다"</text></g>
+  <g id="d_note" class="hid"><text class="svgtext" x="20" y="455" fill="#8a9bb5">"이미지 다시 구워야 하나요?" — 표에서 줄을 찾으면 답이 나온다. 실습 2(APEX)·3(RRO)·7(소스) 이 한 줄씩.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 2: APEX ===== -->
+<div class="scene" id="s2">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="440" height="270" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="240" y="55" text-anchor="middle" fill="#f5b942">빌드 서버 — simple_apex/</text>
+  <g id="a_bin" class="hid"><rect class="box glow" id="a_binb" x="40" y="70" width="190" height="50"/><text class="mono" x="135" y="90" text-anchor="middle" fill="#dbe4f0">binary/main.cpp</text><text class="mono" x="135" y="108" text-anchor="middle" fill="#8a9bb5">cc_binary apex_available</text></g>
+  <g id="a_mf" class="hid"><rect class="box glow" id="a_mfb" x="250" y="70" width="190" height="50"/><text class="mono" x="345" y="90" text-anchor="middle" fill="#dbe4f0">apex_manifest.json</text><text class="mono" x="345" y="108" text-anchor="middle" fill="#8a9bb5">name · version</text></g>
+  <g id="a_key" class="hid"><rect class="box glow" id="a_keyb" x="40" y="135" width="190" height="60"/><text class="mono" x="135" y="155" text-anchor="middle" fill="#dbe4f0">키 4종</text><text class="mono" x="135" y="172" text-anchor="middle" fill="#8a9bb5">.pem .avbpubkey (AVB)</text><text class="mono" x="135" y="188" text-anchor="middle" fill="#8a9bb5">.pk8 .x509.pem (APK)</text></g>
+  <g id="a_fc" class="hid"><rect class="box glow" id="a_fcb" x="250" y="135" width="190" height="60"/><text class="mono" x="345" y="155" text-anchor="middle" fill="#f87171">file_contexts</text><text class="mono" x="345" y="172" text-anchor="middle" fill="#8a9bb5">system/sepolicy/apex/</text><text class="mono" x="345" y="188" text-anchor="middle" fill="#8a9bb5">&lt;name&gt;-file_contexts 고정</text></g>
+  <g id="a_bp" class="hid"><rect class="box glow" id="a_bpb" x="40" y="210" width="400" height="70"/><text class="mono" x="52" y="230" fill="#dbe4f0">apex { manifest, binaries, key, cert, updatable:false }</text><text class="mono" x="52" y="250" fill="#dbe4f0">apex_key {} · android_app_certificate {}</text><text class="mono" x="52" y="270" fill="#8a9bb5">m com.example.simple → $OUT/system/apex/*.apex</text></g>
+  <rect x="500" y="30" width="440" height="270" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="720" y="55" text-anchor="middle" fill="#2dd4bf">Emulator</text>
+  <g id="a_push" class="hid"><rect class="box glow" id="a_pushb" x="520" y="70" width="400" height="50"/><text class="mono" x="720" y="90" text-anchor="middle" fill="#dbe4f0">push /system/apex/ → reboot</text><text class="mono" x="720" y="108" text-anchor="middle" fill="#8a9bb5">(remount 상태) 또는 adb install --apex</text></g>
+  <g id="a_apexd" class="hid"><rect class="box glow" id="a_apexdb" x="520" y="135" width="400" height="60"/><text class="mono" x="720" y="155" text-anchor="middle" fill="#dbe4f0">apexd: AVB 검증 → loop mount (ext4 ro)</text><text class="mono" x="720" y="173" text-anchor="middle" fill="#8a9bb5">/apex/com.example.simple@1</text><text class="mono" x="720" y="189" text-anchor="middle" fill="#8a9bb5">/apex/com.example.simple → @1 링크</text></g>
+  <g id="a_run" class="hid"><rect class="box glow" id="a_runb" x="520" y="210" width="400" height="70"/><text class="mono" x="532" y="232" fill="#34d399">/apex/com.example.simple/bin/simple_apex_binary</text><text class="mono" x="532" y="252" fill="#dbe4f0">Hello from Simple APEX on Android 16!</text><text class="mono" x="532" y="270" fill="#8a9bb5">dumpsys apexservice · mount</text></g>
+  <g id="pkt2" class="pkt" style="opacity:0"><rect x="-30" y="-14" width="60" height="28" rx="14" fill="#f5b942"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#0b1220">.apex</text></g>
+  <g id="a_note" class="hid"><rect class="box" x="20" y="320" width="920" height="140"/><text class="svgtext" x="32" y="345" fill="#f5b942">APEX = 파일시스템 이미지 + manifest + 서명 두 벌</text>
+    <text class="svgtext" x="32" y="370">AVB 키(.pem/.avbpubkey) 는 이미지 검증, APK 키(.pk8/.x509) 는 패키지 서명. 둘 다 필요.</text>
+    <text class="svgtext" x="32" y="394">file_contexts 는 system/sepolicy/apex 에서만 — 아니면 "should be under system/sepolicy". updatable:false → compressible 불가.</text>
+    <text class="svgtext" x="32" y="418" fill="#8a9bb5">Mainline 모듈(ART·Media·Wi-Fi)이 이 형식으로 Play 업데이트. 커스텀은 이미지 내장.</text>
+    <text class="svgtext" x="32" y="446" fill="#8a9bb5">APEX 안의 바이너리도 init.rc·SELinux 도메인 규칙은 Day 2 실습 9 와 같다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 3: RRO 매칭 ===== -->
+<div class="scene" id="s3">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="290" height="280" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="165" y="55" text-anchor="middle" fill="#60a5fa">타겟 앱 RROTarget</text>
+  <g id="r_res" class="hid"><rect class="box glow" id="r_resb" x="40" y="70" width="250" height="90"/><text class="mono" x="52" y="92" fill="#dbe4f0">string/hello_world "how are you"</text><text class="mono" x="52" y="110" fill="#dbe4f0">color/background_color #FFFFFF</text><text class="mono" x="52" y="128" fill="#dbe4f0">drawable/background_shape</text><text class="mono" x="52" y="146" fill="#dbe4f0">drawable/ic_target_icon</text></g>
+  <g id="r_ov" class="hid"><rect class="box glow" id="r_ovb" x="40" y="175" width="250" height="120"/><text class="svgtext" x="52" y="198" fill="#f5b942">overlayable.xml (계약)</text><text class="mono" x="52" y="220" fill="#dbe4f0">&lt;overlayable name="RROTargetTheme"&gt;</text><text class="mono" x="52" y="238" fill="#dbe4f0"> &lt;policy type="public"&gt;</text><text class="mono" x="52" y="256" fill="#dbe4f0">  &lt;item type="string" name="hello_world"/&gt;</text><text class="mono" x="52" y="274" fill="#dbe4f0">  &lt;item type="drawable" name="…"/&gt;</text><text class="mono" x="52" y="290" fill="#8a9bb5">이 목록 밖은 무시된다</text></g>
+  <rect x="340" y="30" width="290" height="280" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="485" y="55" text-anchor="middle" fill="#f5b942">OverlayManagerService</text>
+  <g id="r_match" class="hid"><rect class="box glow" id="r_matchb" x="360" y="70" width="250" height="90"/><text class="svgtext" x="485" y="92" text-anchor="middle">매칭 (idmap)</text><text class="mono" x="372" y="114" fill="#dbe4f0">targetPackage == 타겟?</text><text class="mono" x="372" y="132" fill="#dbe4f0">targetName == overlayable name?</text><text class="mono" x="372" y="150" fill="#dbe4f0">policy 허용? (public / system)</text></g>
+  <g id="r_state" class="hid"><rect class="box" x="360" y="175" width="250" height="120"/><text class="svgtext" x="372" y="198" fill="#dbe4f0">cmd overlay list</text><text class="mono" x="372" y="222" fill="#34d399">[x] enabled</text><text class="mono" x="372" y="244" fill="#f5b942">[ ] 매칭 OK · 비활성 → enable</text><text class="mono" x="372" y="266" fill="#f87171">--- 매칭 실패 (NO_IDMAP)</text><text class="mono" x="372" y="288" fill="#8a9bb5">priority 높은 활성 오버레이가 이긴다</text></g>
+  <rect x="660" y="30" width="280" height="280" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#2dd4bf">RROOverlay (hasCode=false)</text>
+  <g id="r_mf" class="hid"><rect class="box glow" id="r_mfb" x="680" y="70" width="240" height="100"/><text class="mono" x="692" y="92" fill="#dbe4f0">&lt;overlay</text><text class="mono" x="692" y="110" fill="#dbe4f0">  targetPackage="com.example.rrotarget"</text><text class="mono" x="692" y="128" fill="#dbe4f0">  targetName="RROTargetTheme"</text><text class="mono" x="692" y="146" fill="#dbe4f0">  priority="1" isStatic="false"/&gt;</text></g>
+  <g id="r_val" class="hid"><rect class="box glow" id="r_valb" x="680" y="185" width="240" height="110"/><text class="mono" x="692" y="207" fill="#34d399">string/hello_world "Hello, RRO!"</text><text class="mono" x="692" y="225" fill="#34d399">color/background_color #4A148C</text><text class="mono" x="692" y="243" fill="#34d399">drawable/background_shape (gradient)</text><text class="mono" x="692" y="261" fill="#34d399">drawable/ic_target_icon (rocket)</text><text class="mono" x="692" y="285" fill="#8a9bb5">같은 이름·타입만 덮는다</text></g>
+  <g id="pkt3" class="pkt" style="opacity:0"><rect x="-46" y="-14" width="92" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt3_t">hello_world</text></g>
+  <g id="r_note" class="hid"><rect class="box" x="20" y="330" width="920" height="130"/><text class="svgtext" x="32" y="355" fill="#f5b942">RRO 는 세 당사자의 계약</text>
+    <text class="svgtext" x="32" y="380">타겟이 overlayable 로 허용 → 오버레이가 overlay 로 지목 → OMS 가 idmap 생성 → enable 시 오버레이 값 우선.</text>
+    <text class="svgtext" x="32" y="404">실습 3: overlayable 에서 빼면 enable 돼도 그대로. 실습 4: priority 2 가 1 을 덮는다.</text>
+    <text class="svgtext" x="32" y="428" fill="#8a9bb5">SRO(Product Flavors) 는 이 매칭이 빌드 시 Gradle 안에서 일어나는 것 — 런타임 전환 불가.</text>
+    <text class="svgtext" x="32" y="452" fill="#8a9bb5">IOverlayManager.getOverlayInfosForTarget 이 cmd overlay list 의 실체 (실습 4).</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 4: Car SystemUI RRO ===== -->
+<div class="scene" id="s4">
+<svg viewBox="0 0 960 480">
+  <g id="c_s1" class="hid"><rect class="box glow" id="c_s1b" x="20" y="40" width="290" height="80"/><text class="svgtext" x="32" y="63" fill="#f87171">① adb install 로 SystemUI 오버레이</text><text class="mono" x="32" y="86" fill="#dbe4f0">cmd overlay list → ---</text><text class="mono" x="32" y="104" fill="#8a9bb5">Car SystemUI: mTargetOverlayableName = null</text></g>
+  <g id="c_s2" class="hid"><line x1="310" y1="80" x2="335" y2="80" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="c_s2b" x="340" y="40" width="290" height="80"/><text class="svgtext" x="352" y="63" fill="#f5b942">② 왜? policy</text><text class="mono" x="352" y="86" fill="#dbe4f0">사용자 설치 = public → overlayable 필수</text><text class="mono" x="352" y="104" fill="#dbe4f0">/system/app = system → 불필요</text></g>
+  <g id="c_s3" class="hid"><line x1="630" y1="80" x2="655" y2="80" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="c_s3b" x="660" y="40" width="280" height="80"/><text class="svgtext" x="672" y="63" fill="#34d399">③ 해결</text><text class="mono" x="672" y="86" fill="#dbe4f0">targetName 제거 + /system/app 설치</text><text class="mono" x="672" y="104" fill="#8a9bb5">→ [ ] → enable → killall systemui</text></g>
+  <!-- remount steps -->
+  <text class="svgtext" x="20" y="155" fill="#f5b942">/system 에 쓰려면 — 2단계 remount</text>
+  <g id="c_r1" class="hid"><rect class="box glow" id="c_r1b" x="20" y="170" width="210" height="60"/><text class="mono" x="125" y="192" text-anchor="middle" fill="#dbe4f0">adb root; adb remount</text><text class="mono" x="125" y="212" text-anchor="middle" fill="#8a9bb5">verity 해제 · overlayfs 설정</text></g>
+  <g id="c_r2" class="hid"><line x1="230" y1="200" x2="255" y2="200" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="c_r2b" x="260" y="170" width="150" height="60"/><text class="mono" x="335" y="192" text-anchor="middle" fill="#dbe4f0">adb reboot</text><text class="mono" x="335" y="212" text-anchor="middle" fill="#8a9bb5">설정 적용</text></g>
+  <g id="c_r3" class="hid"><line x1="410" y1="200" x2="435" y2="200" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="c_r3b" x="440" y="170" width="230" height="60"/><text class="mono" x="555" y="192" text-anchor="middle" fill="#34d399">adb root; adb remount</text><text class="mono" x="555" y="212" text-anchor="middle" fill="#8a9bb5">remount succeeded ← 이제 쓰기 가능</text></g>
+  <g id="c_r4" class="hid"><line x1="670" y1="200" x2="695" y2="200" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="c_r4b" x="700" y="170" width="240" height="60"/><text class="mono" x="820" y="192" text-anchor="middle" fill="#dbe4f0">push /system/app/X/X.apk</text><text class="mono" x="820" y="212" text-anchor="middle" fill="#8a9bb5">reboot → 시스템 앱으로 인식</text></g>
+  <!-- aapt -->
+  <g id="c_aapt" class="hid"><rect class="box" x="20" y="250" width="450" height="110"/><text class="svgtext" x="32" y="273" fill="#f5b942">리소스 이름은 APK 에서 뽑는다</text><text class="mono" x="32" y="296" fill="#dbe4f0">pm path com.android.systemui → adb pull CarSystemUI.apk</text><text class="mono" x="32" y="314" fill="#dbe4f0">aapt dump resources … | findstr color/system_bar</text><text class="mono" x="32" y="332" fill="#34d399">system_bar_clock_text_color · car_nav_icon_fill_color …</text><text class="mono" x="32" y="350" fill="#8a9bb5">Phone SystemUI 이름과 다르다 — 추측하면 안 바뀐다</text></g>
+  <g id="c_res" class="hid"><rect class="box" x="490" y="250" width="450" height="110"/><text class="svgtext" x="502" y="273" fill="#f5b942">결과</text><text class="mono" x="502" y="296" fill="#34d399">시계 → 핑크 · 아이콘 → 노랑 · "Driver" → 시안 ✅</text><text class="mono" x="502" y="314" fill="#34d399">하단 내비 아이콘 → 주황 ✅</text><text class="mono" x="502" y="332" fill="#f5b942">바 배경 → 변화 없음 ⚠ (투명 리소스 사용)</text><text class="mono" x="502" y="350" fill="#8a9bb5">*_transparent 리소스도 함께 덮어야 한다</text></g>
+  <g id="c_note" class="hid"><rect class="box" x="20" y="380" width="920" height="80"/><text class="svgtext" x="32" y="405" fill="#f5b942">변경이 안 먹을 때 체크리스트 (실습 6 트러블슈팅)</text><text class="svgtext" x="32" y="430">① remount succeeded? ② --- (targetName)? ③ enable 안 함? ④ killall? ⑤ aapt 이름? ⑥ 높은 priority? ⑦ 크래시 로그?</text><text class="svgtext" x="32" y="452" fill="#8a9bb5">이 일곱 줄이 현장 질문의 80% 를 해결한다.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 5: SystemUI 프레임 + QS 타일 ===== -->
+<div class="scene" id="s5">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="600" height="220" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="320" y="55" text-anchor="middle" fill="#60a5fa">com.android.systemui — 한 프레임</text>
+  <g id="f_in" class="hid"><rect class="box glow" id="f_inb" x="40" y="70" width="130" height="60"/><text class="mono" x="105" y="92" text-anchor="middle" fill="#dbe4f0">deliverInput</text><text class="mono" x="105" y="110" text-anchor="middle" fill="#8a9bb5">Event (swipe)</text></g>
+  <g id="f_ui" class="hid"><line x1="170" y1="100" x2="190" y2="100" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="f_uib" x="195" y="70" width="190" height="60"/><text class="mono" x="290" y="92" text-anchor="middle" fill="#dbe4f0">Choreographer#doFrame</text><text class="mono" x="290" y="110" text-anchor="middle" fill="#8a9bb5">UI Thread: measure/layout/draw</text></g>
+  <g id="f_rt" class="hid"><line x1="385" y1="100" x2="405" y2="100" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="f_rtb" x="410" y="70" width="190" height="60"/><text class="mono" x="505" y="92" text-anchor="middle" fill="#dbe4f0">RenderThread DrawFrames</text><text class="mono" x="505" y="110" text-anchor="middle" fill="#8a9bb5">GPU 명령 → BufferQueue</text></g>
+  <g id="f_sf" class="hid"><rect class="box glow" id="f_sfb" x="40" y="150" width="560" height="50"/><text class="mono" x="320" y="172" text-anchor="middle" fill="#dbe4f0">surfaceflinger onMessageRefresh → composite → HWC (Day 3 동일)</text><text class="mono" x="320" y="190" text-anchor="middle" fill="#8a9bb5">Java App 은 UI + Render 2개 Thread — Jank 원인을 두 트랙으로 가른다</text></g>
+  <g id="f_tools" class="hid"><rect class="box" x="40" y="208" width="560" height="34"/><text class="mono" x="52" y="230" fill="#8a9bb5">gfxinfo (Janky %) ↔ Perfetto Actual Timeline — 같은 것의 숫자/그림</text></g>
+  <rect x="640" y="30" width="300" height="220" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="790" y="55" text-anchor="middle" fill="#f5b942">QS 타일 추가 (실습 7)</text>
+  <g id="f_q1" class="hid"><rect class="box glow" id="f_q1b" x="660" y="70" width="260" height="44"/><text class="mono" x="672" y="90" fill="#dbe4f0">CpuInfoTile : QSTileImpl&lt;BooleanState&gt;</text><text class="mono" x="672" y="106" fill="#8a9bb5">handleClick · handleUpdateState</text></g>
+  <g id="f_q2" class="hid"><rect class="box glow" id="f_q2b" x="660" y="122" width="260" height="44"/><text class="mono" x="672" y="142" fill="#dbe4f0">@Binds @IntoMap @StringKey("cpuinfo")</text><text class="mono" x="672" y="158" fill="#8a9bb5">Dagger 맵 — 빼면 크래시</text></g>
+  <g id="f_q3" class="hid"><rect class="box glow" id="f_q3b" x="660" y="174" width="260" height="44"/><text class="mono" x="672" y="194" fill="#dbe4f0">config.xml quick_settings_tiles_default</text><text class="mono" x="672" y="210" fill="#8a9bb5">…,cpuinfo</text></g>
+  <g id="f_q4" class="hid"><rect class="box" x="660" y="226" width="260" height="20"/><text class="mono" x="790" y="240" text-anchor="middle" fill="#34d399">m SystemUI → push → killall</text></g>
+  <g id="f_note" class="hid"><rect class="box" x="20" y="270" width="920" height="190"/><text class="svgtext" x="32" y="295" fill="#f5b942">SystemUI 를 바꾸는 두 층위</text>
+    <text class="svgtext" x="32" y="320"><tspan fill="#2dd4bf">리소스</tspan> — RRO (실습 6). 색·문자열·아이콘·config.xml 값. 코드 재빌드 없음. Car SystemUI 는 /system/app.</text>
+    <text class="svgtext" x="32" y="344"><tspan fill="#f5b942">코드</tspan> — 소스 수정 + m SystemUI (실습 7). APK 만 교체. Dagger 등록 누락 → 반복 크래시 → logcat -s AndroidRuntime 에서 "cpuinfo".</text>
+    <text class="svgtext" x="32" y="368">분석 — dumpsys statusbar / notification / gfxinfo (실습 5), Perfetto view·wm·input (실습 8).</text>
+    <text class="svgtext" x="32" y="392" fill="#8a9bb5">상태바 커스텀 뷰(BatteryTemperatureView): status_bar.xml 에 TextView 상속 뷰 + Handler.postDelayed — "회사 상태를 상태바에" 패턴.</text>
+    <text class="svgtext" x="32" y="416" fill="#8a9bb5">SystemUI 의 각 바는 WMS 가 SF 에 만든 Layer — dumpsys SurfaceFlinger --list 의 StatusBar#0.</text>
+    <text class="svgtext" x="32" y="446" fill="#8a9bb5">"QS 타일이 안 보여요" → Dagger 등록 누락(크래시 로그) 또는 Car SystemUI 의 config.xml 이 우선.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 6: WMS 창 → SF Layer ===== -->
+<div class="scene" id="s6">
+<svg viewBox="0 0 960 480">
+  <rect x="20" y="30" width="280" height="260" rx="10" fill="#0f1728" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text class="svgtext" x="160" y="55" text-anchor="middle" fill="#2dd4bf">FloatingOverlayDemo</text>
+  <g id="w_p" class="hid"><rect class="box glow" id="w_pb" x="40" y="70" width="240" height="60"/><text class="mono" x="52" y="90" fill="#dbe4f0">SYSTEM_ALERT_WINDOW 권한</text><text class="mono" x="52" y="108" fill="#8a9bb5">Settings.canDrawOverlays / appops allow</text></g>
+  <g id="w_add" class="hid"><rect class="box glow" id="w_addb" x="40" y="145" width="240" height="70"/><text class="mono" x="52" y="165" fill="#dbe4f0">LayoutParams(TYPE_APPLICATION_OVERLAY</text><text class="mono" x="52" y="183" fill="#dbe4f0">  FLAG_NOT_FOCUSABLE, TRANSLUCENT)</text><text class="mono" x="52" y="203" fill="#34d399">windowManager.addView(view, params)</text></g>
+  <g id="w_srf" class="hid"><rect class="box" x="40" y="230" width="240" height="44"/><text class="mono" x="52" y="250" fill="#dbe4f0">Surface 를 받아 View 가 그린다</text><text class="mono" x="52" y="266" fill="#8a9bb5">removeView → Layer 제거</text></g>
+  <rect x="340" y="30" width="280" height="260" rx="10" fill="#0f1728" stroke="#f5b942" stroke-width="1.5"/>
+  <text class="svgtext" x="480" y="55" text-anchor="middle" fill="#f5b942">WindowManagerService (system_server)</text>
+  <g id="w_chk" class="hid"><rect class="box glow" id="w_chkb" x="360" y="70" width="240" height="70"/><text class="mono" x="372" y="90" fill="#dbe4f0">addWindow(): 창 타입 2038 →</text><text class="mono" x="372" y="108" fill="#dbe4f0">호출자 uid 의 SYSTEM_ALERT_WINDOW 검사</text><text class="mono" x="372" y="128" fill="#f87171">없으면 BadTokenException</text></g>
+  <g id="w_cs" class="hid"><rect class="box glow" id="w_csb" x="360" y="155" width="240" height="60"/><text class="mono" x="372" y="175" fill="#dbe4f0">SurfaceComposerClient.createSurface</text><text class="mono" x="372" y="193" fill="#8a9bb5">Day 3 실습 9 를 WMS 가 대신</text><text class="mono" x="372" y="209" fill="#8a9bb5">z-order 는 창 타입별 계층</text></g>
+  <g id="w_dump" class="hid"><rect class="box" x="360" y="230" width="240" height="44"/><text class="mono" x="372" y="250" fill="#dbe4f0">dumpsys window windows</text><text class="mono" x="372" y="266" fill="#8a9bb5">ty=APPLICATION_OVERLAY (2038)</text></g>
+  <rect x="660" y="30" width="280" height="260" rx="10" fill="#0f1728" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="svgtext" x="800" y="55" text-anchor="middle" fill="#60a5fa">SurfaceFlinger</text>
+  <g id="w_l1" class="hid"><rect class="box" x="680" y="70" width="240" height="40"/><text class="mono" x="692" y="95" fill="#dbe4f0">StatusBar#0  (z 높음)</text></g>
+  <g id="w_l2" class="hid"><rect class="box glow" id="w_l2b" x="680" y="118" width="240" height="40"/><text class="mono" x="692" y="143" fill="#34d399">com.example.floatingoverlaydemo#0</text></g>
+  <g id="w_l3" class="hid"><rect class="box" x="680" y="166" width="240" height="40"/><text class="mono" x="692" y="191" fill="#dbe4f0">carlauncher/…CarLauncher#0</text></g>
+  <g id="w_l4" class="hid"><rect class="box" x="680" y="214" width="240" height="60"/><text class="mono" x="692" y="234" fill="#dbe4f0">splitscreendemo/…MainActivity#0</text><text class="mono" x="692" y="252" fill="#8a9bb5">좌우 Fragment 분할 — Layer 는 하나</text><text class="mono" x="692" y="268" fill="#8a9bb5">dumpsys SurfaceFlinger --list</text></g>
+  <g id="pkt6" class="pkt" style="opacity:0"><rect x="-40" y="-14" width="80" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt6_t">addView</text></g>
+  <g id="w_note" class="hid"><rect class="box" x="20" y="310" width="920" height="150"/><text class="svgtext" x="32" y="335" fill="#f5b942">창(Window) 과 Layer 의 관계</text>
+    <text class="svgtext" x="32" y="360">addView 는 WMS 로 가는 Binder 호출. WMS 가 권한·타입 검사 → SF 에 Layer → Surface 를 App 에 반환.</text>
+    <text class="svgtext" x="32" y="384">권한 검사는 WMS(system_server) 에서 — Day 2 실습 8 UID 검사, 실습 10 CarPropertyService 와 같은 자리.</text>
+    <text class="svgtext" x="32" y="408">Fragment 분할은 Layer 1개. 디스플레이가 다르면 Layer 스택이 다르다 — dumpsys display · am start --display.</text>
+    <text class="svgtext" x="32" y="432" fill="#8a9bb5">실습 9: appops deny → BadTokenException(permission denied for window type 2038) 재현.</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 7: Automotive 계층 ===== -->
+<div class="scene" id="s7">
+<svg viewBox="0 0 960 480">
+  <g id="v_app" class="hid"><rect class="box glow" id="v_appb" x="20" y="40" width="200" height="80"/><text class="svgtext" x="120" y="63" text-anchor="middle" fill="#2dd4bf">App (HvacSimulator)</text><text class="mono" x="120" y="86" text-anchor="middle">createCar → CarPropertyManager</text><text class="mono" x="120" y="104" text-anchor="middle" fill="#8a9bb5">uid 10xxx · priv-app 권한</text></g>
+  <g id="v_cs" class="hid"><line x1="220" y1="80" x2="255" y2="80" stroke="#8a9bb5" marker-end="url(#arr)"/><text class="mono" x="237" y="70" text-anchor="middle" fill="#a78bfa">ICarProperty</text><rect class="box glow" id="v_csb" x="260" y="40" width="240" height="80"/><text class="svgtext" x="380" y="63" text-anchor="middle" fill="#60a5fa">CarService (com.android.car)</text><text class="mono" x="380" y="86" text-anchor="middle">CarPropertyService · PropertyHal</text><text class="mono" x="380" y="104" text-anchor="middle" fill="#8a9bb5">uid system · car_service: [ICar]</text></g>
+  <g id="v_hal" class="hid"><line x1="500" y1="80" x2="535" y2="80" stroke="#8a9bb5" marker-end="url(#arr)"/><text class="mono" x="517" y="70" text-anchor="middle" fill="#a78bfa">IVehicle</text><rect class="box glow" id="v_halb" x="540" y="40" width="220" height="80"/><text class="svgtext" x="650" y="63" text-anchor="middle" fill="#f5b942">VHAL (vendor)</text><text class="mono" x="650" y="86" text-anchor="middle">…vehicle.IVehicle/default</text><text class="mono" x="650" y="104" text-anchor="middle" fill="#8a9bb5">AIDL HAL · NDK · VINTF</text></g>
+  <g id="v_hw" class="hid"><line x1="760" y1="80" x2="795" y2="80" stroke="#8a9bb5" marker-end="url(#arr)"/><rect class="box glow" id="v_hwb" x="800" y="40" width="140" height="80"/><text class="svgtext" x="870" y="63" text-anchor="middle" fill="#8a9bb5">차량 버스</text><text class="mono" x="870" y="86" text-anchor="middle">CAN / LIN</text><text class="mono" x="870" y="104" text-anchor="middle" fill="#8a9bb5">Emulator: Fake</text></g>
+  <!-- property -->
+  <g id="v_prop" class="hid"><rect class="box" x="20" y="140" width="450" height="120"/><text class="svgtext" x="32" y="163" fill="#f5b942">Vehicle Property ID 구조</text><text class="mono" x="32" y="186" fill="#dbe4f0">HVAC_TEMPERATURE_SET = 0x15600503</text><text class="mono" x="32" y="204" fill="#8a9bb5">  0x1_______ Group(SYSTEM)  ·  0x_5______ Area(SEAT)</text><text class="mono" x="32" y="222" fill="#8a9bb5">  0x__6_____ Type(FLOAT)   ·  0x___00503 ID</text><text class="mono" x="32" y="246" fill="#dbe4f0">areaId: 좌석 그룹 49 (0x31) / 68 (0x44) — config 에서 읽는다</text></g>
+  <g id="v_perm" class="hid"><rect class="box" x="490" y="140" width="450" height="120"/><text class="svgtext" x="502" y="163" fill="#f5b942">권한 검사는 CarService 에서</text><text class="mono" x="502" y="186" fill="#dbe4f0">setProperty → getCallingUid → 권한</text><text class="mono" x="502" y="204" fill="#dbe4f0">HVAC_* → CONTROL_CAR_CLIMATE</text><text class="mono" x="502" y="222" fill="#f87171">없으면 SecurityException (logcat)</text><text class="mono" x="502" y="246" fill="#8a9bb5">privileged → priv-app + privapp-permissions.xml</text></g>
+  <!-- tools -->
+  <g id="v_tools" class="hid"><rect class="box" x="20" y="280" width="920" height="70"/><text class="svgtext" x="32" y="303" fill="#f5b942">차 없이 재현하는 도구</text><text class="mono" x="32" y="326" fill="#dbe4f0">dumpsys …IVehicle/default --set 0x15600503 -a 49 -f 25.0  (VHAL 값 변경)</text><text class="mono" x="32" y="344" fill="#dbe4f0">cmd car_service inject-vhal-event / day-night-mode / get-property-value (CarService 에 직접)</text></g>
+  <g id="pkt7" class="pkt" style="opacity:0"><rect x="-40" y="-14" width="80" height="28" rx="14" fill="#2dd4bf"/><text class="mono" x="0" y="5" text-anchor="middle" fill="#062a26" id="pkt7_t">set 22.5</text></g>
+  <g id="v_note" class="hid"><rect class="box" x="20" y="370" width="920" height="90"/><text class="svgtext" x="32" y="395" fill="#f5b942">Day 2 의 규칙이 그대로</text>
+    <text class="svgtext" x="32" y="420">CarService(Java Service) 가 VHAL(AIDL HAL) 을 부르고 App 은 CarService 만 본다. VHAL 은 vendor·NDK·VINTF.</text>
+    <text class="svgtext" x="32" y="444" fill="#8a9bb5">콜백은 Binder Thread(Day 3 실습 6) → runOnUiThread. 값의 진실은 VHAL — inject 와 --set 의 차이(실습 12).</text></g>
+</svg>
+</div>
+
+<!-- ===== Scene 8: 버튼 한 번의 flow ===== -->
+<div class="scene" id="s8">
+<svg viewBox="0 0 960 480">
+  <text class="svgtext" x="20" y="35" fill="#f5b942">Perfetto 트랙 (실습 13) — 온도 ▲ 한 번</text>
+  <g id="t_l0"><text class="mono" x="20" y="70" fill="#2dd4bf">hvacsimulator main</text><line x1="200" y1="66" x2="940" y2="66" stroke="#22304a"/></g>
+  <g id="t_l1"><text class="mono" x="20" y="120" fill="#60a5fa">com.android.car binder:N</text><line x1="200" y1="116" x2="940" y2="116" stroke="#22304a"/></g>
+  <g id="t_l2"><text class="mono" x="20" y="170" fill="#f5b942">vehicle (VHAL) binder:N</text><line x1="200" y1="166" x2="940" y2="166" stroke="#22304a"/></g>
+  <g id="t_l3"><text class="mono" x="20" y="220" fill="#a78bfa">hvacsimulator binder:N</text><line x1="200" y1="216" x2="940" y2="216" stroke="#22304a"/></g>
+  <g id="t_l4"><text class="mono" x="20" y="270" fill="#2dd4bf">hvacsimulator RenderThread</text><line x1="200" y1="266" x2="940" y2="266" stroke="#22304a"/></g>
+  <g id="t_l5"><text class="mono" x="20" y="320" fill="#34d399">surfaceflinger</text><line x1="200" y1="316" x2="940" y2="316" stroke="#22304a"/></g>
+  <g id="fl_1" class="hid"><rect x="210" y="52" width="70" height="26" rx="4" fill="#2dd4bf"/><text class="mono" x="245" y="69" text-anchor="middle" fill="#062a26">click</text><rect x="285" y="52" width="150" height="26" rx="4" fill="#15203a" stroke="#2dd4bf"/><text class="mono" x="360" y="69" text-anchor="middle" fill="#2dd4bf">binder transaction setProperty</text></g>
+  <g id="fl_2" class="hid"><line x1="360" y1="78" x2="380" y2="102" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/><rect x="380" y="102" width="160" height="26" rx="4" fill="#15203a" stroke="#60a5fa"/><text class="mono" x="460" y="119" text-anchor="middle" fill="#60a5fa">binder reply · CarPropertyService</text></g>
+  <g id="fl_3" class="hid"><rect x="470" y="128" width="60" height="14" rx="3" fill="#15203a" stroke="#60a5fa"/><text class="mono" x="500" y="139" text-anchor="middle" fill="#8a9bb5" font-size="9">setValues</text><line x1="500" y1="142" x2="520" y2="152" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/><rect x="520" y="152" width="120" height="26" rx="4" fill="#15203a" stroke="#f5b942"/><text class="mono" x="580" y="169" text-anchor="middle" fill="#f5b942">binder reply · VHAL</text></g>
+  <g id="fl_4" class="hid"><line x1="620" y1="152" x2="640" y2="128" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/><rect x="640" y="102" width="130" height="26" rx="4" fill="#15203a" stroke="#60a5fa"/><text class="mono" x="705" y="119" text-anchor="middle" fill="#60a5fa">onPropertyEvent</text></g>
+  <g id="fl_5" class="hid"><line x1="705" y1="128" x2="740" y2="202" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/><rect x="740" y="202" width="120" height="26" rx="4" fill="#15203a" stroke="#a78bfa"/><text class="mono" x="800" y="219" text-anchor="middle" fill="#a78bfa">onChangeEvent</text></g>
+  <g id="fl_6" class="hid"><line x1="800" y1="202" x2="800" y2="80" stroke="#a78bfa" stroke-dasharray="4 4" marker-end="url(#arr)"/><rect x="770" y="52" width="110" height="26" rx="4" fill="#15203a" stroke="#2dd4bf"/><text class="mono" x="825" y="69" text-anchor="middle" fill="#2dd4bf">doFrame</text><text class="mono" x="820" y="145" fill="#8a9bb5" font-size="10">runOnUiThread</text></g>
+  <g id="fl_7" class="hid"><line x1="850" y1="78" x2="860" y2="252" stroke="#8a9bb5" marker-end="url(#arr)"/><rect x="840" y="252" width="90" height="26" rx="4" fill="#15203a" stroke="#2dd4bf"/><text class="mono" x="885" y="269" text-anchor="middle" fill="#2dd4bf">DrawFrames</text><line x1="885" y1="278" x2="885" y2="302" stroke="#8a9bb5" marker-end="url(#arr)"/><rect x="820" y="302" width="120" height="26" rx="4" fill="#15203a" stroke="#34d399"/><text class="mono" x="880" y="319" text-anchor="middle" fill="#34d399">onMessageRefresh</text></g>
+  <g id="fl_note" class="hid"><rect class="box" x="20" y="345" width="920" height="115"/><text class="svgtext" x="32" y="370" fill="#f5b942">이 한 줄이 4일의 지도</text>
+    <text class="svgtext" x="32" y="395">Day 1: AIDL Proxy(setProperty) · 콜백(onChangeEvent) &nbsp; Day 2: Java Service(CarPropertyService) → AIDL HAL(IVehicle) · UID/권한</text>
+    <text class="svgtext" x="32" y="419">Day 3: Binder Thread → Looper 큐(runOnUiThread) · Choreographer → RenderThread → SF &nbsp; Day 4: SystemUI·RRO·APEX·Automotive</text>
+    <text class="svgtext" x="32" y="447" fill="#8a9bb5">"느리다" 면 이 그림의 어느 구간인지부터 — SQL 로 binder 쌍의 dur_us (실습 13).</text></g>
+</svg>
+</div>
+
+</div>
+<div class="controls">
+  <button id="btnPlay" class="primary">▶ 재생</button>
+  <button id="btnPrev">◀ 이전</button>
+  <button id="btnNext">다음 ▶</button>
+  <button id="btnReset">↺ 처음</button>
+  <span class="step" id="stepTxt"></span>
+</div>
+<div class="caption" id="caption"></div>
+<div class="pills" id="pills"></div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=(...ids)=>ids.forEach(i=>$(i).classList.add('vis'));
+const hide=(...ids)=>ids.forEach(i=>$(i).classList.remove('vis'));
+const lit=(id,c)=>{$(id).style.stroke=c;$(id).style.strokeWidth='2.5';};
+const unlit=id=>{$(id).style.stroke='';$(id).style.strokeWidth='';};
+const W=(id,w)=>$(id).setAttribute('width',w);
+
+const SCENES=[
+{ id:'s1', title:'1. 델타 배포 판단표', pills:[['m + adb push','green'],['RRO','green'],['APEX','green'],['m emu_img_zip','red']],
+  reset(){['d_r1','d_r2','d_r3','d_r4','d_r5','d_r6','d_note'].forEach(i=>hide(i));['d_r1b','d_r2b','d_r3b','d_r4b','d_r5b','d_r6b'].forEach(unlit);},
+  steps:[
+   ['Native 바이너리·.so — Day 2·3 에서 매일 한 것. <b>m + adb push</b>, 수십 초. 이미지와 무관.',()=>{show('d_r1');lit('d_r1b','#34d399');}],
+   ['Java 리소스 — 색·문자열·drawable·config 값. <b>RRO</b> APK 하나 설치하고 enable. 코드 재빌드 없음 (실습 3·6).',()=>{show('d_r2');lit('d_r2b','#34d399');}],
+   ['시스템 앱 코드 — <b>m SystemUI</b> 로 APK 만 다시 빌드해 push, killall. 수 분 (실습 7).',()=>{show('d_r3');lit('d_r3b','#34d399');}],
+   ['독립 배포 모듈 — <b>APEX</b>. 바이너리·라이브러리를 이미지로 묶어 /apex 에 마운트. 따로 버전 관리 (실습 2).',()=>{show('d_r4');lit('d_r4b','#34d399');}],
+   ['경계선 — init.rc 는 push 로 되지만 <b>.te(sepolicy)</b> 는 정책 리빌드가 필요하다 (Day 2 실습 9).',()=>{show('d_r5');lit('d_r5b','#f5b942');}],
+   ['커널 · 기본 탑재 RRO · VHAL 속성 추가 — 여기서만 <b>m emu_img_zip</b>. "이미지를 다시 굽는다" 는 이 줄뿐.',()=>{show('d_r6');lit('d_r6b','#f87171');}],
+   ['실무의 첫 질문에 답하는 표. 오늘 실습 2·3·7 이 각각 한 줄씩이다.',()=>show('d_note')],
+  ]},
+{ id:'s2', title:'2. APEX — 모듈을 이미지로 묶다', pills:[['apex_manifest.json','amber'],['키 4종','amber'],['file_contexts 위치','red'],['/apex/<name>@<ver>','teal']],
+  reset(){['a_bin','a_mf','a_key','a_fc','a_bp','a_push','a_apexd','a_run','a_note'].forEach(i=>hide(i));['a_binb','a_mfb','a_keyb','a_fcb','a_bpb','a_pushb','a_apexdb','a_runb'].forEach(unlit);const p=$('pkt2');p.style.opacity=0;p.style.transform='translate(240px,245px)';},
+  steps:[
+   ['바이너리 하나 — cc_binary 에 <b>apex_available</b> 로 "이 APEX 에 들어가도 된다" 표시.',()=>{show('a_bin');lit('a_binb','#f5b942');}],
+   ['<b>apex_manifest.json</b> — name 과 version. 마운트 경로의 @&lt;ver&gt; 가 여기서 온다.',()=>{show('a_mf');lit('a_mfb','#f5b942');}],
+   ['키 4종 — AVB(.pem/.avbpubkey) 로 이미지 검증, APK(.pk8/.x509) 로 패키지 서명. 두 벌 다 필요.',()=>{show('a_key');lit('a_keyb','#f5b942');}],
+   ['<b>file_contexts</b> — 반드시 system/sepolicy/apex/&lt;name&gt;-file_contexts. 모듈 안에 두면 빌드 오류 (실습 2 Step 7).',()=>{show('a_fc');lit('a_fcb','#f87171');}],
+   ['<b>apex {}</b> 가 이것들을 묶는다. updatable:false 면 compressible 불가. m com.example.simple → .apex 파일.',()=>{show('a_bp');lit('a_bpb','#f5b942');const p=$('pkt2');p.style.opacity=1;p.style.transform='translate(240px,245px)';}],
+   ['remount 상태에서 /system/apex/ 에 push 하고 reboot.',()=>{show('a_push');lit('a_pushb','#2dd4bf');$('pkt2').style.transform='translate(720px,95px)';}],
+   ['부팅 시 <b>apexd</b> 가 서명을 검증하고 ext4 이미지를 loop mount — /apex/com.example.simple@1, 그리고 @없는 심볼릭 링크.',()=>{show('a_apexd');lit('a_apexdb','#2dd4bf');$('pkt2').style.transform='translate(720px,165px)';}],
+   ['/apex/…/bin/simple_apex_binary 실행. dumpsys apexservice 로 상태 확인. Mainline 모듈이 이 형식으로 Play 를 통해 업데이트된다.',()=>{show('a_run','a_note');lit('a_runb','#34d399');$('pkt2').style.opacity=0;}],
+  ]},
+{ id:'s3', title:'3. RRO 매칭 — 세 당사자의 계약', pills:[['overlayable','blue'],['overlay targetName','teal'],['idmap · [x] [ ] ---','amber'],['priority','amber']],
+  reset(){['r_res','r_ov','r_match','r_state','r_mf','r_val','r_note'].forEach(i=>hide(i));['r_resb','r_ovb','r_matchb','r_mfb','r_valb'].forEach(unlit);const p=$('pkt3');p.style.opacity=0;p.style.transform='translate(800px,207px)';},
+  steps:[
+   ['타겟 앱의 리소스들. 그냥 두면 아무도 못 바꾼다.',()=>{show('r_res');lit('r_resb','#60a5fa');}],
+   ['타겟이 <b>overlayable.xml</b> 로 "이 이름들은 덮어써도 된다" 고 선언 (Android 11+ 의무). 목록 밖은 무시.',()=>{show('r_ov');lit('r_ovb','#f5b942');}],
+   ['오버레이 APK 의 manifest — <b>targetPackage · targetName · priority · isStatic</b>, 코드는 없다(hasCode=false).',()=>{show('r_mf');lit('r_mfb','#2dd4bf');}],
+   ['오버레이 안에는 <b>같은 이름·타입</b>의 리소스만. 파일명이 달라도 이름이 같아야 덮는다.',()=>{show('r_val');lit('r_valb','#34d399');const p=$('pkt3');p.style.opacity=1;p.style.transform='translate(800px,207px)';}],
+   ['설치되면 <b>OverlayManagerService</b> 가 매칭 — targetPackage, targetName, policy 를 검사해 idmap 생성.',()=>{show('r_match');lit('r_matchb','#f5b942');$('pkt3').style.transform='translate(485px,115px)';}],
+   ['<b>cmd overlay list</b>: [ ] 매칭 OK·비활성 → enable → [x]. --- 는 매칭 실패(NO_IDMAP). 활성 오버레이 중 priority 높은 것이 이긴다.',()=>show('r_state')],
+   ['enable 되면 리소스 조회 시 오버레이 값이 먼저 — 타겟 앱은 재시작만 하면 된다.',()=>{$('pkt3').style.transform='translate(165px,92px)';lit('r_resb','#34d399');}],
+   ['실습 3 계약 실험, 실습 4 priority 충돌, ListOverlays 의 hidden API — 모두 이 그림 위에 있다.',()=>show('r_note')],
+  ]},
+{ id:'s4', title:'4. Car SystemUI RRO — 왜 /system/app 인가', pills:[['overlayable 미선언 → ---','red'],['policy system','amber'],['2단계 remount','amber'],['aapt dump resources','teal']],
+  reset(){['c_s1','c_s2','c_s3','c_r1','c_r2','c_r3','c_r4','c_aapt','c_res','c_note'].forEach(i=>hide(i));['c_s1b','c_s2b','c_s3b','c_r1b','c_r2b','c_r3b','c_r4b'].forEach(unlit);},
+  steps:[
+   ['SystemUI 오버레이를 adb install 로 넣으면 <b>---</b>. dumpsys overlay 를 보면 Car SystemUI 는 mTargetOverlayableName 이 null.',()=>{show('c_s1');lit('c_s1b','#f87171');}],
+   ['이유 — 사용자 설치 오버레이는 policy <b>public</b> 이라 overlayable 이 필수. /system/app 의 오버레이는 policy <b>system</b> 이라 불필요.',()=>{show('c_s2');lit('c_s2b','#f5b942');}],
+   ['해결 — manifest 에서 targetName 을 빼고 <b>/system/app/</b> 에 시스템 앱으로 설치 → [ ] → enable → killall.',()=>{show('c_s3');lit('c_s3b','#34d399');}],
+   ['/system 에 쓰려면 <b>2단계 remount</b>. 1차: verity 해제 + overlayfs 설정 → "reboot required".',()=>{show('c_r1');lit('c_r1b','#dbe4f0');}],
+   ['reboot 으로 적용.',()=>{show('c_r2');lit('c_r2b','#dbe4f0');}],
+   ['2차 remount → <b>remount succeeded</b>. 이것을 빼먹으면 Read-only file system. 실습 1 에서 전원 완료.',()=>{show('c_r3');lit('c_r3b','#34d399');}],
+   ['mkdir /system/app/X → push X.apk → reboot → 시스템 앱으로 인식. 리소스 이름은 <b>aapt dump resources</b> 로 실제 APK 에서 뽑는다 — Phone 과 다르다.',()=>{show('c_r4','c_aapt');lit('c_r4b','#dbe4f0');}],
+   ['결과: 시계·아이콘·텍스트 ✅, 바 배경 ⚠(투명 리소스). 안 될 때 체크리스트 7항목.',()=>show('c_res','c_note')],
+  ]},
+{ id:'s5', title:'5. SystemUI — 프레임과 QS 타일', pills:[['Choreographer#doFrame','blue'],['RenderThread','blue'],['QSTileImpl','amber'],['Dagger @IntoMap','amber']],
+  reset(){['f_in','f_ui','f_rt','f_sf','f_tools','f_q1','f_q2','f_q3','f_q4','f_note'].forEach(i=>hide(i));['f_inb','f_uib','f_rtb','f_sfb','f_q1b','f_q2b','f_q3b'].forEach(unlit);},
+  steps:[
+   ['swipe 터치 — <b>deliverInputEvent</b> 가 SystemUI main Thread 에 도착 (Perfetto input 카테고리).',()=>{show('f_in');lit('f_inb','#60a5fa');}],
+   ['<b>Choreographer#doFrame</b> — UI Thread 에서 measure/layout/draw. 16.67 ms 예산의 앞부분.',()=>{show('f_ui');lit('f_uib','#60a5fa');}],
+   ['<b>RenderThread DrawFrames</b> — GPU 명령 생성 후 BufferQueue 에 queue. Java App 은 Thread 가 둘이다.',()=>{show('f_rt');lit('f_rtb','#60a5fa');}],
+   ['SurfaceFlinger 합성 — Day 3 와 같다. Jank 원인이 UI 인지 Render 인지 두 트랙으로 가른다. gfxinfo 의 Janky % 가 같은 것의 숫자판.',()=>{show('f_sf','f_tools');lit('f_sfb','#34d399');}],
+   ['QS 타일 추가 ① <b>QSTileImpl&lt;BooleanState&gt;</b> 상속 — handleClick 에서 상태 바꾸고 refreshState, handleUpdateState 에서 label·icon.',()=>{show('f_q1');lit('f_q1b','#f5b942');}],
+   ['② Dagger <b>@Binds @IntoMap @StringKey("cpuinfo")</b> — spec→클래스 맵. 빼면 SystemUI 가 크래시 (실습 7 Step 6 에서 일부러 재현).',()=>{show('f_q2');lit('f_q2b','#f5b942');}],
+   ['③ config.xml quick_settings_tiles_default 에 cpuinfo. m SystemUI → APK push → killall — 이미지 재빌드 없음.',()=>{show('f_q3','f_q4');lit('f_q3b','#f5b942');}],
+   ['SystemUI 를 바꾸는 두 층위 — 리소스는 RRO, 코드는 소스+m SystemUI. 분석은 dumpsys 와 Perfetto.',()=>show('f_note')],
+  ]},
+{ id:'s6', title:'6. WMS 창 → SurfaceFlinger Layer', pills:[['TYPE_APPLICATION_OVERLAY','teal'],['SYSTEM_ALERT_WINDOW · appops','amber'],['WMS addWindow 검사','amber'],['dumpsys window / SF --list','blue']],
+  reset(){['w_p','w_add','w_srf','w_chk','w_cs','w_dump','w_l1','w_l2','w_l3','w_l4','w_note'].forEach(i=>hide(i));['w_pb','w_addb','w_chkb','w_csb','w_l2b'].forEach(unlit);const p=$('pkt6');p.style.opacity=0;p.style.transform='translate(160px,180px)';},
+  steps:[
+   ['앱이 다른 앱 위에 창을 띄우려면 <b>SYSTEM_ALERT_WINDOW</b> — 설치 시 자동 부여 안 됨. 사용자 허용 또는 appops set … allow.',()=>{show('w_p');lit('w_pb','#2dd4bf');}],
+   ['<b>LayoutParams(TYPE_APPLICATION_OVERLAY, FLAG_NOT_FOCUSABLE, TRANSLUCENT)</b> 로 windowManager.addView — WMS 로 가는 Binder 호출.',()=>{show('w_add');lit('w_addb','#2dd4bf');const p=$('pkt6');p.style.opacity=1;p.style.transform='translate(160px,180px)';}],
+   ['WMS <b>addWindow()</b>: 창 타입 2038 이면 호출자 uid 의 권한을 검사. 없으면 <b>BadTokenException</b>. 검사는 App 이 아니라 system_server 에서.',()=>{show('w_chk');lit('w_chkb','#f5b942');$('pkt6').style.transform='translate(480px,105px)';}],
+   ['통과하면 WMS 가 SF 에 <b>createSurface</b> — Day 3 실습 9 를 대신 해 주는 것. z-order 는 창 타입별 계층.',()=>{show('w_cs','w_l1','w_l3');lit('w_csb','#f5b942');$('pkt6').style.transform='translate(800px,138px)';}],
+   ['SF 의 Layer 목록에 <b>com.example.floatingoverlaydemo#0</b>. StatusBar 보다 아래, Launcher 보다 위.',()=>{show('w_l2');lit('w_l2b','#34d399');$('pkt6').style.opacity=0;}],
+   ['App 은 Surface 를 받아 View 를 그린다. removeView 면 Layer 가 사라진다. dumpsys window windows 에 ty=APPLICATION_OVERLAY.',()=>show('w_srf','w_dump')],
+   ['SplitScreenDemo — 좌우 Fragment 분할이지만 Layer 는 <b>하나</b>. 디스플레이가 다르면 Layer 스택이 다르다.',()=>show('w_l4')],
+   ['창과 Layer 의 관계, 권한 검사 위치(Day 2 UID 검사와 같은 자리), 실습 9 의 deny 재현.',()=>show('w_note')],
+  ]},
+{ id:'s7', title:'7. Automotive 계층 — CarService · VHAL', pills:[['Car.createCar','teal'],['CarPropertyService','blue'],['IVehicle/default','amber'],['areaId · 권한','amber']],
+  reset(){['v_app','v_cs','v_hal','v_hw','v_prop','v_perm','v_tools','v_note'].forEach(i=>hide(i));['v_appb','v_csb','v_halb','v_hwb'].forEach(unlit);const p=$('pkt7');p.style.opacity=0;p.style.transform='translate(120px,80px)';},
+  steps:[
+   ['App — <b>Car.createCar</b> 로 CarService 에 Binder 연결, getCarManager(PROPERTY_SERVICE) → CarPropertyManager.',()=>{show('v_app');lit('v_appb','#2dd4bf');}],
+   ['setProperty(HVAC_TEMPERATURE_SET, area 49, 22.5) → <b>ICarProperty</b> Binder → CarService(com.android.car, uid system).',()=>{show('v_cs');lit('v_csb','#60a5fa');const p=$('pkt7');p.style.opacity=1;p.style.transform='translate(120px,80px)';setTimeout(()=>p.style.transform='translate(380px,80px)',50);}],
+   ['CarPropertyService 가 <b>권한 검사</b>(getCallingUid → HVAC → CONTROL_CAR_CLIMATE) → PropertyHalService → <b>IVehicle.setValues</b>.',()=>{show('v_perm');$('pkt7').style.transform='translate(650px,80px)';}],
+   ['VHAL — android.hardware.automotive.vehicle.IVehicle/default. Day 2 실습 10 의 AIDL HAL 그대로: vendor, NDK, VINTF manifest.',()=>{show('v_hal');lit('v_halb','#f5b942');}],
+   ['VHAL 이 차량 버스(CAN)에 쓴다. Emulator 는 FakeVehicleHardware — 값만 저장.',()=>{show('v_hw');lit('v_hwb','#8a9bb5');$('pkt7').style.transform='translate(870px,80px)';}],
+   ['Vehicle Property ID 는 Group·Area·Type·ID 비트. HVAC 온도의 areaId 는 좌석 그룹 49/68 — <b>getCarPropertyConfig</b> 로 읽는다.',()=>show('v_prop')],
+   ['차 없이 재현: VHAL <b>--set</b> (값의 진실을 바꿈) vs <b>cmd car_service inject-vhal-event</b> (CarService 에만). day-night-mode 로 테마 전환.',()=>show('v_tools')],
+   ['Day 2 규칙이 그대로. 콜백은 Binder Thread → runOnUiThread (Day 3). 실습 10~12.',()=>{show('v_note');$('pkt7').style.opacity=0;}],
+  ]},
+{ id:'s8', title:'8. 온도 버튼 한 번의 flow — 4일의 지도', pills:[['Day 1 AIDL','teal'],['Day 2 Service · HAL','blue'],['Day 3 Looper · SF','green'],['Day 4 Automotive','amber']],
+  reset(){['fl_1','fl_2','fl_3','fl_4','fl_5','fl_6','fl_7','fl_note'].forEach(i=>hide(i));},
+  steps:[
+   ['① 앱 main Thread — 클릭 → <b>binder transaction (ICarProperty::setProperty)</b>. Day 1 의 Java AIDL Proxy.',()=>show('fl_1')],
+   ['② com.android.car 의 Binder Thread 에서 <b>binder reply</b> — CarPropertyService. Day 2 실습 11 의 Java System Service.',()=>show('fl_2')],
+   ['③ 같은 Thread 안에서 <b>IVehicle::setValues</b> transaction → VHAL 프로세스의 binder reply. Day 2 실습 10 의 AIDL HAL.',()=>show('fl_3')],
+   ['④ VHAL → CarService 로 <b>onPropertyEvent</b> — 역방향 Binder. Day 1 실습 9 · Day 2 실습 6 의 Callback.',()=>show('fl_4')],
+   ['⑤ CarService → 앱의 Binder Thread 로 <b>onChangeEvent</b>. Looper 가 없는 Thread — Day 3 실습 6.',()=>show('fl_5')],
+   ['⑥ runOnUiThread → Looper 큐 → main Thread 의 <b>Choreographer#doFrame</b>. Day 3 실습 5 의 Looper.',()=>show('fl_6')],
+   ['⑦ RenderThread <b>DrawFrames</b> → BufferQueue → surfaceflinger <b>onMessageRefresh</b>. Day 3 실습 9·10.',()=>show('fl_7')],
+   ['이 한 줄에 4일이 다 있다. 실습 13 에서 각자 캡처하고 SQL 로 binder 쌍의 시간을 뽑는다.',()=>show('fl_note')],
+  ]},
+];
+let cur=0, step=-1, timer=null;
+const tabs=$('tabs');
+SCENES.forEach((s,i)=>{const t=document.createElement('div');t.className='tab';t.textContent=s.title;t.onclick=()=>select(i);tabs.appendChild(t);});
+function select(i){stop();cur=i;document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('on',k===i));document.querySelectorAll('.scene').forEach((sc,k)=>sc.classList.toggle('on',k===i));
+  $('pills').innerHTML=SCENES[i].pills.map(p=>`<span class="pill ${p[1]}">${p[0]}</span>`).join('');reset();}
+function reset(){stop();step=-1;SCENES[cur].reset();$('caption').innerHTML='▶ 재생 또는 다음 ▶ 을 눌러 시작합니다.';$('stepTxt').textContent=`0 / ${SCENES[cur].steps.length}`;}
+function next(){const st=SCENES[cur].steps;if(step>=st.length-1){stop();return;}step++;st[step][1]();$('caption').innerHTML=st[step][0];$('stepTxt').textContent=`${step+1} / ${st.length}`;}
+function prev(){if(step<0)return;const target=step-1;SCENES[cur].reset();step=-1;for(let k=0;k<=target;k++)next();if(target<0)reset();}
+function play(){if(timer){stop();return;}$('btnPlay').textContent='❚❚ 일시정지';if(step>=SCENES[cur].steps.length-1)reset();next();timer=setInterval(()=>{next();if(step>=SCENES[cur].steps.length-1)stop();},2600);}
+function stop(){if(timer)clearInterval(timer);timer=null;$('btnPlay').textContent='▶ 재생';}
+$('btnPlay').onclick=play;$('btnNext').onclick=()=>{stop();next();};$('btnPrev').onclick=()=>{stop();prev();};$('btnReset').onclick=reset;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();next();}else if(e.key==='ArrowLeft'){stop();prev();}else if(e.key===' '){e.preventDefault();play();}});
+(function(){var h=parseInt((location.hash||'').replace('#s',''),10);select(isNaN(h)||h<1||h>SCENES.length?0:h-1);})();
+window.addEventListener('hashchange',function(){var h=parseInt((location.hash||'').replace('#s',''),10);if(!isNaN(h)&&h>=1&&h<=SCENES.length)select(h-1);});
+</script>
+</body>
+</html>
